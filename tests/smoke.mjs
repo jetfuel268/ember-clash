@@ -203,6 +203,17 @@ async function testCombatBasics() {
   assert.ok(c.p.hp > 10, 'potion heals');
   assert.equal(p.items.potion, 1, 'item consumed from player inventory');
   await tick(); // resolve the potion's enemy turn
+  // Elixir restores 50% of max HP and max energy.
+  p.items.elixir = 1;
+  c.p.items.elixir = 1;
+  c.p.maxHp = 100;
+  c.p.maxEnergy = 100;
+  c.p.hp = 10;
+  c.p.energy = 5;
+  c.act('item', 'elixir');
+  assert.equal(c.p.hp, 60, 'elixir restores 50% max HP');
+  assert.equal(c.p.energy, 55, 'elixir restores 50% max energy');
+  await tick(); // resolve the elixir's enemy turn
   // Victory path.
   c.e.hp = 1;
   c.p.guarantee = true; // Focus: guaranteed hit, no flaky miss

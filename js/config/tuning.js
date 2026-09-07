@@ -10,6 +10,7 @@ export const TUNING = {
     baseCritChance: 0.1,
     baseCritDamage: 2.0,
     potionHeal: 0.35, // fraction of maxHp
+    elixirRestore: 0.5, // fraction of maxHp and maxEnergy
     // Per level-up: attack/defense gain a random amount in [statMin, statMax],
     // magic (max energy) in [magicMin, magicMax], maxHp in [hpMin, hpMax].
     levelUp: {
@@ -80,7 +81,7 @@ export const TUNING = {
     items: {
       potion: { name: 'Potion', desc: 'Heal 35% of max ❤️', priceBase: 25, perStage: 2 },
       vial: { name: '⭐ Vial', desc: 'Restore 50 ⭐', priceBase: 35, perStage: 2 },
-      elixir: { name: 'Elixir', desc: 'Fully restore ❤️ and ⭐', priceBase: 70, perStage: 3 },
+      elixir: { name: 'Elixir', desc: 'Restore 50% of max ❤️ and ⭐', priceBase: 70, perStage: 3 },
     },
   },
 };

@@ -281,11 +281,13 @@ export class Combat {
     } else if (id === 'vial') {
       const before = this.p.energy;
       this.p.energy = Math.min(this.p.maxEnergy, this.p.energy + 50);
-      this.bus.emit('log', { text: `You drink a ${def.name} and recover ${this.p.energy - before} energy.`, kind: 'player' });
+      this.bus.emit('log', { text: `You drink a ${def.name} and recover ${this.p.energy - before} ⭐.`, kind: 'player' });
     } else if (id === 'elixir') {
-      this.p.hp = this.p.maxHp;
-      this.p.energy = this.p.maxEnergy;
-      this.bus.emit('log', { text: `You drink a ${def.name}. Fully restored!`, kind: 'player' });
+      const hpBefore = this.p.hp;
+      const enBefore = this.p.energy;
+      this.p.hp = Math.min(this.p.maxHp, this.p.hp + Math.round(this.p.maxHp * TUNING.player.elixirRestore));
+      this.p.energy = Math.min(this.p.maxEnergy, this.p.energy + Math.round(this.p.maxEnergy * TUNING.player.elixirRestore));
+      this.bus.emit('log', { text: `You drink a ${def.name} and recover ${this.p.hp - hpBefore} ❤️ and ${this.p.energy - enBefore} ⭐.`, kind: 'player' });
     }
     this.player.removeItem(id);
     this.p.items[id] -= 1;
