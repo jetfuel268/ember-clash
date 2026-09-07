@@ -1,6 +1,7 @@
-// Enemy generation per campaign stage: type system, stats, skills, scaling.
+// Enemy generation per campaign stage: type system, stats, skills, scaling,
+// and per-stage limited enemy pools.
 import { TUNING } from '../config/tuning.js';
-import { pick, weightedPick } from '../core/rng.js';
+import { weightedPick } from '../core/rng.js';
 
 // Creature-based types. `slash` = Power Strike multiplier, `blunt` = Attack.
 // `element` = strengths (1.5x) and weaknesses (0.5x) of the creature against
@@ -32,17 +33,31 @@ export function weaknessOf(type) {
   return t.blunt >= t.slash ? 'Blunt (Attack)' : 'Slash (Power Strike)';
 }
 
-const BASES = [
-  { id: 'grunt', name: 'Grunt', sprite: 'grunt', type: 'beast', hp: 60, atk: 9, skills: [] },
-  { id: 'brute', name: 'Brute', sprite: 'brute', type: 'demon', hp: 48, atk: 13, skills: ['enrage'] },
-  { id: 'tank', name: 'Warden', sprite: 'warden', type: 'construct', hp: 85, atk: 7, skills: ['shell'] },
-  { id: 'stinger', name: 'Stinger', sprite: 'stinger', type: 'insect', hp: 55, atk: 11, skills: ['venom'] },
-  { id: 'skeleton', name: 'Skeleton', sprite: 'skeleton', type: 'undead', hp: 58, atk: 12, skills: ['shell'] },
-  { id: 'wyvern', name: 'Wyvern', sprite: 'wyvern', type: 'beast', hp: 52, atk: 12, skills: ['enrage'] },
+// Regular (non-boss) enemies. Adding an enemy = adding an entry here.
+export const ENEMY_DEFS = {
+  grunt: { id: 'grunt', name: 'Grunt', sprite: 'grunt', type: 'beast', hp: 60, atk: 9, skills: [] },
+  brute: { id: 'brute', name: 'Brute', sprite: 'brute', type: 'demon', hp: 48, atk: 13, skills: ['enrage'] },
+  warden: { id: 'warden', name: 'Warden', sprite: 'warden', type: 'construct', hp: 85, atk: 7, skills: ['shell'] },
+  stinger: { id: 'stinger', name: 'Stinger', sprite: 'stinger', type: 'insect', hp: 55, atk: 11, skills: ['venom'] },
+  skeleton: { id: 'skeleton', name: 'Skeleton', sprite: 'skeleton', type: 'undead', hp: 58, atk: 12, skills: ['shell'] },
+  wyvern: { id: 'wyvern', name: 'Wyvern', sprite: 'wyvern', type: 'beast', hp: 52, atk: 12, skills: ['enrage'] },
+  slime: { id: 'slime', name: 'Slime', sprite: 'slime', type: 'beast', hp: 45, atk: 8, skills: ['shell'] },
+};
+
+// Limited per-stage pools: each biome (10 stages) draws only from its pool.
+// Order matches the ENV_TIERS biomes (forest, crystal cavern, dungeon,
+// walkway, dark castle); past stage 50 the cycle repeats in endless mode.
+export const STAGE_POOLS = [
+  ['stinger', 'skeleton', 'slime'], // forest (1-10)
+  ['warden', 'slime', 'grunt'], // crystal cavern (11-20)
+  ['skeleton', 'brute', 'warden'], // dungeon (21-30)
+  ['wyvern', 'grunt', 'stinger'], // walkway (31-40)
+  ['brute', 'skeleton', 'wyvern'], // dark castle (41-50)
 ];
 
+// The boss of each biome, cycled every 10 stages (10, 20, 30, 40, ...).
 const BOSSES = [
-  { id: 'malgrath', name: 'Overlord Malgrath', sprite: 'brute', type: 'demon', skills: ['enrage', 'venom'] },
+  { id: 'broodmother', name: 'The Broodmother', sprite: 'broodmother', type: 'insect', skills: ['web', 'toxins'] },
   { id: 'wardenprime', name: 'Warden Prime', sprite: 'warden', type: 'construct', skills: ['shell', 'enrage'] },
   { id: 'hollowking', name: 'The Hollow King', sprite: 'skeleton', type: 'undead', skills: ['venom', 'shell'] },
   { id: 'colossus', name: 'Revenant Colossus', sprite: 'wyvern', type: 'beast', skills: ['enrage', 'venom'] },
@@ -54,11 +69,20 @@ const FINAL_BOSS = {
   type: 'undead', hp: 70, atk: 11, skills: ['shell', 'enrage'],
 };
 
-// All discoverable bestiary ids (BASES ids + boss ids + final boss).
-export const KNOWN_ENEMY_IDS = [...BASES.map((b) => b.id), ...BOSSES.map((b) => b.id), FINAL_BOSS.id];
+// All discoverable bestiary ids (regular + boss + final boss).
+export const KNOWN_ENEMY_IDS = [
+  ...Object.keys(ENEMY_DEFS),
+  ...BOSSES.map((b) => b.id),
+  FINAL_BOSS.id,
+];
 
 export function isBossStage(stage) {
   return stage % TUNING.stage.bossEvery === 0;
+}
+
+// The pool a stage draws from (biomes cycle in endless mode).
+export function poolForStage(stage) {
+  return STAGE_POOLS[Math.floor((stage - 1) / 10) % STAGE_POOLS.length];
 }
 
 export function createEnemy(stage, baseIndex) {
@@ -74,7 +98,9 @@ export function createEnemy(stage, baseIndex) {
     const b = BOSSES[(stage / t.stage.bossEvery - 1) % BOSSES.length];
     base = { hp: 60, atk: 10, id: b.id, name: b.name, sprite: b.sprite, type: b.type, skills: b.skills };
   } else {
-    base = baseIndex != null ? BASES[baseIndex] : pick(BASES);
+    const pool = poolForStage(stage);
+    const id = baseIndex != null ? pool[baseIndex % pool.length] : pool[Math.floor(Math.random() * pool.length)];
+    base = { ...ENEMY_DEFS[id] };
   }
 
   const hpMult = boss ? t.combat.boss.hpMultiplier : 1;
@@ -133,5 +159,5 @@ export const INTENT_LABELS = {
   attack: 'Unsheathing blade',
   charge: 'Gathering power',
   defend: 'Raising guard',
-  skill: 'Preparing a skill', // replaced with the real name in combat.js
+  skill: 'Preparing a skill',
 };

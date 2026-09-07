@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+  <defs>
+    <radialGradient id="abdomen" cx="0.38" cy="0.3" r="1">
+      <stop offset="0" stop-color="#5a4a8a"/>
+      <stop offset="0.6" stop-color="#3a2a60"/>
+      <stop offset="1" stop-color="#241a40"/>
+    </radialGradient>
+    <radialGradient id="skull" cx="0.4" cy="0.35" r="1">
+      <stop offset="0" stop-color="#4a3a70"/>
+      <stop offset="1" stop-color="#2a1e48"/>
+    </radialGradient>
+    <radialGradient id="eyeglow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ff5a5a"/>
+      <stop offset="0.7" stop-color="#c02020"/>
+      <stop offset="1" stop-color="#801010"/>
+    </radialGradient>
+    <radialGradient id="egg" cx="0.4" cy="0.35" r="1">
+      <stop offset="0" stop-color="#e8d8a8"/>
+      <stop offset="1" stop-color="#b09858"/>
+    </radialGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="400" cy="700" rx="290" ry="46" fill="#000" opacity="0.4"/>
+  </g>
+  <g id="webs" stroke="#c8d0e0" stroke-width="3" opacity="0.35" fill="none">
+    <path d="M 60 120 L 300 320 M 120 60 L 320 300 M 180 90 L 240 240"/>
+    <path d="M 740 140 L 520 340 M 680 70 L 500 300"/>
+    <path d="M 60 120 Q 190 190 320 300 Q 200 240 120 60" />
+  </g>
+  <g id="legs" fill="none" stroke-linecap="round">
+    <!-- left side -->
+    <path d="M 320 430 Q 180 360 130 250" stroke="#1a1430" stroke-width="34"/>
+    <path d="M 320 430 Q 180 360 130 250" stroke="#3a2a60" stroke-width="16"/>
+    <path d="M 310 480 Q 150 470 80 420" stroke="#1a1430" stroke-width="34"/>
+    <path d="M 310 480 Q 150 470 80 420" stroke="#3a2a60" stroke-width="16"/>
+    <path d="M 315 530 Q 170 600 140 680" stroke="#1a1430" stroke-width="34"/>
+    <path d="M 315 530 Q 170 600 140 680" stroke="#3a2a60" stroke-width="16"/>
+    <path d="M 335 575 Q 260 660 250 730" stroke="#1a1430" stroke-width="34"/>
+    <path d="M 335 575 Q 260 660 250 730" stroke="#3a2a60" stroke-width="16"/>
+    <!-- right side -->
+    <path d="M 480 430 Q 620 360 670 250" stroke="#1a1430" stroke-width="34"/>
+    <path d="M 480 430 Q 620 360 670 250" stroke="#3a2a60" stroke-width="16"/>
+    <path d="M 490 480 Q 650 470 720 420" stroke="#1a1430" stroke-width="34"/>
+    <path d="M 490 480 Q 650 470 720 420" stroke="#3a2a60" stroke-width="16"/>
+    <path d="M 485 530 Q 630 600 660 680" stroke="#1a1430" stroke-width="34"/>
+    <path d="M 485 530 Q 630 600 660 680" stroke="#3a2a60" stroke-width="16"/>
+    <path d="M 465 575 Q 540 660 550 730" stroke="#1a1430" stroke-width="34"/>
+    <path d="M 465 575 Q 540 660 550 730" stroke="#3a2a60" stroke-width="16"/>
+  </g>
+  <g id="body" stroke="#14102a" stroke-width="10">
+    <!-- swollen queen abdomen -->
+    <path fill="url(#abdomen)" d="
+      M 400 330
+      C 500 330 580 400 585 500
+      C 588 570 540 630 400 640
+      C 260 630 212 570 215 500
+      C 220 400 300 330 400 330
+      Z"/>
+    <g id="marks" stroke="none">
+      <!-- hourglass marking, queen's signature -->
+      <path d="M 400 420 L 445 500 L 400 590 L 355 500 Z" fill="#7a68b0" opacity="0.8"/>
+      <ellipse cx="330" cy="430" rx="30" ry="22" fill="#8a78c0" opacity="0.5"/>
+      <ellipse cx="475" cy="430" rx="30" ry="22" fill="#8a78c0" opacity="0.5"/>
+      <ellipse cx="320" cy="560" rx="26" ry="18" fill="#2a2050" opacity="0.6"/>
+      <ellipse cx="480" cy="560" rx="26" ry="18" fill="#2a2050" opacity="0.6"/>
+    </g>
+    <!-- egg sac the queen carries -->
+    <g id="eggs">
+      <circle cx="400" cy="655" r="34" fill="url(#egg)" stroke="#14102a" stroke-width="8"/>
+      <circle cx="352" cy="648" r="26" fill="url(#egg)" stroke="#14102a" stroke-width="8"/>
+      <circle cx="448" cy="648" r="26" fill="url(#egg)" stroke="#14102a" stroke-width="8"/>
+    </g>
+  </g>
+  <g id="head" stroke="#14102a" stroke-width="9">
+    <ellipse cx="400" cy="290" rx="95" ry="80" fill="url(#skull)"/>
+    <g id="crown" stroke="none">
+      <path d="M 330 235 L 345 185 L 368 215 L 392 168 L 400 160 L 408 168 L 432 215 L 455 185 L 470 235 Q 400 215 330 235 Z" fill="#d8a838"/>
+      <circle cx="400" cy="222" r="8" fill="#c04848"/>
+      <circle cx="362" cy="228" r="6" fill="#48a0c0"/>
+      <circle cx="438" cy="228" r="6" fill="#48a0c0"/>
+    </g>
+    <g id="eyes" stroke="none">
+      <!-- eight glowing eyes -->
+      <circle cx="352" cy="280" r="13" fill="url(#eyeglow)"/>
+      <circle cx="448" cy="280" r="13" fill="url(#eyeglow)"/>
+      <circle cx="336" cy="310" r="10" fill="url(#eyeglow)"/>
+      <circle cx="464" cy="310" r="10" fill="url(#eyeglow)"/>
+      <circle cx="378" cy="322" r="9" fill="url(#eyeglow)"/>
+      <circle cx="422" cy="322" r="9" fill="url(#eyeglow)"/>
+      <circle cx="352" cy="280" r="5" fill="#ffd0d0"/>
+      <circle cx="448" cy="280" r="5" fill="#ffd0d0"/>
+    </g>
+  </g>
+  <g id="fangs" stroke="#14102a" stroke-width="7" fill="#e8e0f0">
+    <path d="M 372 356 C 366 390 362 412 372 434 C 380 414 382 390 384 358 Z"/>
+    <path d="M 428 356 C 434 390 438 412 428 434 C 420 414 418 390 416 358 Z"/>
+  </g>
+</svg>

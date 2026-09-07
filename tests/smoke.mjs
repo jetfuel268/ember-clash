@@ -13,7 +13,7 @@ if (typeof globalThis.localStorage === 'undefined') {
 }
 import { Player } from '../js/game/player.js';
 import { Progression } from '../js/game/progression.js';
-import { createEnemy, isBossStage } from '../js/game/enemies.js';
+import { createEnemy, isBossStage, poolForStage } from '../js/game/enemies.js';
 import { Combat } from '../js/game/combat.js';
 import { EventBus } from '../js/core/events.js';
 import { SaveStore, DEFAULT_SAVE } from '../js/core/save.js';
@@ -117,6 +117,23 @@ function newSave() {
   const e50 = createEnemy(50);
   assert.equal(e50.id, 'umbra', 'stage 50 is the final boss');
   assert.ok(e50.magic >= e10.magic, 'enemy magic scales with stage');
+}
+
+// --- Stage pools: limited per-stage pools + biome bosses ------------------
+{
+  const pool1 = poolForStage(1);
+  assert.deepEqual(pool1, ['stinger', 'skeleton', 'slime'], 'stage-1 pool is spider/skeleton/slime');
+  const seen = new Set();
+  for (let i = 0; i < 30; i++) seen.add(createEnemy(1).id);
+  for (const id of seen) assert.ok(pool1.includes(id), `stage-1 only spawns pool enemies (got ${id})`);
+  // Pools differ per biome.
+  assert.deepEqual(poolForStage(11), ['warden', 'slime', 'grunt'], 'cavern pool');
+  assert.deepEqual(poolForStage(41), ['brute', 'skeleton', 'wyvern'], 'dark castle pool');
+  // The stage-10 boss is the Broodmother with web + 5-turn toxin + bite.
+  const bm = createEnemy(10);
+  assert.equal(bm.id, 'broodmother', 'stage 10 boss is the Broodmother');
+  assert.deepEqual(bm.skills.sort(), ['toxins', 'web']);
+  assert.equal(bm.boss, true);
 }
 
 // --- Combat: turn order, guard, skill energy/cd, items, victory ------------
@@ -327,8 +344,29 @@ async function playBossFight(level, upgrades, seed) {
   return c.e.hp <= 0;
 }
 
+// --- HP carryover: no heal on win or level-up ------------------------------
+async function testHpCarryover() {
+  const p = newPlayer(11);
+  const e = createEnemy(1);
+  e.maxHp = 200; e.hp = 200;
+  const c = new Combat(p, e, new EventBus());
+  c.start();
+  c.p.guarantee = true;
+  c.p.hp = 40; // simulate damage taken in battle
+  c.e.hp = 1;
+  c.act('attack'); // guaranteed kill
+  assert.equal(c.done, true);
+  p.currentHp = c.p.hp; // main.js does this on win
+  const e2 = createEnemy(1);
+  e2.maxHp = 300; e2.hp = 300;
+  const c2 = new Combat(p, e2, new EventBus(), p.currentHp);
+  c2.start();
+  assert.equal(c2.p.hp, 40, 'battle starts with carried-over HP (no heal)');
+}
+
 async function main() {
   await testCombatBasics();
+  await testHpCarryover();
   await testTypeSkills();
   await testElementSkills();
   const win = await playBossFight(23, UPGRADES.filter((u) => ['sharp', 'iron', 'crit'].includes(u.id)));

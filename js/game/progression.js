@@ -22,7 +22,7 @@ export class Progression {
 
   // Call after a stage win. `bonus` is 'gold'|'xp' (kill-bonus skills).
   // Returns: { gold, xp, leveledUp, gain, learned, learnedSkill, needsReplace,
-  //           healFrac, nextStage, victory }
+  //           nextStage, victory }
   onStageWon(stage, bonus = null) {
     const p = this.player;
     const s = TUNING;
@@ -58,12 +58,8 @@ export class Progression {
     const nextStage = stage + 1;
     this.save.stage = nextStage;
 
-    // No per-level restoration: only a fraction of maxHp is restored on a win
-    // (a full restore requires sleeping in a shop bed).
-    const healFrac = s.stage.healOnWin;
-    if (healFrac > 0) {
-      p.heal(healFrac);
-    }
+    // No restoration on win or level-up: HP carries over between battles.
+    // A full restore requires sleeping in a shop bed.
 
     return {
       gold: Math.round(gold),
@@ -73,7 +69,6 @@ export class Progression {
       learned,
       learnedSkill,
       needsReplace,
-      healFrac,
       nextStage,
       victory,
     };

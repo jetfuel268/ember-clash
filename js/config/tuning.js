@@ -45,7 +45,6 @@ export const TUNING = {
     enemyAtkPerStage: 0.08,
     enemyEvasionPerStage: 0.004,
     enemyArmorEvery: 4,
-    healOnWin: 0.4, // fraction of maxHp restored after a stage win
     shopEvery: 10, // shop opens on stages ending in 5
     shopOffset: 5,
   },
@@ -69,6 +68,7 @@ export const TUNING = {
     bossBonus: 5,
     startEnergy: 50,
     skillCost: 25,
+    webPenalty: 0.25, // accuracy reduction while webbed (Broodmother)
   },
   shop: {
     bed: { base: 15, perStage: 4 }, // full restore cost = base + perStage * stage

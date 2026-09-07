@@ -9,13 +9,13 @@
 //   enemy.magic, enemy.energy, enemy.buffs
 import { TUNING } from '../config/tuning.js';
 import { rollIntent, INTENT_LABELS, TYPES } from './enemies.js';
-import { SKILL_MAP, ENEMY_SKILLS } from './skills.js';
+import { SKILL_MAP } from './skills.js';
 import { chance } from '../core/rng.js';
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
 function freshBuffs() {
-  return { damage: null, defense: null, hit: null, dot: null };
+  return { damage: null, defense: null, hit: null, dot: null, web: null };
 }
 
 export class Combat {
@@ -144,7 +144,14 @@ export class Combat {
     }
     const hitChance = forceHit
       ? 1
-      : clamp(s.hit + (this.p.buffs.hit?.bonus ?? 0) - this.enemy.evasion, 0.05, 0.98);
+      : clamp(
+          s.hit +
+            (this.p.buffs.hit?.bonus ?? 0) -
+            (this.p.buffs.web ? TUNING.enemyMagic.webPenalty : 0) -
+            this.enemy.evasion,
+          0.05,
+          0.98
+        );
     if (!forceHit && chance(1 - hitChance)) {
       this.bus.emit('log', { text: 'You miss!', kind: 'player' });
       this.bus.emit('sfx', { name: 'miss' });
@@ -292,6 +299,12 @@ export class Combat {
     } else if (id === 'venom') {
       this.p.buffs.dot = { amount: 5, turns: 3 };
       this.bus.emit('log', { text: `${this.enemy.name} poisons you!`, kind: 'enemy' });
+    } else if (id === 'toxins') {
+      this.p.buffs.dot = { amount: 5, turns: 5 };
+      this.bus.emit('log', { text: `${this.enemy.name} drenches you in toxic venom!`, kind: 'enemy' });
+    } else if (id === 'web') {
+      this.p.buffs.web = { turns: 3 };
+      this.bus.emit('log', { text: `${this.enemy.name} sprays webs — your accuracy drops!`, kind: 'enemy' });
     }
     this.bus.emit('sfx', { name: 'skill' });
   }
@@ -309,7 +322,8 @@ export class Combat {
       this.bus.emit('log', { text: `${this.enemy.name} raises its guard.`, kind: 'enemy' });
     } else if (intent === 'skill') {
       this.e.energy -= TUNING.enemyMagic.skillCost;
-      this.enemySkill(this.enemy.skills[0]);
+      const sid = this.enemy.skills[Math.floor(Math.random() * this.enemy.skills.length)];
+      this.enemySkill(sid);
     } else {
       const mult =
         (intent === 'charge' ? TUNING.combat.enemyChargeMultiplier : 1) *
@@ -382,7 +396,7 @@ export class Combat {
   }
 
   tickBuffs(side) {
-    for (const key of ['damage', 'defense', 'hit', 'dot']) {
+    for (const key of ['damage', 'defense', 'hit', 'dot', 'web']) {
       const b = side.buffs[key];
       if (b) {
         b.turns -= 1;
@@ -434,7 +448,7 @@ export class Combat {
         intent: this.e.intent,
         intentLabel:
           this.e.intent === 'skill'
-            ? `Using ${ENEMY_SKILLS[this.enemy.skills[0]]?.name ?? 'a skill'}`
+            ? INTENT_LABELS.skill
             : INTENT_LABELS[this.e.intent],
         charging: this.e.charging,
         boss: this.enemy.boss,
@@ -451,7 +465,7 @@ export class Combat {
 
   describeBuffs(side) {
     const out = [];
-    const names = { damage: '+DMG', defense: '+DEF', hit: '+ACC', dot: 'POISON' };
+    const names = { damage: '+DMG', defense: '+DEF', hit: '+ACC', dot: 'POISON', web: 'WEB' };
     for (const [key, b] of Object.entries(side.buffs)) {
       if (b) out.push(`${names[key]} ${b.turns}t`);
     }

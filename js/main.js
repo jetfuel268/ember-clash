@@ -85,6 +85,8 @@ function startStage(stage) {
 
 function onStageWon(bonus) {
   const stage = save.stage;
+  // HP carries over between battles — no win or level-up restoration.
+  player.currentHp = combat.p.hp;
   const reward = progression.onStageWon(stage, bonus);
   recordKill(save.bestiary, combat.enemy);
   persist();
@@ -102,6 +104,8 @@ function onStageWon(bonus) {
 }
 
 function onStageLost() {
+  // Resting after a defeat: the retry starts at full HP.
+  player.currentHp = null;
   progression.onStageLost();
   persist();
   sfx.defeat();
@@ -116,7 +120,7 @@ function isShopStage(stage) {
 function showStageEnd(reward, stage) {
   const $ = (id) => document.getElementById(id);
   $('stageend-title').textContent = reward.victory ? 'VICTORY!' : `Stage ${stage} Cleared!`;
-  $('stageend-rewards').textContent = `+${reward.xp} XP  ·  +${reward.gold} gold  ·  healed ${Math.round(reward.healFrac * 100)}%`;
+  $('stageend-rewards').textContent = `+${reward.xp} XP  ·  +${reward.gold} gold`;
   $('btn-next-stage').textContent = reward.victory ? 'Continue (Endless)' : 'Next Stage';
   const shop = isShopStage(stage);
   document.querySelector('#screen-stageend .shop').classList.toggle('hidden', !shop);
