@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+  <defs>
+    <radialGradient id="wyvern" cx="0.4" cy="0.3" r="1">
+      <stop offset="0" stop-color="#5ab0a8"/>
+      <stop offset="1" stop-color="#2a6a68"/>
+    </radialGradient>
+    <linearGradient id="wing" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4a9a90"/>
+      <stop offset="1" stop-color="#1e4a48"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="400" cy="742" rx="230" ry="42" fill="#000" opacity="0.35"/>
+  </g>
+  <g id="legs" stroke="#23263a" stroke-width="10">
+    <rect x="322" y="560" width="64" height="140" rx="26" fill="url(#wyvern)"/>
+    <rect x="414" y="560" width="64" height="140" rx="26" fill="url(#wyvern)"/>
+    <ellipse cx="342" cy="712" rx="54" ry="26" fill="#1e4a48"/>
+    <ellipse cx="458" cy="712" rx="54" ry="26" fill="#1e4a48"/>
+  </g>
+  <g id="wings" stroke="#23263a" stroke-width="10">
+    <path d="M 320 420 C 240 380 170 380 130 430 C 190 420 220 440 240 470 C 280 460 300 450 320 460 Z" fill="url(#wing)"/>
+    <path d="M 480 420 C 560 380 630 380 670 430 C 610 420 580 440 560 470 C 520 460 500 450 480 460 Z" fill="url(#wing)"/>
+  </g>
+  <g id="body" stroke="#23263a" stroke-width="10">
+    <path d="M 330 390 C 330 350 356 330 400 330 C 444 330 470 350 470 390 L 482 556 C 482 590 450 604 400 604 C 350 604 318 590 318 556 Z" fill="url(#wyvern)"/>
+    <g id="belly" stroke="none" opacity="0.7">
+      <ellipse cx="400" cy="470" rx="52" ry="84" fill="#8ad4cc"/>
+    </g>
+    <g id="spikes" fill="#e8c040" stroke-width="6">
+      <polygon points="400,318 414,344 386,344"/>
+      <polygon points="352,368 340,398 368,392"/>
+      <polygon points="448,368 460,398 432,392"/>
+    </g>
+  </g>
+  <g id="arms" stroke="#23263a" stroke-width="10">
+    <rect x="262" y="400" width="50" height="120" rx="24" fill="url(#wyvern)" transform="rotate(12 287 424)"/>
+    <rect x="488" y="400" width="50" height="120" rx="24" fill="url(#wyvern)" transform="rotate(-12 513 424)"/>
+    <g id="claws" fill="#e8c040" stroke-width="6">
+      <polygon points="258,520 236,548 268,544"/>
+      <polygon points="268,544 258,576 284,552"/>
+      <polygon points="542,520 564,548 532,544"/>
+      <polygon points="532,544 542,576 516,552"/>
+    </g>
+  </g>
+  <g id="head" stroke="#23263a" stroke-width="10">
+    <path d="M 348 250 C 348 200 366 176 400 176 C 434 176 452 200 452 250 C 452 286 430 302 400 302 C 370 302 348 286 348 250 Z" fill="url(#wyvern)"/>
+    <polygon points="368,182 352,128 392,160" fill="#e8c040"/>
+    <polygon points="432,182 448,128 408,160" fill="#e8c040"/>
+    <circle cx="376" cy="240" r="18" fill="#ffd24a" stroke="none"/>
+    <circle cx="424" cy="240" r="18" fill="#ffd24a" stroke="none"/>
+    <circle cx="379" cy="243" r="8" fill="#23263a" stroke="none"/>
+    <circle cx="427" cy="243" r="8" fill="#23263a" stroke="none"/>
+    <path d="M 372 282 Q 400 298 428 282" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -38,10 +38,15 @@ export const TUNING = {
     victoryStage: 10,
     enemyHpPerStage: 0.12,
     enemyAtkPerStage: 0.08,
+    enemyEvasionPerStage: 0.004,
+    enemyArmorEvery: 4,
     healOnWin: 0.4, // fraction of maxHp restored after a stage win
     potionRefillEvery: 3,
   },
   enemyAi: {
-    weights: { attack: 70, charge: 15, defend: 15 },
+    weights: { attack: 60, charge: 12, defend: 12, skill: 16 },
+    enemyHitBase: 0.6,
+    enemyHitPerStage: 0.02,
+    playerEvasion: 0.05,
   },
 };

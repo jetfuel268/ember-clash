@@ -16,6 +16,8 @@
       <div class="menu-stats" id="menu-stats"></div>
       <div class="menu-buttons">
         <button id="btn-start" class="btn btn-primary">Begin Campaign</button>
+        <button id="btn-bestiary" class="btn">Bestiary</button>
+        <button id="btn-sound" class="btn">Sound: On</button>
         <button id="btn-reset" class="btn">Reset Progress</button>
       </div>
       <p class="hint" id="menu-hint"></p>
@@ -30,21 +32,52 @@
           <div class="bar hp"><div class="bar-fill" id="player-hp-fill"></div><span class="bar-text" id="player-hp-text"></span></div>
           <div class="bar energy"><div class="bar-fill" id="player-energy-fill"></div><span class="bar-text" id="player-energy-text"></span></div>
           <div class="potions" id="player-potions"></div>
+          <div class="buff-chips" id="player-buffs"></div>
+          <div class="stat-line" id="player-stats"></div>
         </div>
         <div class="hud-corner right" id="enemy-panel">
           <div class="stat-name" id="enemy-name"></div>
           <div class="bar hp"><div class="bar-fill enemy" id="enemy-hp-fill"></div><span class="bar-text" id="enemy-hp-text"></span></div>
           <div class="intent" id="enemy-intent"></div>
+          <div class="buff-chips" id="enemy-buffs"></div>
+          <div class="stat-line" id="enemy-stats"></div>
         </div>
-        <div class="actor actor-player" id="player-sprite"><img id="player-sprite-img" alt="Hero"></div>
+        <div class="actor actor-player" id="player-sprite"><img id="player-sprite-img" src="assets/sprites/hero.svg" alt="Hero"></div>
         <div class="actor actor-enemy" id="enemy-sprite"><img id="enemy-sprite-img" alt="Enemy"></div>
       </div>
       <div id="log" class="log" aria-live="polite"></div>
       <div id="actions" class="actions">
-        <button id="action-attack" class="btn">Attack<span class="cost">+10 energy</span></button>
-        <button id="action-power" class="btn">Power Strike<span class="cost">175% · 25 energy</span></button>
+        <button id="action-attack" class="btn">Attack<span class="cost">blunt · +10 energy</span></button>
+        <button id="action-power" class="btn">Power Strike<span class="cost">slash · 175% · 25 energy</span></button>
         <button id="action-defend" class="btn">Defend<span class="cost">-50% dmg · +20 energy</span></button>
         <button id="action-potion" class="btn">Potion<span class="cost">heals 35%</span></button>
+        <div class="skill-wrap">
+          <button id="action-skills" class="btn btn-primary">Skills<span class="cost" id="skills-cost">none</span></button>
+          <div id="skills-menu" class="skills-menu hidden"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-stageend" class="screen hidden">
+      <h2 class="title" id="stageend-title">Stage Cleared!</h2>
+      <p class="subtitle" id="stageend-rewards"></p>
+      <div class="shop">
+        <div class="shop-header">Skill Shop <span id="shop-gold" class="gold"></span></div>
+        <div id="shop-items" class="shop-items"></div>
+        <div id="shop-empty" class="shop-empty hidden">All skills purchased. Gold carries over — enemies scale forever.</div>
+      </div>
+      <div class="menu-buttons">
+        <button id="btn-next-stage" class="btn btn-primary">Next Stage</button>
+        <button id="btn-menu-3" class="btn">Main Menu</button>
+      </div>
+    </section>
+
+    <section id="screen-bestiary" class="screen hidden">
+      <h2 class="title">Bestiary</h2>
+      <p class="subtitle">Creatures you have defeated, with their types, skills and weaknesses.</p>
+      <div id="bestiary-grid" class="bestiary-grid"></div>
+      <div class="menu-buttons">
+        <button id="btn-menu-4" class="btn">Main Menu</button>
       </div>
     </section>
 
@@ -52,7 +85,7 @@
       <h2 class="title" id="levelup-title">Level Up!</h2>
       <p class="subtitle" id="levelup-sub">Choose one upgrade:</p>
       <div id="upgrade-cards" class="cards"></div>
-      <button id="btn-skip-levelup" class="btn">Skip — next stage</button>
+      <button id="btn-skip-levelup" class="btn">Skip — stage end</button>
     </section>
 
     <section id="screen-gameover" class="screen hidden">

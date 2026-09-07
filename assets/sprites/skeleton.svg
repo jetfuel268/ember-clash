@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+  <defs>
+    <linearGradient id="bone" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#efe8d8"/>
+      <stop offset="1" stop-color="#b8ac94"/>
+    </linearGradient>
+    <linearGradient id="boneDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cfc4ac"/>
+      <stop offset="1" stop-color="#948868"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="400" cy="742" rx="200" ry="40" fill="#000" opacity="0.35"/>
+  </g>
+  <g id="legs" stroke="#23263a" stroke-width="10">
+    <rect x="332" y="540" width="58" height="170" rx="26" fill="url(#boneDark)"/>
+    <rect x="410" y="540" width="58" height="170" rx="26" fill="url(#boneDark)"/>
+    <ellipse cx="352" cy="716" rx="48" ry="26" fill="#a89878"/>
+    <ellipse cx="448" cy="716" rx="48" ry="26" fill="#a89878"/>
+  </g>
+  <g id="body" stroke="#23263a" stroke-width="10">
+    <rect x="356" y="380" width="88" height="190" rx="30" fill="url(#bone)"/>
+    <g id="ribs" stroke-width="8">
+      <path d="M 344 420 Q 400 436 456 420" fill="none"/>
+      <path d="M 344 456 Q 400 472 456 456" fill="none"/>
+      <path d="M 344 492 Q 400 508 456 492" fill="none"/>
+      <path d="M 348 528 Q 400 542 452 528" fill="none"/>
+    </g>
+  </g>
+  <g id="arms" stroke="#23263a" stroke-width="10">
+    <rect x="252" y="368" width="52" height="150" rx="24" fill="url(#boneDark)" transform="rotate(14 278 392)"/>
+    <rect x="496" y="368" width="52" height="150" rx="24" fill="url(#boneDark)" transform="rotate(-14 522 392)"/>
+    <circle cx="252" cy="520" r="30" fill="url(#bone)"/>
+    <circle cx="548" cy="520" r="30" fill="url(#bone)"/>
+  </g>
+  <g id="head" stroke="#23263a" stroke-width="10">
+    <path d="M 336 296 C 336 226 356 190 400 190 C 444 190 464 226 464 296 C 464 322 448 334 430 330 L 400 342 L 370 330 C 352 334 336 322 336 296 Z" fill="url(#bone)"/>
+    <circle cx="372" cy="268" r="24" fill="#23263a" stroke="none"/>
+    <circle cx="428" cy="268" r="24" fill="#23263a" stroke="none"/>
+    <circle cx="376" cy="264" r="9" fill="#e8503a" stroke="none"/>
+    <circle cx="432" cy="264" r="9" fill="#e8503a" stroke="none"/>
+    <g id="jaw" stroke="none">
+      <polygon points="378,318 384,336 390,316" fill="#23263a"/>
+      <polygon points="404,322 408,340 414,320" fill="#23263a"/>
+      <polygon points="426,316 432,336 438,318" fill="#23263a"/>
+    </g>
+  </g>
+</svg>

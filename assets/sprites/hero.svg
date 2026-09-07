@@ -22,10 +22,10 @@
     <ellipse cx="400" cy="745" rx="230" ry="42" fill="#000" opacity="0.35"/>
   </g>
   <g id="sword" stroke="#23263a" stroke-width="10">
-    <rect x="172" y="240" width="54" height="390" rx="16" fill="url(#blade)"/>
-    <rect x="136" y="620" width="126" height="36" rx="12" fill="#8a6a20"/>
-    <rect x="184" y="656" width="40" height="92" rx="12" fill="#6a4a18"/>
-    <circle cx="204" cy="770" r="20" fill="url(#pauldron)"/>
+    <rect x="212" y="150" width="54" height="390" rx="16" fill="url(#blade)"/>
+    <rect x="176" y="540" width="126" height="36" rx="12" fill="#8a6a20"/>
+    <rect x="224" y="576" width="40" height="92" rx="12" fill="#6a4a18"/>
+    <circle cx="244" cy="690" r="20" fill="url(#pauldron)"/>
   </g>
   <g id="legs" stroke="#23263a" stroke-width="10">
     <rect x="312" y="556" width="72" height="136" rx="28" fill="url(#metalDark)"/>
@@ -41,8 +41,9 @@
   <g id="arms" stroke="#23263a" stroke-width="10">
     <rect x="248" y="416" width="54" height="134" rx="26" fill="url(#metalDark)"/>
     <rect x="498" y="416" width="54" height="134" rx="26" fill="url(#metalDark)"/>
-    <circle cx="300" cy="398" r="56" fill="url(#pauldron)"/>
-    <circle cx="500" cy="398" r="56" fill="url(#pauldron)"/>
+    <circle cx="244" cy="576" r="28" fill="url(#metalDark)"/>
+    <circle cx="300" cy="372" r="56" fill="url(#pauldron)"/>
+    <circle cx="500" cy="372" r="56" fill="url(#pauldron)"/>
   </g>
   <g id="head" stroke="#23263a" stroke-width="10">
     <path d="M 350 254 C 350 202 366 176 400 176 C 434 176 450 202 450 254 C 450 292 428 308 400 308 C 372 308 350 292 350 254 Z" fill="url(#metal)"/>

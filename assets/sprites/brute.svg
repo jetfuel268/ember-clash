@@ -23,13 +23,15 @@
     <path d="M 340 300 C 360 284 440 284 460 300" fill="none" opacity="0.5"/>
   </g>
   <g id="arms" stroke="#23263a" stroke-width="10">
-    <rect x="180" y="330" width="120" height="64" rx="32" fill="url(#demonDark)" transform="rotate(24 240 362)"/>
-    <rect x="500" y="330" width="120" height="64" rx="32" fill="url(#demonDark)" transform="rotate(-24 560 362)"/>
+    <rect x="180" y="330" width="120" height="64" rx="32" fill="url(#demonDark)" transform="rotate(-24 240 362)"/>
+    <rect x="500" y="330" width="120" height="64" rx="32" fill="url(#demonDark)" transform="rotate(24 560 362)"/>
     <g id="claws" fill="#40e0d0" stroke-width="8">
-      <polygon points="150,430 128,478 168,452"/>
-      <polygon points="168,452 160,502 196,468"/>
-      <polygon points="650,430 672,478 632,452"/>
-      <polygon points="632,452 640,502 604,468"/>
+      <polygon points="198,378 158,392 194,414"/>
+      <polygon points="190,410 152,430 188,444"/>
+      <polygon points="184,440 150,468 184,476"/>
+      <polygon points="602,378 642,392 606,414"/>
+      <polygon points="610,410 648,430 612,444"/>
+      <polygon points="616,440 650,468 616,476"/>
     </g>
   </g>
   <g id="head" stroke="#23263a" stroke-width="10">
