@@ -198,6 +198,12 @@ export class Combat {
     return '';
   }
 
+  givePlayerBuff(b) {
+    if (b.damage) this.p.buffs.damage = { bonus: b.damage.bonus, turns: b.damage.turns };
+    if (b.defense) this.p.buffs.defense = { bonus: b.defense.bonus, turns: b.defense.turns };
+    if (b.hit) this.p.buffs.hit = { bonus: b.hit.bonus, turns: b.hit.turns };
+  }
+
   usePlayerSkill(s, sk) {
     if (sk.hpCostFrac) {
       this.p.hp = Math.max(1, this.p.hp - Math.round(this.p.maxHp * sk.hpCostFrac));
@@ -205,11 +211,7 @@ export class Combat {
     this.bus.emit('log', { text: `You use ${sk.name}!`, kind: 'player' });
     this.bus.emit('sfx', { name: 'skill' });
 
-    if (sk.buff) {
-      if (sk.buff.damage) this.p.buffs.damage = { bonus: sk.buff.damage.bonus, turns: sk.buff.damage.turns };
-      if (sk.buff.defense) this.p.buffs.defense = { bonus: sk.buff.defense.bonus, turns: sk.buff.defense.turns };
-      if (sk.buff.hit) this.p.buffs.hit = { bonus: sk.buff.hit.bonus, turns: sk.buff.hit.turns };
-    }
+    if (sk.buff) this.givePlayerBuff(sk.buff);
     if (sk.healFrac) {
       const heal = Math.round(this.p.maxHp * sk.healFrac);
       this.p.hp = Math.min(this.p.maxHp, this.p.hp + heal);
@@ -262,6 +264,7 @@ export class Combat {
           this.bus.emit('log', { text: `You drain ${heal} HP.`, kind: 'player' });
         }
         if (sk.extraActionOnHit) this.p.extraAction = true;
+        if (sk.buffOnHit) this.givePlayerBuff(sk.buffOnHit);
       }
       this.lastKillBonus = sk.killBonus ?? null;
     }

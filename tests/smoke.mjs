@@ -88,6 +88,19 @@ function newSave() {
   assert.ok(poolFor(3).some((s) => s.pool[0] <= 3 && s.pool[1] >= 3), 'pool 1-9 non-empty at lv3');
   assert.ok(!poolFor(3).some((s) => s.pool[0] > 3), 'no 10+ skills at lv3');
   assert.ok(poolFor(15).some((s) => s.pool[0] >= 10), 'pool 10-19 present at lv15');
+  // Cost 50-60 skills are only learnable at levels 11-13.
+  const pricey = (lv) => poolFor(lv).filter((s) => s.cost >= 50 && s.cost <= 60);
+  for (const lv of [1, 5, 9, 10, 14, 19, 25]) {
+    assert.equal(pricey(lv).length, 0, `no 50-60 cost skills at lv${lv}`);
+  }
+  assert.ok(pricey(11).length >= 3, '50-60 cost skills present at lv11');
+  assert.ok(pricey(12).length >= 3 && pricey(13).length >= 3, '50-60 cost skills present through lv13');
+  // Early pool carries the cheaper variants of the pricey skills.
+  const earlyIds = poolFor(3).map((s) => s.id);
+  assert.ok(earlyIds.includes('minormend'), 'early pool has the cheaper heal (Minor Mend)');
+  assert.ok(earlyIds.includes('swiftedge'), 'early pool has the cheaper on-hit skill (Swift Edge)');
+  assert.ok(earlyIds.includes('emberjab') && earlyIds.includes('frostbrand') && earlyIds.includes('arcbolt'),
+    'early pool has the 150% element variants of the 225% trios');
   for (let i = 0; i < 50; i++) {
     const pick = pickSkillToLearn(15, [], makeRng(i));
     if (pick) assert.ok(pick.pool[0] <= 15 && pick.pool[1] >= 15, 'pick matches level range');
@@ -221,6 +234,7 @@ async function testElementSkills() {
   // Fire is 1.5x vs beasts, 0.5x vs demons.
   const p = newPlayer(3);
   p.stats0.magic = 100;
+  p.stats0.critChance = 0; // keep comparisons deterministic (no crits)
   p.skills = ['emberjab', 'powerstrike'];
   const beast = createEnemy(1);
   beast.type = 'beast';
@@ -228,12 +242,12 @@ async function testElementSkills() {
   const c = new Combat(p, beast, new EventBus());
   c.start();
   c.p.guarantee = true;
-  c.p.critChance = 0; // keep the weak>resisted comparison deterministic
   c.act('skill', 'emberjab');
   const vsWeak = 300 - c.e.hp;
 
   const p2 = newPlayer(3);
   p2.stats0.magic = 100;
+  p2.stats0.critChance = 0;
   p2.skills = ['emberjab', 'powerstrike'];
   const demon = createEnemy(1);
   demon.type = 'demon';
@@ -241,7 +255,6 @@ async function testElementSkills() {
   const c2 = new Combat(p2, demon, new EventBus());
   c2.start();
   c2.p.guarantee = true;
-  c2.p.critChance = 0;
   c2.act('skill', 'emberjab');
   const vsResist = 300 - c2.e.hp;
   assert.ok(vsWeak > vsResist, `fire weakness vs beast (${vsWeak}) > resistance vs demon (${vsResist})`);
@@ -249,6 +262,7 @@ async function testElementSkills() {
   // Advanced tier is strictly stronger than the basic tier.
   const p3 = newPlayer(3);
   p3.stats0.magic = 100;
+  p3.stats0.critChance = 0;
   p3.skills = ['pyroclasm', 'emberjab'];
   const beast3 = createEnemy(1);
   beast3.type = 'beast';
@@ -256,7 +270,6 @@ async function testElementSkills() {
   const c3 = new Combat(p3, beast3, new EventBus());
   c3.start();
   c3.p.guarantee = true;
-  c3.p.critChance = 0;
   c3.act('skill', 'pyroclasm');
   const adv = 300 - c3.e.hp;
   assert.ok(adv > vsWeak, `advanced tier (${adv}) > basic tier (${vsWeak})`);
@@ -381,11 +394,41 @@ async function testHpCarryover() {
   assert.equal(c2.p.hp, 40, 'battle starts with carried-over HP (no heal)');
 }
 
+// --- Early-pool variants: Minor Mend heals, Swift Edge grants on-hit buff --
+async function testEarlyVariants() {
+  TUNING.combat.enemyActionDelayMs = 0;
+  const tick = () => new Promise((r) => setTimeout(r, 30));
+  const p = newPlayer(3);
+  p.stats0.magic = 100;
+  p.skills = ['minormend', 'swiftedge', 'powerstrike'];
+  const e = createEnemy(1);
+  e.maxHp = 300; e.hp = 300;
+  e.armor = 0;
+  const c = new Combat(p, e, new EventBus());
+  c.start();
+  c.p.guarantee = true; // hits land
+  // Minor Mend: heals 15% of max HP.
+  c.p.hp = Math.max(1, Math.round(c.p.maxHp * 0.5));
+  const before = c.p.hp;
+  c.act('skill', 'minormend');
+  await tick(); // let the enemy turn resolve so busy clears
+  assert.ok(c.p.hp > Math.round(c.p.maxHp * 0.5),
+    `Minor Mend raised HP above the 50% floor (hp ${c.p.hp})`);
+  assert.ok(c.p.hp <= Math.round(c.p.maxHp * 0.65) + 20,
+    `Minor Mend heals ~15% (not more), even after an enemy hit (hp ${c.p.hp})`);
+  // Swift Edge: on a hit, grants +20% damage for 2 turns.
+  assert.ok(!c.p.buffs.damage, 'no damage buff before Swift Edge');
+  c.act('skill', 'swiftedge');
+  assert.ok(c.p.buffs.damage && c.p.buffs.damage.bonus === 0.2 && c.p.buffs.damage.turns === 2,
+    `Swift Edge grants +20% dmg buff on hit (got ${JSON.stringify(c.p.buffs.damage)})`);
+}
+
 async function main() {
   await testCombatBasics();
   await testHpCarryover();
   await testTypeSkills();
   await testElementSkills();
+  await testEarlyVariants();
   const win = await playBossFight(23, UPGRADES.filter((u) => ['sharp', 'iron', 'crit'].includes(u.id)));
   assert.ok(win, `Lv 23 player (with upgrades) defeats the stage-50 final boss (shortened)`);
 }
