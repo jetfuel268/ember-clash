@@ -86,9 +86,55 @@ const e10 = createEnemy(10);
 assert(e10.boss === true, 'stage 10 is a boss stage');
 assert(e5.boss === false, 'stage 5 is not a boss');
 assert(e1.boss === false, 'stage 1 is not a boss');
+assert(e10.critChance > 0 && e10.critDamage > 1, 'enemies have crit stats');
+assert(e10.critChance > e1.critChance, 'enemy crit scales with stage');
+const ps5 = new Player({ level: 5, xp: 0, gold: 0, upgrades: [] }).stats();
+const ps9 = new Player({ level: 9, xp: 0, gold: 0, upgrades: [] }).stats();
+assert(ps9.defense > ps5.defense && ps9.evasion > ps5.evasion, 'player defense and evasion scale with level');
+const e50 = createEnemy(50);
+
+// --- Level curve: a clean run (49 stage wins) lands in Lv 22-25 at the final boss ---
+let cleanRunLevel = 0;
+{
+  const sv = DEFAULT_SAVE();
+  const prog = new Progression(new Player(sv.player), sv);
+  for (let s = 1; s <= 49; s++) prog.onStageWon(s);
+  cleanRunLevel = prog.player.level;
+  assert(cleanRunLevel >= 22 && cleanRunLevel <= 25, `clean run reaches Lv 22-25 by stage 50 (got Lv ${cleanRunLevel})`);
+}
+assert(e50.maxHp > 700 && e50.atk > 55, 'final boss keeps full stage-50 stats (uncapped)');
+
+// --- Final boss winnability: a clean-run player actually beats Umbra ---
+async function playBossFight(level, upgrades) {
+  const bus = new EventBus();
+  const pl = new Player({ level, xp: 0, gold: 0, upgrades });
+  const c = new Combat(pl, createEnemy(50), bus);
+  let phase = null;
+  bus.on('phase', (d) => { phase = d.value; });
+  const oldDelay = TUNING.combat.enemyActionDelayMs;
+  TUNING.combat.enemyActionDelayMs = 30; // speed up the simulation
+  c.start();
+  const iv = setInterval(() => {
+    if (c.done) return;
+    if (c.p.hp / c.p.maxHp < 0.45 && c.canAct('potion')) c.act('potion');
+    else if (c.p.energy >= 25 && c.canAct('power')) c.act('power');
+    else if (c.canAct('attack')) c.act('attack');
+  }, 5);
+  const result = await new Promise((resolve) => {
+    const t = setTimeout(() => resolve('timeout'), 30000);
+    const ch = setInterval(() => { if (c.done) { clearTimeout(t); clearInterval(ch); resolve(phase); } }, 25);
+  });
+  clearInterval(iv);
+  TUNING.combat.enemyActionDelayMs = oldDelay;
+  return result;
+}
+const bossResult = await playBossFight(
+  cleanRunLevel,
+  ['crit', 'crit', 'crip', 'crip', 'lung', 'lung', 'sharp', 'sharp']
+);
+assert(bossResult === 'victory', `clean-run player (Lv ${cleanRunLevel}, typical upgrades) defeats Umbra (got ${bossResult})`);
 const e2 = createEnemy(2, 0);
 assert(e2.maxHp > e1.maxHp && e2.atk >= e1.atk, 'enemy stats scale with stage (same base)');
-const e50 = createEnemy(50);
 assert(e50.boss === true && e50.name === 'Umbra, Dark Reflection', 'stage 50 is the final boss');
 assert(e50.maxHp > e5.maxHp, 'final boss out-scales a regular boss');
 
@@ -125,7 +171,7 @@ function playFight(stage, seedAction) {
 }
 
 await playFight(1, (opts) => opts[0]);
-await playFight(5, (opts) => opts[opts.length - 1]);
+await playFight(5, (opts) => (opts.includes('attack') ? 'attack' : opts[0]));
 assert(true, 'combat fights terminate (no infinite loops)');
 
 console.log(failures === 0 ? '\nALL TESTS PASSED' : `\n${failures} FAILURES`);

@@ -19,6 +19,11 @@ export class Player {
       critChance: TUNING.player.baseCritChance,
       critDamage: TUNING.player.baseCritDamage,
       hit: Math.min(0.8 + (this.level - 1) * 0.01, 0.9),
+      defense: (this.level - 1) * TUNING.player.defenseGainPerLevel,
+      evasion: Math.min(
+        TUNING.player.evasionBase + (this.level - 1) * TUNING.player.evasionPerLevel,
+        TUNING.player.evasionCap
+      ),
       attackEnergy: TUNING.combat.attackEnergyGain,
       goldBonus: 0,
       potionHeal: TUNING.player.potionHeal,

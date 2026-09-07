@@ -9,8 +9,12 @@ export const TUNING = {
     potionHeal: 0.35, // fraction of maxHp
     baseStartPotions: 2,
     maxPotions: 9,
-    attackGainPerLevel: 1,
-    hpGainPerLevel: 8,
+    attackGainPerLevel: 2,
+    hpGainPerLevel: 12,
+    defenseGainPerLevel: 1,
+    evasionBase: 0.03,
+    evasionPerLevel: 0.005,
+    evasionCap: 0.15,
   },
   combat: {
     damageVariance: 0.15, // +/- fraction
@@ -47,6 +51,13 @@ export const TUNING = {
     weights: { attack: 60, charge: 12, defend: 12, skill: 16 },
     enemyHitBase: 0.6,
     enemyHitPerStage: 0.02,
-    playerEvasion: 0.05,
+  },
+  enemyCrit: {
+    base: 0.05,
+    perStage: 0.005,
+    cap: 0.2,
+    dmgBase: 1.5,
+    dmgPerStage: 0.02,
+    dmgCap: 2.0,
   },
 };

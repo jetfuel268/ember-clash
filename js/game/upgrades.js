@@ -8,7 +8,7 @@ import { TUNING } from '../config/tuning.js';
 
 export const UPGRADES = [
   { id: 'sharp', name: 'Sharp Edge', emoji: '🗡️', desc: '+2 Attack per stack', max: 5, effect: { attack: 2 } },
-  { id: 'iron', name: 'Iron Hide', emoji: '🛡️', desc: '+20 Max HP per stack', max: 5, effect: { maxHp: 20 } },
+  { id: 'iron', name: 'Iron Hide', emoji: '🛡️', desc: '+20 Max HP, +1 Defense per stack', max: 5, effect: { maxHp: 20, defense: 1 } },
   { id: 'lung', name: 'Deep Lungs', emoji: '🌀', desc: '+15 Max Energy per stack', max: 3, effect: { maxEnergy: 15 } },
   { id: 'frenzy', name: 'Frenzy', emoji: '⚡', desc: '+3 Energy on basic attack per stack', max: 3, effect: { attackEnergy: 3 } },
   { id: 'crit', name: 'Critical Focus', emoji: '🎯', desc: '+8% Crit Chance per stack', max: 3, effect: { critChance: 0.08 } },

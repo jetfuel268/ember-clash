@@ -67,6 +67,14 @@ export function createEnemy(stage, baseIndex) {
   const atk = Math.round(base.atk * atkScale * atkMult);
   const evasion = Math.min(0.05 + t.stage.enemyEvasionPerStage * (stage - 1) + (boss ? 0.05 : 0), 0.2);
   const armor = Math.floor((stage - 1) / 4);
+  const critChance = Math.min(
+    t.enemyCrit.base + t.enemyCrit.perStage * (stage - 1) + (boss ? 0.05 : 0),
+    t.enemyCrit.cap
+  );
+  const critDamage = Math.min(
+    t.enemyCrit.dmgBase + t.enemyCrit.dmgPerStage * (stage - 1),
+    t.enemyCrit.dmgCap
+  );
   return {
     id: base.id,
     name: base.name,
@@ -79,6 +87,8 @@ export function createEnemy(stage, baseIndex) {
     atk,
     evasion,
     armor,
+    critChance,
+    critDamage,
     boss,
     stage,
   };

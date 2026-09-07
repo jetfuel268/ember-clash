@@ -3,8 +3,9 @@
 //
 // Extra events (see core/events.js):
 //   'sfx'  { name: 'miss'|'defend'|'potion'|'skill'|'hurt' }
-//   state payload also carries: player.hit, player.evasion, player.buffs,
-//   player.skills (id -> uses left), enemy.evasion, enemy.armor, enemy.buffs
+//   state payload also carries: player.hit, player.defense, player.evasion, player.buffs,
+//   player.skills (id -> uses left), enemy.evasion, enemy.armor, enemy.critChance,
+//   enemy.critDamage, enemy.buffs
 import { TUNING } from '../config/tuning.js';
 import { rollIntent, INTENT_LABELS, TYPES } from './enemies.js';
 import { SKILL_MAP } from './skills.js';
@@ -169,23 +170,26 @@ export class Combat {
       const mult =
         (intent === 'charge' ? TUNING.combat.enemyChargeMultiplier : 1) *
         (charged ? TUNING.combat.enemyChargeMultiplier : 1);
+      const ps = this.player.stats();
       const variance = 1 + (Math.random() * 2 - 1) * TUNING.combat.damageVariance;
       let dmg = Math.max(1, Math.round(this.enemy.atk * mult * variance * (1 + (this.e.buffs.damage?.bonus ?? 0))));
-      const hitChance = clamp(this.eHit + (this.e.buffs.hit?.bonus ?? 0) - TUNING.enemyAi.playerEvasion, 0.05, 0.95);
+      const hitChance = clamp(this.eHit + (this.e.buffs.hit?.bonus ?? 0) - ps.evasion, 0.05, 0.95);
       if (chance(1 - hitChance)) {
         this.bus.emit('log', { text: `${this.enemy.name} misses!`, kind: 'enemy' });
         this.bus.emit('sfx', { name: 'miss' });
       } else {
+        const crit = chance(this.enemy.critChance);
         const defending = this.p.defending;
         const defendMult = 1 - Math.max(
           defending ? TUNING.combat.defendReduction : 0,
           this.p.buffs.defense?.bonus ?? 0
         );
         if (defending) this.p.defending = false;
-        dmg = Math.max(1, Math.round(dmg * defendMult));
+        dmg = Math.max(1, Math.round(dmg * defendMult) - ps.defense);
+        if (crit) dmg = Math.max(dmg, Math.round(dmg * this.enemy.critDamage));
         this.p.hp = Math.max(0, this.p.hp - dmg);
-        this.bus.emit('log', { text: `${this.enemy.name} hits you for ${dmg}.`, kind: 'enemy' });
-        this.bus.emit('hit', { target: 'player', crit: false });
+        this.bus.emit('log', { text: `${crit ? 'CRITICAL! ' : ''}${this.enemy.name} hits you for ${dmg}.`, kind: 'enemy' });
+        this.bus.emit('hit', { target: 'player', crit });
         this.bus.emit('sfx', { name: 'hurt' });
       }
     }
@@ -227,6 +231,7 @@ export class Combat {
   }
 
   pushState() {
+    const ps = this.player.stats();
     this.bus.emit('state', {
       player: {
         hp: this.p.hp,
@@ -235,7 +240,9 @@ export class Combat {
         maxEnergy: this.p.maxEnergy,
         potions: this.p.potions,
         defending: this.p.defending,
-        hit: this.player.stats().hit,
+        hit: ps.hit,
+        defense: ps.defense,
+        evasion: ps.evasion,
         buffs: this.describeBuffs(this.p),
         skills: { ...this.p.skillUses },
       },
@@ -254,6 +261,8 @@ export class Combat {
         boss: this.enemy.boss,
         evasion: this.enemy.evasion,
         armor: this.enemy.armor,
+        critChance: this.enemy.critChance,
+        critDamage: this.enemy.critDamage,
         buffs: this.describeBuffs(this.e),
       },
     });
