@@ -35,7 +35,7 @@ export const TUNING = {
   },
   stage: {
     bossEvery: 5,
-    victoryStage: 10,
+    victoryStage: 50,
     enemyHpPerStage: 0.12,
     enemyAtkPerStage: 0.08,
     enemyEvasionPerStage: 0.004,

@@ -86,6 +86,9 @@ assert(e5.boss === true, 'stage 5 is a boss stage');
 assert(e1.boss === false, 'stage 1 is not a boss');
 const e2 = createEnemy(2, 0);
 assert(e2.maxHp > e1.maxHp && e2.atk >= e1.atk, 'enemy stats scale with stage (same base)');
+const e50 = createEnemy(50);
+assert(e50.boss === true && e50.name === 'Umbra, Dark Reflection', 'stage 50 is the final boss');
+assert(e50.maxHp > e5.maxHp, 'final boss out-scales a regular boss');
 
 // --- Combat state machine: play full fights, must terminate ---
 function playFight(stage, seedAction) {

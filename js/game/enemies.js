@@ -32,8 +32,14 @@ const BOSSES = [
   { id: 'colossus', name: 'Revenant Colossus', sprite: 'wyvern', type: 'beast', skills: ['enrage', 'venom'] },
 ];
 
-// All discoverable bestiary ids (BASES ids + boss ids).
-export const KNOWN_ENEMY_IDS = [...BASES.map((b) => b.id), ...BOSSES.map((b) => b.id)];
+// The stage-50 final boss: a dark mirror of the hero.
+const FINAL_BOSS = {
+  id: 'umbra', name: 'Umbra, Dark Reflection', sprite: 'dreadknight',
+  type: 'undead', hp: 70, atk: 11, skills: ['shell', 'enrage'],
+};
+
+// All discoverable bestiary ids (BASES ids + boss ids + final boss).
+export const KNOWN_ENEMY_IDS = [...BASES.map((b) => b.id), ...BOSSES.map((b) => b.id), FINAL_BOSS.id];
 
 export function isBossStage(stage) {
   return stage % TUNING.stage.bossEvery === 0;
@@ -46,7 +52,9 @@ export function createEnemy(stage, baseIndex) {
   const boss = isBossStage(stage);
 
   let base;
-  if (boss) {
+  if (stage === TUNING.stage.victoryStage) {
+    base = { ...FINAL_BOSS };
+  } else if (boss) {
     const b = BOSSES[(stage / t.stage.bossEvery - 1) % BOSSES.length];
     base = { hp: 60, atk: 10, id: b.id, name: b.name, sprite: b.sprite, type: b.type, skills: b.skills };
   } else {

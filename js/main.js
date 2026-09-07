@@ -4,7 +4,7 @@ import { EventBus } from './core/events.js';
 import { SaveStore } from './core/save.js';
 import { Player } from './game/player.js';
 import { Progression } from './game/progression.js';
-import { createEnemy, isBossStage, KNOWN_ENEMY_IDS } from './game/enemies.js';
+import { createEnemy, KNOWN_ENEMY_IDS } from './game/enemies.js';
 import { Combat } from './game/combat.js';
 import { stackCount, xpForNext } from './game/upgrades.js';
 import { SKILLS } from './game/skills.js';
@@ -27,12 +27,11 @@ const progression = new Progression(player, save);
 let combat = null;
 let pending = null; // stage reward, held until the player moves on
 
-// Environments rotate every 3 stages; bosses always fight in the stone keep.
-const ENVIRONMENTS = ['arena', 'forest', 'cavern'];
+// Environments: 5 biomes of 10 stages each (bosses fight in their own tier's
+// environment; past stage 50 the cycle repeats in endless mode).
+const ENV_TIERS = ['forest', 'cavern', 'arena', 'walkway', 'darkcastle'];
 function setEnvironment(stage) {
-  const name = isBossStage(stage)
-    ? 'arena'
-    : ENVIRONMENTS[Math.floor((stage - 1) / 3) % ENVIRONMENTS.length];
+  const name = ENV_TIERS[Math.floor((stage - 1) / 10) % ENV_TIERS.length];
   document.getElementById('battlefield').style.backgroundImage =
     `url('assets/bg/${name}.png')`;
 }

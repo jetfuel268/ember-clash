@@ -12,9 +12,12 @@ step required — the project root **is** the production build.
 
 **Progression:** each stage win grants XP and gold. XP levels you up; each level
 offers a choice of 3 stackable upgrades (attack, HP, energy, crit, potions, gold).
-A **boss** appears every 5 stages, the campaign is **won at stage 10**, and you
-can continue into endless mode with escalating enemies. Losing sends you back to
-the same stage. All progress is persisted in `localStorage`.
+A **boss** appears every 5 stages, the campaign is **won at stage 50** — the
+final boss (Umbra, Dark Reflection) — and you can continue into endless mode
+with escalating enemies. The campaign spans **5 biomes of 10 stages each**
+(forest, crystal cavern, dungeon, mountain walkway, dark castle), with bosses
+fighting in their own biome. Losing sends you back to the same stage. All
+progress is persisted in `localStorage`.
 
 ## Running locally
 
@@ -75,7 +78,7 @@ assets/sprites/       Hand-crafted vector SVG characters (primitives + Bezier pa
 js/config/tuning.js   Every balance number. Tune the game here only.
 js/core/events.js     Tiny typed event bus — the contract between game and UI
 js/core/rng.js        Random helpers
-js/core/save.js       Versioned localStorage persistence (key: combat-game.save.v1)
+js/core/save.js       Versioned localStorage persistence (key: combat-game.save.v2)
 js/game/player.js     Player model: persisted fields + derived stats
 js/game/upgrades.js   Data-driven upgrade catalog + XP curve (add an entry to add an upgrade)
 js/game/enemies.js    Enemy types, bosses, per-stage scaling, AI intents
