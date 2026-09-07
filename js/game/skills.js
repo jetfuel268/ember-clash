@@ -13,7 +13,7 @@ export const SKILLS = [
   {
     id: 'powerstrike',
     name: 'Power Strike',
-    desc: 'A heavy blow dealing 150% damage.',
+    desc: 'A 150% ⚔️ attack.',
     cost: 25,
     starter: true,
     type: 'damage',
@@ -63,7 +63,7 @@ export const SKILLS = [
   {
     id: 'doublestrike',
     name: 'Double Strike',
-    desc: 'Strike twice at basic strength. Each hit can miss and crit.',
+    desc: 'Two 100% 🔨 attacks. Each hit can miss and crit.',
     cost: 30,
     pool: [1, 9],
     type: 'damage',
@@ -97,7 +97,7 @@ export const SKILLS = [
   {
     id: 'poisonedblade',
     name: 'Poisoned Blade',
-    desc: 'Attack and poison the enemy (damage over time).',
+    desc: 'A 100% 🔨 attack that poisons the enemy (damage over time).',
     cost: 20,
     pool: [1, 9],
     type: 'damage',
@@ -107,7 +107,7 @@ export const SKILLS = [
   {
     id: 'emberjab',
     name: 'Ember Jab 🔥',
-    desc: 'A fire attack dealing 150% damage.',
+    desc: 'A 150% 🔥 attack.',
     cost: 25,
     pool: [1, 9],
     type: 'damage',
@@ -117,7 +117,7 @@ export const SKILLS = [
   {
     id: 'frostbrand',
     name: 'Frost Brand ❄️',
-    desc: 'An ice attack dealing 150% damage.',
+    desc: 'A 150% ❄️ attack.',
     cost: 25,
     pool: [1, 9],
     type: 'damage',
@@ -127,7 +127,7 @@ export const SKILLS = [
   {
     id: 'arcbolt',
     name: 'Arc Bolt ⚡',
-    desc: 'A lightning attack dealing 150% damage.',
+    desc: 'A 150% ⚡ attack.',
     cost: 25,
     pool: [1, 9],
     type: 'damage',
@@ -137,7 +137,7 @@ export const SKILLS = [
   {
     id: 'swiftedge',
     name: 'Swift Edge',
-    desc: 'Deal 125% damage. If it hits, gain +20% damage for 2 turns.',
+    desc: 'A 125% 🔨 attack. If it hits, gain +20% damage for 2 turns.',
     cost: 25,
     pool: [1, 9],
     type: 'damage',
@@ -149,7 +149,7 @@ export const SKILLS = [
   {
     id: 'embersnap',
     name: 'Ember Snap 🔥',
-    desc: 'A quick fire attack dealing 100% damage.',
+    desc: 'A 100% 🔥 attack.',
     cost: 15,
     pool: [1, 9],
     type: 'damage',
@@ -159,7 +159,7 @@ export const SKILLS = [
   {
     id: 'frostenip',
     name: 'Frost Nip ❄️',
-    desc: 'A quick ice attack dealing 100% damage.',
+    desc: 'A 100% ❄️ attack.',
     cost: 15,
     pool: [1, 9],
     type: 'damage',
@@ -169,7 +169,7 @@ export const SKILLS = [
   {
     id: 'staticzap',
     name: 'Static Zap ⚡',
-    desc: 'A quick lightning attack dealing 100% damage.',
+    desc: 'A 100% ⚡ attack.',
     cost: 15,
     pool: [1, 9],
     type: 'damage',
@@ -180,7 +180,7 @@ export const SKILLS = [
   {
     id: 'vampirefang',
     name: 'Vampire Fang',
-    desc: 'Attack and heal for 50% of the damage dealt.',
+    desc: 'A 100% 🔨 attack; heal for 50% of the damage dealt.',
     cost: 35,
     pool: [10, 19],
     type: 'damage',
@@ -190,7 +190,7 @@ export const SKILLS = [
   {
     id: 'reckless',
     name: 'Reckless Strike',
-    desc: 'Deal 175% damage, but lose 20% of your max ❤️.',
+    desc: 'A 175% 🔨 attack, but you lose 20% of your max ❤️.',
     cost: 0,
     pool: [10, 19],
     type: 'damage',
@@ -200,7 +200,7 @@ export const SKILLS = [
   {
     id: 'giantswing',
     name: "Giant's Swing",
-    desc: 'Charge your weapon. Your next attack deals 175% damage.',
+    desc: 'Charge your ⚔️. Your next attack deals 175% damage.',
     cost: 40,
     pool: [10, 19],
     chargeMult: 1.75,
@@ -225,7 +225,7 @@ export const SKILLS = [
   {
     id: 'greedystab',
     name: 'Greedy Stab',
-    desc: 'Deal 25% damage. Doubles the gold if it kills.',
+    desc: 'A 25% 🔨 attack. Doubles the gold if it kills.',
     cost: 25,
     pool: [10, 19],
     type: 'damage',
@@ -235,7 +235,7 @@ export const SKILLS = [
   {
     id: 'surgicalslice',
     name: 'Surgical Slice',
-    desc: 'Deal 25% damage. Doubles the XP if it kills.',
+    desc: 'A 25% 🔨 attack. Doubles the XP if it kills.',
     cost: 25,
     pool: [10, 19],
     type: 'damage',
@@ -245,7 +245,7 @@ export const SKILLS = [
   {
     id: 'beasthunter',
     name: 'Beasthunter',
-    desc: 'Deal 150% damage, 200% against beasts.',
+    desc: 'A 150% 🔨 attack, 200% against beasts.',
     cost: 30,
     pool: [10, 19],
     type: 'damage',
@@ -256,7 +256,7 @@ export const SKILLS = [
   {
     id: 'undeadbane',
     name: 'Undead Bane',
-    desc: 'Deal 150% damage, 200% against undead.',
+    desc: 'A 150% 🔨 attack, 200% against undead.',
     cost: 30,
     pool: [10, 19],
     type: 'damage',
@@ -267,7 +267,7 @@ export const SKILLS = [
   {
     id: 'pyroclasm',
     name: 'Pyroclasm 🔥',
-    desc: 'A devastating fire attack dealing 225% damage.',
+    desc: 'A devastating 225% 🔥 attack.',
     cost: 50,
     pool: [11, 13],
     type: 'damage',
@@ -277,7 +277,7 @@ export const SKILLS = [
   {
     id: 'permafrost',
     name: 'Permafrost ❄️',
-    desc: 'A crushing ice attack dealing 225% damage.',
+    desc: 'A crushing 225% ❄️ attack.',
     cost: 50,
     pool: [11, 13],
     type: 'damage',
@@ -287,7 +287,7 @@ export const SKILLS = [
   {
     id: 'stormcall',
     name: 'Stormcall ⚡',
-    desc: 'A blinding lightning attack dealing 225% damage.',
+    desc: 'A blinding 225% ⚡ attack.',
     cost: 50,
     pool: [11, 13],
     type: 'damage',
@@ -300,7 +300,7 @@ export const SKILLS = [
   {
     id: 'trueedge',
     name: 'True Edge',
-    desc: 'Deal 125% damage, ignoring armor.',
+    desc: 'A 125% 🔨 attack, ignoring armor.',
     cost: 30,
     pool: [20, 999],
     type: 'damage',
@@ -310,7 +310,7 @@ export const SKILLS = [
   {
     id: 'opportune',
     name: 'Opportune Moment',
-    desc: 'Attack. If it hits, you act again.',
+    desc: 'A 100% 🔨 attack. If it hits, you act again.',
     cost: 60,
     pool: [11, 13],
     type: 'damage',
@@ -320,7 +320,7 @@ export const SKILLS = [
   {
     id: 'volley',
     name: 'Volley',
-    desc: 'Strike three times at 70% strength. Each hit can miss and crit.',
+    desc: 'Three 70% 🔨 attacks. Each hit can miss and crit.',
     cost: 40,
     pool: [20, 999],
     type: 'damage',

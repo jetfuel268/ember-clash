@@ -64,6 +64,7 @@ export class HUD {
     this.el.playerHpText.textContent = `❤️ ${p.hp} / ${p.maxHp}`;
     this.el.playerEnergy.style.width = `${(p.energy / p.maxEnergy) * 100}%`;
     this.el.playerEnergyText.textContent = `⭐ ${p.energy} / ${p.maxEnergy}`;
+    this.el.actions.attack.textContent = p.swing > 1 ? 'Attack (Charged) ⚔️' : 'Attack 🔨';
     this.renderBuffs(this.el.playerBuffs, p.buffs);
     this.el.enemyHp.style.width = `${(e.hp / e.maxHp) * 100}%`;
     this.el.enemyHpText.textContent = `❤️ ${e.hp} / ${e.maxHp}`;

@@ -437,6 +437,7 @@ export class Combat {
         items: { ...this.p.items },
         equipment: { ...this.player.equipment },
         defending: this.p.defending,
+        swing: this.p.swing,
         hit: ps.hit,
         defense: ps.defense,
         evasion: ps.evasion,

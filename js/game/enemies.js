@@ -30,7 +30,7 @@ export function elementSummary(type) {
 
 export function weaknessOf(type) {
   const t = TYPES[type];
-  return t.blunt >= t.slash ? 'Blunt (Attack)' : 'Slash (Power Strike)';
+  return t.blunt >= t.slash ? '🔨 Blunt (Attack)' : '⚔️ Slash (Power Strike)';
 }
 
 // Regular (non-boss) enemies. Adding an enemy = adding an entry here.
