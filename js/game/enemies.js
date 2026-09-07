@@ -3,13 +3,29 @@ import { TUNING } from '../config/tuning.js';
 import { pick, weightedPick } from '../core/rng.js';
 
 // Creature-based types. `slash` = Power Strike multiplier, `blunt` = Attack.
+// `element` = strengths (1.5x) and weaknesses (0.5x) of the creature against
+// fire / ice / lightning *attacks*. (The elements are attack types only —
+// there are no fire/ice/lightning monsters.)
 export const TYPES = {
-  beast: { label: 'Beast', slash: 1.0, blunt: 1.0 },
-  demon: { label: 'Demon', slash: 1.25, blunt: 0.75 },
-  undead: { label: 'Undead', slash: 0.75, blunt: 1.25 },
-  insect: { label: 'Insect', slash: 0.75, blunt: 1.25 },
-  construct: { label: 'Construct', slash: 0.9, blunt: 0.9 },
+  beast: { label: 'Beast', slash: 1.0, blunt: 1.0, element: { fire: 1.5, ice: 0.5, lightning: 1.0 } },
+  demon: { label: 'Demon', slash: 1.25, blunt: 0.75, element: { fire: 0.5, ice: 1.5, lightning: 1.0 } },
+  undead: { label: 'Undead', slash: 0.75, blunt: 1.25, element: { fire: 0.5, ice: 1.0, lightning: 1.5 } },
+  insect: { label: 'Insect', slash: 0.75, blunt: 1.25, element: { fire: 1.0, ice: 1.5, lightning: 0.5 } },
+  construct: { label: 'Construct', slash: 0.9, blunt: 0.9, element: { fire: 1.0, ice: 0.5, lightning: 1.5 } },
 };
+
+// Human-readable element line for the bestiary, e.g. "weak to lightning, resists fire".
+export function elementSummary(type) {
+  const el = TYPES[type]?.element;
+  if (!el) return '';
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  const weak = Object.entries(el).filter(([, m]) => m > 1).map(([k]) => cap(k));
+  const res = Object.entries(el).filter(([, m]) => m < 1).map(([k]) => cap(k));
+  const parts = [];
+  if (weak.length) parts.push(`weak to ${weak.join(', ')}`);
+  if (res.length) parts.push(`resists ${res.join(', ')}`);
+  return parts.join(', ');
+}
 
 export function weaknessOf(type) {
   const t = TYPES[type];

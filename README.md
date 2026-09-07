@@ -11,8 +11,12 @@ step required — the project root **is** the production build.
   matching your new level; with all 4 slots full you choose which skill to
   replace. Skills cost **energy** — energy is the only gate — and it
   regenerates each turn from your **Magic** stat. The pool includes damage,
-  buff, heal, and type-specific skills (e.g. Beasthunter is 200% against
-  beasts) — check the Bestiary for type matchups.
+  buff, heal, type-specific skills (e.g. Beasthunter is 200% against
+  beasts), and **element skills** (fire / ice / lightning). Elements are
+  attack types only: every creature has an element profile (one weakness
+  at 1.5×, one resistance at 0.5×, one neutral), so Ember Jab (fire) hits
+  beasts hard but is resisted by demons, and so on — the Bestiary shows
+  each creature's element profile.
 - **Items** (Potion, Energy Vial, Elixir) are **single-use**, bought in the
   shop, consumed in battle. Nothing restores between levels: you heal a small
   fraction on stage wins, and **sleep in a shop bed** (cost scales with the

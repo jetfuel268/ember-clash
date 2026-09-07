@@ -127,13 +127,21 @@ export class Combat {
     setTimeout(() => this.enemyTurn(), TUNING.combat.enemyActionDelayMs);
   }
 
-  // One player strike. `typeKey` selects the type matchup (slash = charged
+  // One player strike. `typeKey` selects the weapon matchup (slash = charged
   // weapon, blunt = basic attack); `vsType`/`vsMult` override the matchup for
-  // type-specific skills. Returns { dmg, crit, hit }.
-  playerStrike(s, mult, { typeKey = 'blunt', forceHit = false, ignoreArmor = false, vsType = null, vsMult = null }) {
-    const typeMult = TYPES[this.enemy.type][typeKey];
-    const totalMult =
-      vsType && this.enemy.type === vsType ? vsMult : mult * typeMult;
+  // type-specific skills; `element` selects the element affinity (fire/ice/
+  // lightning) and bypasses the weapon matchup (magic, not a weapon).
+  // Returns { dmg, crit, hit }.
+  playerStrike(s, mult, { typeKey = 'blunt', forceHit = false, ignoreArmor = false, vsType = null, vsMult = null, element = null }) {
+    const t = TYPES[this.enemy.type];
+    let totalMult;
+    if (element) {
+      totalMult = mult * (t.element[element] ?? 1);
+    } else if (vsType && this.enemy.type === vsType) {
+      totalMult = vsMult;
+    } else {
+      totalMult = mult * t[typeKey];
+    }
     const hitChance = forceHit
       ? 1
       : clamp(s.hit + (this.p.buffs.hit?.bonus ?? 0) - this.enemy.evasion, 0.05, 0.98);
@@ -168,6 +176,18 @@ export class Combat {
       kind: 'player',
     });
     this.bus.emit('hit', { target: 'enemy', crit: r.crit });
+  }
+
+  // Log label for a skill's matchup against the current enemy.
+  matchupLabel(sk) {
+    if (sk.element) {
+      const m = TYPES[this.enemy.type]?.element?.[sk.element];
+      if (m > 1) return ' (weakness!)';
+      if (m < 1) return ' (resisted)';
+      return '';
+    }
+    if (sk.vsType && this.enemy.type === sk.vsType) return ' (weakness!)';
+    return '';
   }
 
   usePlayerSkill(s, sk) {
@@ -214,6 +234,7 @@ export class Combat {
           ignoreArmor: sk.ignoreArmor,
           vsType: sk.vsType,
           vsMult: sk.vsMult,
+          element: sk.element,
         });
         if (i === 0 && this.p.guarantee) this.p.guarantee = false;
         total += r.dmg;
@@ -222,7 +243,7 @@ export class Combat {
       }
       if (landed) {
         this.bus.emit('log', {
-          text: `${anyCrit ? 'CRITICAL! ' : ''}${sk.name} hits for ${total}${sk.vsType && this.enemy.type === sk.vsType ? ' (weakness!)' : ''}.`,
+          text: `${anyCrit ? 'CRITICAL! ' : ''}${sk.name} hits for ${total}${this.matchupLabel(sk)}.`,
           kind: 'player',
         });
         this.bus.emit('hit', { target: 'enemy', crit: anyCrit });

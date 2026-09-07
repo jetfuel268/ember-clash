@@ -189,6 +189,46 @@ async function testTypeSkills() {
   assert.ok(c2.e.hp < 30, 'undeadbane base damage works vs non-undead');
 }
 
+// --- Combat: element skills (attack elements vs creature affinities) --------
+async function testElementSkills() {
+  // Fire is 1.5x vs beasts, 0.5x vs demons.
+  const p = newPlayer(3);
+  p.skills = ['emberjab', 'powerstrike'];
+  const beast = createEnemy(1);
+  beast.type = 'beast';
+  beast.maxHp = 300; beast.hp = 300;
+  const c = new Combat(p, beast, new EventBus());
+  c.start();
+  c.p.guarantee = true;
+  c.act('skill', 'emberjab');
+  const vsWeak = 300 - c.e.hp;
+
+  const p2 = newPlayer(3);
+  p2.skills = ['emberjab', 'powerstrike'];
+  const demon = createEnemy(1);
+  demon.type = 'demon';
+  demon.maxHp = 300; demon.hp = 300;
+  const c2 = new Combat(p2, demon, new EventBus());
+  c2.start();
+  c2.p.guarantee = true;
+  c2.act('skill', 'emberjab');
+  const vsResist = 300 - c2.e.hp;
+  assert.ok(vsWeak > vsResist, `fire weakness vs beast (${vsWeak}) > resistance vs demon (${vsResist})`);
+
+  // Advanced tier is strictly stronger than the basic tier.
+  const p3 = newPlayer(3);
+  p3.skills = ['pyroclasm', 'emberjab'];
+  const beast3 = createEnemy(1);
+  beast3.type = 'beast';
+  beast3.maxHp = 300; beast3.hp = 300;
+  const c3 = new Combat(p3, beast3, new EventBus());
+  c3.start();
+  c3.p.guarantee = true;
+  c3.act('skill', 'pyroclasm');
+  const adv = 300 - c3.e.hp;
+  assert.ok(adv > vsWeak, `advanced tier (${adv}) > basic tier (${vsWeak})`);
+}
+
 // --- Progression: rewards, skill learning, victory stage -------------------
 {
   const p = newPlayer();
@@ -290,6 +330,7 @@ async function playBossFight(level, upgrades, seed) {
 async function main() {
   await testCombatBasics();
   await testTypeSkills();
+  await testElementSkills();
   const win = await playBossFight(23, UPGRADES.filter((u) => ['sharp', 'iron', 'crit'].includes(u.id)));
   assert.ok(win, `Lv 23 player (with upgrades) defeats the stage-50 final boss (shortened)`);
 }

@@ -317,6 +317,7 @@ function showBestiary() {
         </div>
         <div class="b-line">Skills: ${entry.skills.length ? entry.skills.join(', ') : 'none'}</div>
         <div class="b-line">Weak to: ${entry.weakness}</div>
+        <div class="b-line">Element: ${entry.element || '—'}</div>
         <div class="b-line">Kills: ${entry.kills}</div>`;
     } else {
       card.className = 'bestiary-card undiscovered';
