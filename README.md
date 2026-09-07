@@ -12,11 +12,12 @@ step required — the project root **is** the production build.
 
 **Progression:** each stage win grants XP and gold. XP levels you up; each level
 offers a choice of 3 stackable upgrades (attack, HP, energy, crit, potions, gold).
-A **boss** appears every 5 stages, the campaign is **won at stage 50** — the
+A **boss** appears every 10 stages, the campaign is **won at stage 50** — the
 final boss (Umbra, Dark Reflection) — and you can continue into endless mode
 with escalating enemies. The campaign spans **5 biomes of 10 stages each**
 (forest, crystal cavern, dungeon, mountain walkway, dark castle), with bosses
-fighting in their own biome. Losing sends you back to the same stage. All
+fighting in their own biome. The **skill shop** opens on every stage ending
+in 5. Losing sends you back to the same stage. All
 progress is persisted in `localStorage`.
 
 ## Running locally

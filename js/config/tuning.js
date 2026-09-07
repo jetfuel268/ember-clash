@@ -34,7 +34,7 @@ export const TUNING = {
     goldBountyPerStack: 0.2,
   },
   stage: {
-    bossEvery: 5,
+    bossEvery: 10,
     victoryStage: 50,
     enemyHpPerStage: 0.12,
     enemyAtkPerStage: 0.08,

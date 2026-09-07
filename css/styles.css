@@ -203,6 +203,8 @@ body {
   .hud-corner { width: 46%; }
 }
 
+#shop-scene { background: url("../assets/bg/shop.png") center / cover no-repeat; margin-bottom: 18px; }
+
 #debug-panel { position: fixed; right: 16px; bottom: 16px; z-index: 50; background: rgba(20, 18, 38, 0.95); border: 1px solid var(--border); border-radius: 12px; padding: 12px; width: 230px; }
 .debug-title { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
 .debug-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }

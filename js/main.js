@@ -104,13 +104,20 @@ function onStageLost() {
   screens.show('gameover');
 }
 
-// --- Stage-end screen with skill shop ---
+// --- Stage-end screen (skill shop appears on stages ending in 5) ---
+function isShopStage(stage) {
+  return stage % 10 === 5;
+}
+
 function showStageEnd(reward, stage) {
   const $ = (id) => document.getElementById(id);
   $('stageend-title').textContent = reward.victory ? 'VICTORY!' : `Stage ${stage} Cleared!`;
   $('stageend-rewards').textContent = `+${reward.xp} XP  ·  +${reward.gold} gold  ·  ${reward.leveledUp ? 'leveled up' : `healed ${Math.round(reward.healFrac * 100)}%`}`;
   $('btn-next-stage').textContent = reward.victory ? 'Continue (Endless)' : 'Next Stage';
-  renderShop();
+  const shop = isShopStage(stage);
+  document.querySelector('#screen-stageend .shop').classList.toggle('hidden', !shop);
+  $('shop-scene').classList.toggle('hidden', !shop);
+  if (shop) renderShop();
   sfx.victory();
   screens.show('stageend');
 }

@@ -82,7 +82,9 @@ assert(prog.onStageLost() === undefined && save.stats.losses === 1, 'loss record
 // --- Enemy scaling & bosses ---
 const e1 = createEnemy(1, 0);
 const e5 = createEnemy(5);
-assert(e5.boss === true, 'stage 5 is a boss stage');
+const e10 = createEnemy(10);
+assert(e10.boss === true, 'stage 10 is a boss stage');
+assert(e5.boss === false, 'stage 5 is not a boss');
 assert(e1.boss === false, 'stage 1 is not a boss');
 const e2 = createEnemy(2, 0);
 assert(e2.maxHp > e1.maxHp && e2.atk >= e1.atk, 'enemy stats scale with stage (same base)');
