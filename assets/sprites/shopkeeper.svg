@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+  <defs>
+    <linearGradient id="skRobe" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9a6a34"/>
+      <stop offset="0.6" stop-color="#7a4e22"/>
+      <stop offset="1" stop-color="#543414"/>
+    </linearGradient>
+    <linearGradient id="skHat" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b07a3a"/>
+      <stop offset="1" stop-color="#6e4a1c"/>
+    </linearGradient>
+    <linearGradient id="skBeard" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f5f0e6"/>
+      <stop offset="1" stop-color="#c9c2b2"/>
+    </linearGradient>
+    <radialGradient id="skPotion" cx="0.4" cy="0.35" r="0.9">
+      <stop offset="0" stop-color="#a8e86a"/>
+      <stop offset="1" stop-color="#3a8a24"/>
+    </radialGradient>
+    <radialGradient id="skGlow" cx="0.5" cy="0.5" r="0.7">
+      <stop offset="0" stop-color="#a8e86a" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#a8e86a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="skGold" cx="0.35" cy="0.3" r="0.9">
+      <stop offset="0" stop-color="#f0c860"/>
+      <stop offset="1" stop-color="#a87820"/>
+    </radialGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="400" cy="742" rx="195" ry="38" fill="#000" opacity="0.35"/>
+  </g>
+  <g id="robe" stroke="#2a1c0c" stroke-width="10">
+    <path d="M 312 392 C 300 470 288 560 268 706 L 532 706 C 512 560 500 470 488 392 C 452 366 348 366 312 392 Z" fill="url(#skRobe)"/>
+    <path d="M 276 640 C 330 668 470 668 524 640 L 532 706 L 268 706 Z" fill="#4a2e12" stroke="none"/>
+    <path d="M 400 400 L 400 548" stroke="#3a2410" stroke-width="6" opacity="0.5"/>
+  </g>
+  <g id="belt" stroke="#2a1c0c" stroke-width="10">
+    <rect x="286" y="540" width="228" height="42" rx="16" fill="#4a2e14"/>
+    <circle cx="400" cy="561" r="22" fill="url(#skGold)"/>
+    <circle cx="330" cy="600" r="26" fill="url(#skGold)"/>
+    <rect x="416" y="586" width="34" height="52" rx="10" fill="url(#skPotion)"/>
+    <rect x="424" y="572" width="18" height="18" rx="6" fill="#6a4a1c"/>
+  </g>
+  <g id="arm-left">
+    <path d="M 330 440 C 296 464 268 494 252 528" fill="none" stroke="#2a1c0c" stroke-width="62" stroke-linecap="round"/>
+    <path d="M 330 440 C 296 464 268 494 252 528" fill="none" stroke="#7a4e22" stroke-width="48" stroke-linecap="round"/>
+    <circle cx="248" cy="540" r="30" fill="#e8b88a" stroke="#2a1c0c" stroke-width="10"/>
+  </g>
+  <g id="arm-right">
+    <path d="M 470 440 C 512 420 544 384 556 344" fill="none" stroke="#2a1c0c" stroke-width="62" stroke-linecap="round"/>
+    <path d="M 470 440 C 512 420 544 384 556 344" fill="none" stroke="#7a4e22" stroke-width="48" stroke-linecap="round"/>
+    <circle cx="560" cy="330" r="30" fill="#e8b88a" stroke="#2a1c0c" stroke-width="10"/>
+  </g>
+  <g id="potion">
+    <circle cx="572" cy="252" r="86" fill="url(#skGlow)"/>
+    <g stroke="#2a1c0c" stroke-width="9">
+      <rect x="556" y="216" width="32" height="34" rx="10" fill="url(#skPotion)"/>
+      <circle cx="572" cy="286" r="40" fill="url(#skPotion)"/>
+      <rect x="560" y="200" width="24" height="18" rx="7" fill="#8a6a2a"/>
+    </g>
+    <ellipse cx="558" cy="272" rx="10" ry="14" fill="#d8f8b0" opacity="0.7" transform="rotate(-18 558 272)"/>
+  </g>
+  <g id="head" stroke="#2a1c0c" stroke-width="10">
+    <circle cx="400" cy="308" r="78" fill="#e8b88a"/>
+    <ellipse cx="352" cy="330" rx="16" ry="10" fill="#e8987a" stroke="none" opacity="0.55"/>
+    <ellipse cx="448" cy="330" rx="16" ry="10" fill="#e8987a" stroke="none" opacity="0.55"/>
+    <circle cx="372" cy="300" r="10" fill="#3a2a1a" stroke="none"/>
+    <circle cx="428" cy="300" r="10" fill="#3a2a1a" stroke="none"/>
+    <circle cx="375" cy="297" r="3" fill="#fff" stroke="none"/>
+    <circle cx="431" cy="297" r="3" fill="#fff" stroke="none"/>
+    <path d="M 352 282 C 358 274 372 274 378 280" fill="none" stroke-width="8"/>
+    <path d="M 422 280 C 428 274 442 274 448 282" fill="none" stroke-width="8"/>
+    <ellipse cx="400" cy="326" rx="16" ry="12" fill="#d9a070" stroke="none"/>
+  </g>
+  <g id="beard" stroke="#2a1c0c" stroke-width="10">
+    <path d="M 328 322 C 316 396 322 452 400 492 C 478 452 484 396 472 322 C 462 362 436 382 400 382 C 364 382 338 362 328 322 Z" fill="url(#skBeard)"/>
+    <path d="M 368 400 C 372 436 382 460 400 474" fill="none" stroke="#b0a898" stroke-width="6"/>
+    <path d="M 432 400 C 428 436 418 460 400 474" fill="none" stroke="#b0a898" stroke-width="6"/>
+  </g>
+  <g id="hat" stroke="#2a1c0c" stroke-width="10">
+    <path d="M 400 92 C 428 118 468 178 460 232 L 340 232 C 332 178 372 118 400 92 Z" fill="url(#skHat)"/>
+    <path d="M 348 208 C 380 222 420 222 452 208 L 456 232 C 420 246 380 246 344 232 Z" fill="#5a3a14" stroke="none"/>
+    <ellipse cx="400" cy="238" rx="152" ry="34" fill="url(#skHat)"/>
+    <circle cx="400" cy="214" r="16" fill="url(#skGold)"/>
+  </g>
+</svg>
