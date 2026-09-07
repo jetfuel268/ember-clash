@@ -4,7 +4,7 @@
 // Extra events (see core/events.js):
 //   'sfx'  { name: 'miss'|'defend'|'potion'|'skill'|'hurt' }
 //   state payload also carries: player.hit, player.defense, player.evasion,
-//   player.buffs, player.items, player.magic, player.skillCd,
+//   player.buffs, player.items, player.magic,
 //   enemy.evasion, enemy.armor, enemy.critChance, enemy.critDamage,
 //   enemy.magic, enemy.energy, enemy.buffs
 import { TUNING } from '../config/tuning.js';
@@ -35,7 +35,6 @@ export class Combat {
       items: { ...player.items },
       defending: false,
       buffs: freshBuffs(),
-      skillCd: {}, // skillId -> turns until reusable
       swing: 1, // Giant's Swing charge multiplier
       guarantee: false, // Focus: next attack always hits
       parry: false,
@@ -79,7 +78,6 @@ export class Combat {
     if (action === 'skill') {
       const sk = SKILL_MAP[arg];
       if (!sk) return false;
-      if ((this.p.skillCd[arg] ?? 0) > 0) return false;
       if (this.p.energy < sk.cost) return false;
     }
     if (action === 'item' && !(this.p.items[arg] > 0)) return false;
@@ -109,7 +107,6 @@ export class Combat {
     } else if (action === 'skill') {
       const sk = SKILL_MAP[arg];
       this.p.energy -= sk.cost;
-      this.p.skillCd[arg] = sk.cooldown;
       this.usePlayerSkill(s, sk);
     } else if (action === 'item') {
       this.useItem(arg);
@@ -355,12 +352,9 @@ export class Combat {
     this.p.parry = false;
     this.p.riposte = false;
     this.p.meditating = false;
-    // Energy regenerates from Magic; skill cooldowns tick down.
+    // Energy regenerates from Magic.
     const ps = this.player.stats();
     this.p.energy = Math.min(this.p.energy + ps.magic, this.p.maxEnergy);
-    for (const [id, t] of Object.entries(this.p.skillCd)) {
-      if (t > 0) this.p.skillCd[id] = t - 1;
-    }
     this.busy = false;
     this.pushState();
     this.bus.emit('phase', { value: 'player' });
@@ -405,10 +399,9 @@ export class Combat {
         defense: ps.defense,
         evasion: ps.evasion,
         buffs: this.describeBuffs(this.p),
-        skillCd: { ...this.p.skillCd },
         skillAvailableCount: this.player.skills.filter((id) => {
           const sk = SKILL_MAP[id];
-          return sk && (this.p.skillCd[id] ?? 0) <= 0 && this.p.energy >= sk.cost;
+          return sk && this.p.energy >= sk.cost;
         }).length,
       },
       enemy: {

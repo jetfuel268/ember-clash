@@ -10,7 +10,6 @@ export class HUD {
       playerHpText: document.getElementById('player-hp-text'),
       playerEnergy: document.getElementById('player-energy-fill'),
       playerEnergyText: document.getElementById('player-energy-text'),
-      playerItems: document.getElementById('player-items'),
       playerSprite: document.getElementById('player-sprite'),
       playerSpriteImg: document.getElementById('player-sprite-img'),
       playerBuffs: document.getElementById('player-buffs'),
@@ -23,7 +22,6 @@ export class HUD {
       enemyIntent: document.getElementById('enemy-intent'),
       enemyBuffs: document.getElementById('enemy-buffs'),
       enemyStats: document.getElementById('enemy-stats'),
-      skillsLabel: document.getElementById('skills-label'),
       actions: {
         attack: document.getElementById('action-attack'),
         guard: document.getElementById('action-guard'),
@@ -51,8 +49,6 @@ export class HUD {
     this.el.playerHpText.textContent = `${p.hp} / ${p.maxHp}`;
     this.el.playerEnergy.style.width = `${(p.energy / p.maxEnergy) * 100}%`;
     this.el.playerEnergyText.textContent = `${p.energy} / ${p.maxEnergy}`;
-    this.el.playerItems.textContent =
-      `Potion × ${p.items.potion ?? 0} · Vial × ${p.items.vial ?? 0} · Elixir × ${p.items.elixir ?? 0}`;
     this.el.playerStats.textContent = `Hit ${Math.round(p.hit * 100)}% · Def ${p.defense} · Evade ${Math.round(p.evasion * 100)}% · Magic ${p.magic}`;
     this.renderBuffs(this.el.playerBuffs, p.buffs);
     this.el.enemyHp.style.width = `${(e.hp / e.maxHp) * 100}%`;

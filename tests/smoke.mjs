@@ -143,11 +143,14 @@ async function testCombatBasics() {
   await tick();
   // Energy regenerates from magic at the start of the player turn.
   assert.ok(c.p.energy >= 50, `energy regen from magic (got ${c.p.energy})`);
-  // Skill cooldown.
+  // Skills are gated by energy only.
   c.act('skill', 'powerstrike');
   await tick();
-  assert.ok((c.p.skillCd.powerstrike ?? 0) >= 1, 'cooldown ticks down');
-  assert.ok(!c.canAct('skill', 'powerstrike'), 'cooldown gates use');
+  assert.equal(c.p.energy, 28, 'energy deducted (50 start + 3 magic regen, -25 cost)');
+  c.p.energy = 10;
+  assert.ok(!c.canAct('skill', 'powerstrike'), 'insufficient energy gates use');
+  c.p.energy = 25;
+  assert.ok(c.canAct('skill', 'powerstrike'), 'sufficient energy allows use');
   // Items.
   c.p.hp = 10;
   c.act('item', 'potion');
@@ -170,6 +173,7 @@ async function testTypeSkills() {
   beast.maxHp = 30; beast.hp = 30;
   const c = new Combat(p, beast, new EventBus());
   c.start();
+  c.p.guarantee = true; // remove miss variance
   c.act('skill', 'beasthunter');
   assert.ok(c.e.hp < 30, 'beasthunter damages');
   // Undead Bane against a non-undead target uses the base multiplier only.
@@ -180,6 +184,7 @@ async function testTypeSkills() {
   beast2.maxHp = 30; beast2.hp = 30;
   const c2 = new Combat(p2, beast2, new EventBus());
   c2.start();
+  c2.p.guarantee = true;
   c2.act('skill', 'undeadbane');
   assert.ok(c2.e.hp < 30, 'undeadbane base damage works vs non-undead');
 }

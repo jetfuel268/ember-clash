@@ -220,7 +220,7 @@ function showLevelUp(reward) {
   const sk = reward.learnedSkill;
   $('levelup-skill').innerHTML = `
     <div class="name">Learned: ${sk.name}</div>
-    <div class="desc">${sk.desc} — ${sk.cost} energy, ${sk.cooldown}-turn cooldown</div>`;
+    <div class="desc">${sk.desc} — ${sk.cost} energy</div>`;
 
   const replaceWrap = $('levelup-replace');
   const skipBtn = $('btn-levelup-skip');
@@ -255,12 +255,11 @@ function toggleSkillsMenu() {
     menu.textContent = '';
     for (const id of player.skills) {
       const sk = SKILL_MAP[id];
-      const cd = state?.player?.skillCd?.[id] ?? 0;
       const afford = (state?.player?.energy ?? 0) >= sk.cost;
       const item = document.createElement('button');
       item.className = 'skill-item';
-      item.disabled = !afford || cd > 0;
-      item.innerHTML = `<strong>${sk.name}</strong> (${sk.cost} energy${cd > 0 ? ` · ${cd}t cooldown` : ''})<span class="s-desc">${sk.desc}</span>`;
+      item.disabled = !afford;
+      item.innerHTML = `<strong>${sk.name}</strong> (${sk.cost} energy)<span class="s-desc">${sk.desc}</span>`;
       item.addEventListener('click', () => {
         menu.classList.add('hidden');
         combat?.act('skill', id);

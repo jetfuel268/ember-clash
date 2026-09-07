@@ -9,7 +9,7 @@ step required — the project root **is** the production build.
 - **Skills** (max 4, starting with Power Strike — 150% for 25 energy) are
   **learned on level-up**: each level-up grants a random skill from the pool
   matching your new level; with all 4 slots full you choose which skill to
-  replace. Skills cost **energy** and have a per-skill cooldown; energy
+  replace. Skills cost **energy** — energy is the only gate — and it
   regenerates each turn from your **Magic** stat. The pool includes damage,
   buff, heal, and type-specific skills (e.g. Beasthunter is 200% against
   beasts) — check the Bestiary for type matchups.
