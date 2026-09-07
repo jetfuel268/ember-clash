@@ -40,8 +40,8 @@ export class HUD {
 
   update(state) {
     const { player: p, enemy: e } = state;
-    this.el.playerSpriteImg.src = 'assets/sprites/hero.png';
-    this.el.enemySpriteImg.src = `assets/sprites/${e.sprite}.png`;
+    this.el.playerSpriteImg.src = 'assets/sprites/hero.svg';
+    this.el.enemySpriteImg.src = `assets/sprites/${e.sprite}.svg`;
     this.el.enemyName.textContent = `${e.name}${e.boss ? ' (BOSS)' : ''}`;
     this.el.playerHp.style.width = `${(p.hp / p.maxHp) * 100}%`;
     this.el.playerHpText.textContent = `${p.hp} / ${p.maxHp}`;

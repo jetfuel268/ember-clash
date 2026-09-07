@@ -19,7 +19,7 @@ body {
   display: flex;
   justify-content: center;
 }
-#app { width: min(720px, 100%); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+#app { width: min(92vw, 1400px); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 .hidden { display: none !important; }
 .screen { display: flex; flex-direction: column; gap: 12px; }
 .title { text-align: center; margin: 8px 0 0; }
@@ -37,12 +37,12 @@ body {
 .hint { text-align: center; color: var(--muted); font-size: 13px; }
 
 .stage-label { text-align: center; font-size: 18px; color: var(--accent); letter-spacing: 1px; }
-/* The arena is the stage: spans ~80% of the viewport (capped so it never
-   exceeds native art resolution), 2:1 to match the art. */
+/* The arena is the stage: the widest it can be while keeping side margins
+   (92vw) — capped at 1.37x the native 1024px art so pixels stay reasonable.
+   2:1 to match the art. */
 .scene {
   position: relative;
-  width: min(80vw, 1000px);
-  margin: 0 auto;
+  width: 100%;
   aspect-ratio: 2 / 1;
   background: url("../assets/bg/arena.png") center / cover no-repeat;
   image-rendering: pixelated;
