@@ -75,6 +75,11 @@ export function createEnemy(stage, baseIndex) {
     t.enemyCrit.dmgBase + t.enemyCrit.dmgPerStage * (stage - 1),
     t.enemyCrit.dmgCap
   );
+  const em = t.enemyMagic;
+  const magic = Math.min(
+    Math.round(em.base + (stage - 1) * em.perStage + (boss ? em.bossBonus : 0)),
+    em.cap
+  );
   return {
     id: base.id,
     name: base.name,
@@ -89,6 +94,8 @@ export function createEnemy(stage, baseIndex) {
     armor,
     critChance,
     critDamage,
+    magic,
+    energy: em.startEnergy,
     boss,
     stage,
   };

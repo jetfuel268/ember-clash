@@ -1,7 +1,7 @@
 // Bestiary: records of defeated creatures, persisted in the save.
 // Entries are derived from enemy definitions (enemies.js) + skill names.
 import { TYPES, weaknessOf } from './enemies.js';
-import { SKILL_MAP } from './skills.js';
+import { ENEMY_SKILLS } from './skills.js';
 
 export function bestiaryEntryFor(enemy) {
   return {
@@ -9,7 +9,7 @@ export function bestiaryEntryFor(enemy) {
     name: enemy.name,
     type: TYPES[enemy.type].label,
     sprite: enemy.sprite,
-    skills: enemy.skills.map((id) => SKILL_MAP[id]?.name ?? id),
+    skills: enemy.skills.map((id) => ENEMY_SKILLS[id]?.name ?? id),
     weakness: weaknessOf(enemy.type),
   };
 }

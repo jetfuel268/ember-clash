@@ -204,6 +204,7 @@ body {
 }
 
 #shop-scene { background: url("../assets/bg/shop.png") center / cover no-repeat; margin-bottom: 18px; }
+.shop-section { color: var(--muted); margin: 10px 0 6px; font-size: 0.9em; }
 #shop-scene img {
   position: absolute;
   bottom: 3%;

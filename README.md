@@ -5,19 +5,30 @@ step required — the project root **is** the production build.
 
 ## How to play
 
-- **Attack** deals damage and grants energy.
-- **Power Strike** (25 energy) deals 175% damage.
-- **Defend** halves the next enemy hit and grants 20 energy.
-- **Potion** heals 35% of max HP (refilled between stages).
+- **Attack** deals basic damage. **Guard** halves the next enemy hit.
+- **Skills** (max 4, starting with Power Strike — 150% for 25 energy) are
+  **learned on level-up**: each level-up grants a random skill from the pool
+  matching your new level; with all 4 slots full you choose which skill to
+  replace. Skills cost **energy** and have a per-skill cooldown; energy
+  regenerates each turn from your **Magic** stat. The pool includes damage,
+  buff, heal, and type-specific skills (e.g. Beasthunter is 200% against
+  beasts) — check the Bestiary for type matchups.
+- **Items** (Potion, Energy Vial, Elixir) are **single-use**, bought in the
+  shop, consumed in battle. Nothing restores between levels: you heal a small
+  fraction on stage wins, and **sleep in a shop bed** (cost scales with the
+  stage) to fully restore HP.
 
-**Progression:** each stage win grants XP and gold. XP levels you up; each level
-offers a choice of 3 stackable upgrades (attack, HP, energy, crit, potions, gold).
-A **boss** appears every 10 stages, the campaign is **won at stage 50** — the
-final boss (Umbra, Dark Reflection) — and you can continue into endless mode
-with escalating enemies. The campaign spans **5 biomes of 10 stages each**
+**Progression:** each stage win grants XP and gold. XP levels you up — stats
+(attack, defense, magic, max HP) grow by a random amount per level, and you
+learn a skill. **Upgrades** (attack, HP, magic, energy, crit, item strength,
+gold) are permanent stackable boosts bought in the **shop**, which opens on
+every stage ending in 5. Enemies also have **Magic**: it regenerates their
+energy so they can use their skills (Enrage, Shell, Venom). A **boss** appears
+every 10 stages, the campaign is **won at stage 50** — the final boss
+(Umbra, Dark Reflection) — and you can continue into endless mode with
+escalating enemies. The campaign spans **5 biomes of 10 stages each**
 (forest, crystal cavern, dungeon, mountain walkway, dark castle), with bosses
-fighting in their own biome. The **skill shop** opens on every stage ending
-in 5. Losing sends you back to the same stage. All
+fighting in their own biome. Losing sends you back to the same stage. All
 progress is persisted in `localStorage`.
 
 ## Running locally
@@ -79,9 +90,11 @@ assets/sprites/       Hand-crafted vector SVG characters (primitives + Bezier pa
 js/config/tuning.js   Every balance number. Tune the game here only.
 js/core/events.js     Tiny typed event bus — the contract between game and UI
 js/core/rng.js        Random helpers
-js/core/save.js       Versioned localStorage persistence (key: combat-game.save.v2)
+js/core/save.js       Versioned localStorage persistence (key: combat-game.save.v3)
 js/game/player.js     Player model: persisted fields + derived stats
 js/game/upgrades.js   Data-driven upgrade catalog + XP curve (add an entry to add an upgrade)
+js/game/skills.js     Data-driven skill catalog: effects, energy cost, cooldown, learnable level ranges
+js/game/bestiary.js   Bestiary records of defeated creatures
 js/game/enemies.js    Enemy types, bosses, per-stage scaling, AI intents
 js/game/combat.js     Turn-based combat state machine (no DOM access)
 js/game/progression.js  XP/levels, stage rewards, stage advancing
@@ -108,16 +121,24 @@ tests/smoke.mjs       Node smoke test for all DOM-free modules
 - **New action** → add handling in `Combat.act()` / `canAct()` and a button in
   `index.html` + `js/main.js` binding.
 
-## Save format (v1)
+## Save format (v3)
 
 ```json
 {
-  "version": 1,
-  "player": { "level": 1, "xp": 0, "gold": 0, "upgrades": ["sharp"] },
+  "version": 3,
+  "player": {
+    "level": 1, "xp": 0, "gold": 0, "upgrades": ["sharp"],
+    "stats": { "attack": 16, "defense": 0, "magic": 1, "maxHp": 100,
+               "critChance": 0.1, "critDamage": 2.0 },
+    "skills": ["powerstrike"],
+    "items": { "potion": 2, "vial": 0, "elixir": 0 },
+    "currentHp": null
+  },
   "stage": 1,
   "stats": { "wins": 0, "losses": 0, "kills": 0 }
 }
 ```
 
-Stored under the `localStorage` key `combat-game.save.v1`. Changing the schema?
-Bump `VERSION` in `js/core/save.js` — old saves are safely discarded.
+Stored under the `localStorage` key `combat-game.save.v3`. v2/v1 saves are
+migrated automatically on load. Changing the schema? Bump `VERSION` in
+`js/core/save.js` and add a migration for the previous version.

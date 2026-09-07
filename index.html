@@ -12,7 +12,7 @@
 
     <section id="screen-menu" class="screen">
       <h1 class="title">Ember Clash</h1>
-      <p class="subtitle">A turn-based combat journey. Win stages, gain levels, choose upgrades, face bosses.</p>
+      <p class="subtitle">A turn-based combat journey. Win stages, gain levels, learn skills, face bosses.</p>
       <div class="menu-stats" id="menu-stats"></div>
       <div class="menu-buttons">
         <button id="btn-start" class="btn btn-primary">Begin Campaign</button>
@@ -31,7 +31,7 @@
           <div class="stat-level" id="player-level">Lv 1</div>
           <div class="bar hp"><div class="bar-fill" id="player-hp-fill"></div><span class="bar-text" id="player-hp-text"></span></div>
           <div class="bar energy"><div class="bar-fill" id="player-energy-fill"></div><span class="bar-text" id="player-energy-text"></span></div>
-          <div class="potions" id="player-potions"></div>
+          <div class="potions" id="player-items"></div>
           <div class="buff-chips" id="player-buffs"></div>
           <div class="stat-line" id="player-stats"></div>
         </div>
@@ -47,13 +47,15 @@
       </div>
       <div id="log" class="log" aria-live="polite"></div>
       <div id="actions" class="actions">
-        <button id="action-attack" class="btn">Attack<span class="cost">blunt · +10 energy</span></button>
-        <button id="action-power" class="btn">Power Strike<span class="cost">slash · 175% · 25 energy</span></button>
-        <button id="action-defend" class="btn">Defend<span class="cost">-50% dmg · +20 energy</span></button>
-        <button id="action-potion" class="btn">Potion<span class="cost">heals 35%</span></button>
+        <button id="action-attack" class="btn">Attack<span class="cost">basic strike</span></button>
+        <button id="action-guard" class="btn">Guard<span class="cost">-50% dmg</span></button>
         <div class="skill-wrap">
-          <button id="action-skills" class="btn btn-primary">Skills<span class="cost" id="skills-cost">none</span></button>
+          <button id="action-skills" class="btn btn-primary">Skills<span class="cost" id="skills-label"></span></button>
           <div id="skills-menu" class="skills-menu hidden"></div>
+        </div>
+        <div class="skill-wrap">
+          <button id="action-items" class="btn">Items<span class="cost">single-use</span></button>
+          <div id="items-menu" class="skills-menu hidden"></div>
         </div>
       </div>
     </section>
@@ -62,10 +64,19 @@
       <div class="scene hidden" id="shop-scene"><img id="shopkeeper" src="assets/sprites/shopkeeper.svg" alt=""></div>
       <h2 class="title" id="stageend-title">Stage Cleared!</h2>
       <p class="subtitle" id="stageend-rewards"></p>
-      <div class="shop">
-        <div class="shop-header">Skill Shop <span id="shop-gold" class="gold"></span></div>
+      <div class="shop hidden">
+        <div class="shop-header">Wayside Shop <span id="shop-gold" class="gold"></span></div>
+        <div id="shop-bed" class="shop-item">
+          <div>
+            <div class="s-name">Sleep in the Bed</div>
+            <div class="s-desc">Restore all HP (energy refills each battle).</div>
+          </div>
+          <button id="shop-bed-btn" class="btn"></button>
+        </div>
+        <div class="shop-section">Items (single-use, consumed in battle)</div>
         <div id="shop-items" class="shop-items"></div>
-        <div id="shop-empty" class="shop-empty hidden">All skills purchased. Gold carries over — enemies scale forever.</div>
+        <div class="shop-section">Upgrades (permanent, stackable)</div>
+        <div id="shop-upgrades" class="shop-items"></div>
       </div>
       <div class="menu-buttons">
         <button id="btn-next-stage" class="btn btn-primary">Next Stage</button>
@@ -84,9 +95,17 @@
 
     <section id="screen-levelup" class="screen hidden">
       <h2 class="title" id="levelup-title">Level Up!</h2>
-      <p class="subtitle" id="levelup-sub">Choose one upgrade:</p>
-      <div id="upgrade-cards" class="cards"></div>
-      <button id="btn-skip-levelup" class="btn">Skip — stage end</button>
+      <p class="subtitle" id="levelup-sub"></p>
+      <div id="levelup-gain" class="subtitle" style="margin-bottom:12px"></div>
+      <div id="levelup-skill" class="card" style="margin-bottom:12px"></div>
+      <div id="levelup-replace" class="hidden">
+        <p class="subtitle">Your 4 skill slots are full. Replace one to learn it, or skip.</p>
+        <div id="levelup-replace-cards" class="cards"></div>
+      </div>
+      <div class="menu-buttons">
+        <button id="btn-levelup-continue" class="btn btn-primary">Continue</button>
+        <button id="btn-levelup-skip" class="btn hidden">Skip the skill</button>
+      </div>
     </section>
 
     <section id="screen-gameover" class="screen hidden">

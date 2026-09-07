@@ -10,7 +10,7 @@ export class HUD {
       playerHpText: document.getElementById('player-hp-text'),
       playerEnergy: document.getElementById('player-energy-fill'),
       playerEnergyText: document.getElementById('player-energy-text'),
-      playerPotions: document.getElementById('player-potions'),
+      playerItems: document.getElementById('player-items'),
       playerSprite: document.getElementById('player-sprite'),
       playerSpriteImg: document.getElementById('player-sprite-img'),
       playerBuffs: document.getElementById('player-buffs'),
@@ -23,12 +23,12 @@ export class HUD {
       enemyIntent: document.getElementById('enemy-intent'),
       enemyBuffs: document.getElementById('enemy-buffs'),
       enemyStats: document.getElementById('enemy-stats'),
-      skillsCost: document.getElementById('skills-cost'),
+      skillsLabel: document.getElementById('skills-label'),
       actions: {
         attack: document.getElementById('action-attack'),
-        power: document.getElementById('action-power'),
-        defend: document.getElementById('action-defend'),
-        potion: document.getElementById('action-potion'),
+        guard: document.getElementById('action-guard'),
+        skills: document.getElementById('action-skills'),
+        items: document.getElementById('action-items'),
       },
     };
     this.currentPhase = 'player';
@@ -51,15 +51,15 @@ export class HUD {
     this.el.playerHpText.textContent = `${p.hp} / ${p.maxHp}`;
     this.el.playerEnergy.style.width = `${(p.energy / p.maxEnergy) * 100}%`;
     this.el.playerEnergyText.textContent = `${p.energy} / ${p.maxEnergy}`;
-    this.el.playerPotions.textContent = p.potions > 0 ? `× ${p.potions}` : '× 0';
-    this.el.playerStats.textContent = `Hit ${Math.round(p.hit * 100)}% · Def ${p.defense} · Evade ${Math.round(p.evasion * 100)}%`;
+    this.el.playerItems.textContent =
+      `Potion × ${p.items.potion ?? 0} · Vial × ${p.items.vial ?? 0} · Elixir × ${p.items.elixir ?? 0}`;
+    this.el.playerStats.textContent = `Hit ${Math.round(p.hit * 100)}% · Def ${p.defense} · Evade ${Math.round(p.evasion * 100)}% · Magic ${p.magic}`;
     this.renderBuffs(this.el.playerBuffs, p.buffs);
     this.el.enemyHp.style.width = `${(e.hp / e.maxHp) * 100}%`;
     this.el.enemyHpText.textContent = `${e.hp} / ${e.maxHp}`;
     this.el.enemyIntent.textContent = e.intentLabel || '';
-    this.el.enemyStats.textContent = `Evade ${Math.round(e.evasion * 100)}% · Armor ${e.armor} · Crit ${Math.round(e.critChance * 100)}%`;
+    this.el.enemyStats.textContent = `Evade ${Math.round(e.evasion * 100)}% · Armor ${e.armor} · Crit ${Math.round(e.critChance * 100)}% · Magic ${e.magic}`;
     this.renderBuffs(this.el.enemyBuffs, e.buffs);
-    this.renderSkillsCost(p.skills);
     this.lastState = state;
     this.updateActionButtons();
   }
@@ -74,18 +74,13 @@ export class HUD {
     }
   }
 
-  renderSkillsCost(skills) {
-    const total = Object.values(skills).reduce((a, b) => a + b, 0);
-    this.el.skillsCost.textContent = total > 0 ? `${total} available` : 'none';
-  }
-
   // Action availability that depends on current resources.
   updateActionButtons() {
     if (this.currentPhase !== 'player' || !this.lastState) return;
     const p = this.lastState.player;
-    const needPower = 25; // mirrors TUNING.combat.powerStrike.cost (UI may not import tuning)
-    this.el.actions.power.disabled = p.energy < needPower;
-    this.el.actions.potion.disabled = p.potions <= 0;
+    this.el.actions.skills.disabled = !(p.skillAvailableCount > 0);
+    const totalItems = (p.items.potion ?? 0) + (p.items.vial ?? 0) + (p.items.elixir ?? 0);
+    this.el.actions.items.disabled = totalItems <= 0;
   }
 
   flash(target, crit) {

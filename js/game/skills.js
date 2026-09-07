@@ -1,33 +1,254 @@
-// Data-driven skill catalog.
-//  - kind 'player': bought with gold in the stage-end shop, usable in combat
-//    via the Skills dropdown (limited uses per battle).
-//  - kind 'enemy': referenced by enemy definitions; used by enemy AI.
+export const MAX_SKILLS = 4;
+
+// Skill catalog. Each entry is data only: the combat engine interprets the
+// effect fields, and progression decides when skills become learnable.
 //
-// effect keys (handled in combat.js):
-//   damage:  { bonus, turns }   outgoing damage multiplier bonus
-//   defense: { bonus, turns }   incoming damage reduction
-//   hit:     { bonus, turns }   accuracy bonus
-//   dot:     { amount, turns }  damage-over-time dealt to the opponent
-//   heal:    fraction of maxHp
+// `pool: [minLevel, maxLevel]` — the level range in which this skill can be
+// randomly learned on level-up. Skills with no pool are not learnable
+// (starter only). `starter: true` skills begin equipped.
 export const SKILLS = [
-  { id: 'berserk', name: 'Berserk', kind: 'player', desc: '+50% damage for 3 turns', price: 50, uses: 1,
-    effect: { damage: { bonus: 0.5, turns: 3 } } },
-  { id: 'stoneskin', name: 'Stone Skin', kind: 'player', desc: 'Halve incoming damage for 3 turns', price: 50, uses: 1,
-    effect: { defense: { bonus: 0.5, turns: 3 } } },
-  { id: 'focus', name: 'Focus', kind: 'player', desc: '+20% accuracy for 3 turns', price: 40, uses: 1,
-    effect: { hit: { bonus: 0.2, turns: 3 } } },
-  { id: 'mend', name: 'Mend', kind: 'player', desc: 'Heal 30% of max HP', price: 45, uses: 2,
-    effect: { heal: 0.3 } },
-  { id: 'enrage', name: 'Enrage', kind: 'enemy', desc: '+40% damage for 3 turns',
-    effect: { damage: { bonus: 0.4, turns: 3 } } },
-  { id: 'shell', name: 'Shell', kind: 'enemy', desc: '+50% defense for 3 turns',
-    effect: { defense: { bonus: 0.5, turns: 3 } } },
-  { id: 'venom', name: 'Venom', kind: 'enemy', desc: 'Poison: 8 damage per turn for 3 turns',
-    effect: { dot: { amount: 8, turns: 3 } } },
+  {
+    id: 'powerstrike',
+    name: 'Power Strike',
+    desc: 'A heavy blow dealing 150% damage.',
+    cost: 25,
+    cooldown: 2,
+    starter: true,
+    type: 'damage',
+    mult: 1.5,
+  },
+  // ---- Pool 1-9 ------------------------------------------------------
+  {
+    id: 'berserk',
+    name: 'Berserk',
+    desc: 'Gain +50% damage for 3 turns.',
+    cost: 15,
+    cooldown: 3,
+    pool: [1, 9],
+    buff: { damage: { bonus: 0.5, turns: 3 } },
+  },
+  {
+    id: 'stone',
+    name: 'Stone Skin',
+    desc: 'Halve incoming damage for 3 turns.',
+    cost: 15,
+    cooldown: 3,
+    pool: [1, 9],
+    buff: { defense: { bonus: 0.5, turns: 3 } },
+  },
+  {
+    id: 'mend',
+    name: 'Mend',
+    desc: 'Heal 30% of your max HP.',
+    cost: 20,
+    cooldown: 3,
+    pool: [1, 9],
+    healFrac: 0.3,
+  },
+  {
+    id: 'aim',
+    name: 'Aim',
+    desc: 'Gain +20% hit rate for 3 turns.',
+    cost: 10,
+    cooldown: 3,
+    pool: [1, 9],
+    buff: { hit: { bonus: 0.2, turns: 3 } },
+  },
+  {
+    id: 'doublestrike',
+    name: 'Double Strike',
+    desc: 'Strike twice at basic strength. Each hit can miss and crit.',
+    cost: 10,
+    cooldown: 2,
+    pool: [1, 9],
+    type: 'damage',
+    mult: 1,
+    hits: 2,
+  },
+  {
+    id: 'focus',
+    name: 'Focus',
+    desc: 'Your next attack always hits.',
+    cost: 10,
+    cooldown: 3,
+    pool: [1, 9],
+    guaranteeNext: true,
+  },
+  {
+    id: 'parry',
+    name: 'Parry',
+    desc: 'Guard, and reflect 25% of incoming damage back at the enemy.',
+    cost: 25,
+    cooldown: 3,
+    pool: [1, 9],
+    parry: true,
+  },
+  {
+    id: 'meditate',
+    name: 'Meditate',
+    desc: 'Take double damage this turn, but restore 25% energy.',
+    cost: 0,
+    cooldown: 3,
+    pool: [1, 9],
+    meditate: true,
+  },
+  {
+    id: 'poisonedblade',
+    name: 'Poisoned Blade',
+    desc: 'Attack and poison the enemy (damage over time).',
+    cost: 10,
+    cooldown: 2,
+    pool: [1, 9],
+    type: 'damage',
+    mult: 1,
+    poison: { amount: 6, turns: 3 },
+  },
+  // ---- Pool 10-19 ----------------------------------------------------
+  {
+    id: 'vampirefang',
+    name: 'Vampire Fang',
+    desc: 'Attack and heal for 50% of the damage dealt.',
+    cost: 25,
+    cooldown: 3,
+    pool: [10, 19],
+    type: 'damage',
+    mult: 1,
+    leech: 0.5,
+  },
+  {
+    id: 'reckless',
+    name: 'Reckless Strike',
+    desc: 'Deal 175% damage, but lose 20% of your max HP.',
+    cost: 0,
+    cooldown: 3,
+    pool: [10, 19],
+    type: 'damage',
+    mult: 1.75,
+    hpCostFrac: 0.2,
+  },
+  {
+    id: 'giantswing',
+    name: "Giant's Swing",
+    desc: 'Charge your weapon. Your next attack deals 175% damage.',
+    cost: 30,
+    cooldown: 3,
+    pool: [10, 19],
+    chargeMult: 1.75,
+  },
+  {
+    id: 'riposte',
+    name: 'Riposte',
+    desc: 'Counter the next incoming attack for the damage you take.',
+    cost: 25,
+    cooldown: 3,
+    pool: [10, 19],
+    riposte: true,
+  },
+  {
+    id: 'bloodlet',
+    name: 'Bloodlet',
+    desc: 'Purge negative effects. Costs 10% of your max HP.',
+    cost: 0,
+    cooldown: 4,
+    pool: [10, 19],
+    hpCostFrac: 0.1,
+    cleanse: true,
+  },
+  {
+    id: 'greedystab',
+    name: 'Greedy Stab',
+    desc: 'Deal 25% damage. Doubles the gold if it kills.',
+    cost: 15,
+    cooldown: 2,
+    pool: [10, 19],
+    type: 'damage',
+    mult: 0.25,
+    killBonus: 'gold',
+  },
+  {
+    id: 'surgicalslice',
+    name: 'Surgical Slice',
+    desc: 'Deal 25% damage. Doubles the XP if it kills.',
+    cost: 15,
+    cooldown: 2,
+    pool: [10, 19],
+    type: 'damage',
+    mult: 0.25,
+    killBonus: 'xp',
+  },
+  {
+    id: 'beasthunter',
+    name: 'Beasthunter',
+    desc: 'Deal 150% damage, 200% against beasts.',
+    cost: 15,
+    cooldown: 2,
+    pool: [10, 19],
+    type: 'damage',
+    mult: 1.5,
+    vsType: 'beast',
+    vsMult: 2,
+  },
+  {
+    id: 'undeadbane',
+    name: 'Undead Bane',
+    desc: 'Deal 150% damage, 200% against undead.',
+    cost: 15,
+    cooldown: 2,
+    pool: [10, 19],
+    type: 'damage',
+    mult: 1.5,
+    vsType: 'undead',
+    vsMult: 2,
+  },
+  // ---- Pool 20+ ------------------------------------------------------
+  {
+    id: 'trueedge',
+    name: 'True Edge',
+    desc: 'Deal 125% damage, ignoring armor.',
+    cost: 15,
+    cooldown: 2,
+    pool: [20, 999],
+    type: 'damage',
+    mult: 1.25,
+    ignoreArmor: true,
+  },
+  {
+    id: 'opportune',
+    name: 'Opportune Moment',
+    desc: 'Attack. If it hits, you act again.',
+    cost: 50,
+    cooldown: 4,
+    pool: [20, 999],
+    type: 'damage',
+    mult: 1,
+    extraActionOnHit: true,
+  },
 ];
 
 export const SKILL_MAP = Object.fromEntries(SKILLS.map((s) => [s.id, s]));
 
-export function playerSkills(ownedIds) {
-  return SKILLS.filter((s) => s.kind === 'player' && ownedIds.includes(s.id));
+// Enemy skills (names/desc only — effects live in combat.js; costs come from
+// TUNING.enemyMagic.skillCost). Used by the bestiary and intent labels.
+export const ENEMY_SKILLS = {
+  enrage: { id: 'enrage', name: 'Enrage', desc: 'Gain +40% damage for 3 turns.' },
+  shell: { id: 'shell', name: 'Shell', desc: 'Halve incoming damage for 3 turns.' },
+  venom: { id: 'venom', name: 'Venom', desc: 'Poison the hero (5 damage/turn for 3 turns).' },
+};
+
+// Skills learnable at a given player level (randomized pool per level range).
+export function poolFor(level) {
+  return SKILLS.filter((s) => s.pool && level >= s.pool[0] && level <= s.pool[1]);
+}
+
+// A random learnable skill the player does not already own, or null.
+export function pickSkillToLearn(level, ownedIds, rng) {
+  const candidates = poolFor(level).filter((s) => !ownedIds.includes(s.id));
+  if (candidates.length === 0) return null;
+  const roll = rng ? rng() : Math.random();
+  return candidates[Math.min(candidates.length - 1, Math.floor(roll * candidates.length))];
+}
+
+export function skillCost(id) {
+  const s = SKILL_MAP[id];
+  return s ? s.cost : 0;
 }

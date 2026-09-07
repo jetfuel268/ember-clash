@@ -6,8 +6,9 @@ import { Player } from './game/player.js';
 import { Progression } from './game/progression.js';
 import { createEnemy, KNOWN_ENEMY_IDS } from './game/enemies.js';
 import { Combat } from './game/combat.js';
-import { stackCount, xpForNext } from './game/upgrades.js';
-import { SKILLS } from './game/skills.js';
+import { stackCount, xpForNext, UPGRADES } from './game/upgrades.js';
+import { SKILL_MAP } from './game/skills.js';
+import { TUNING } from './config/tuning.js';
 import { recordKill } from './game/bestiary.js';
 import { Screens } from './ui/screens.js';
 import { HUD } from './ui/hud.js';
@@ -31,7 +32,9 @@ let pending = null; // stage reward, held until the player moves on
 // environment; past stage 50 the cycle repeats in endless mode).
 const ENV_TIERS = ['forest', 'cavern', 'arena', 'walkway', 'darkcastle'];
 function setEnvironment(stage) {
-  const name = ENV_TIERS[Math.floor((stage - 1) / 10) % ENV_TIERS.length];
+  const name = stage <= TUNING.stage.victoryStage
+    ? ENV_TIERS[Math.floor((stage - 1) / 10) % ENV_TIERS.length]
+    : ENV_TIERS[4];
   document.getElementById('battlefield').style.backgroundImage =
     `url('assets/bg/${name}.png')`;
 }
@@ -55,7 +58,7 @@ bus.on('phase', (d) => {
     hud.playDeath(); // kill feedback before the screen change
     setTimeout(() => {
       hud.stopDeath();
-      onStageWon();
+      onStageWon(d.bonus ?? null);
     }, 1000);
   }
   if (d.value === 'defeat') {
@@ -68,20 +71,21 @@ bus.on('phase', (d) => {
 });
 
 // --- Stage / combat lifecycle ---
-function startStage(stage, startHp) {
+function startStage(stage) {
   const enemy = createEnemy(stage);
-  combat = new Combat(player, enemy, bus, save.skills);
+  combat = new Combat(player, enemy, bus, player.currentHp);
   screens.show('combat');
   document.getElementById('skills-menu').classList.add('hidden');
+  document.getElementById('items-menu').classList.add('hidden');
   log.clear();
   setEnvironment(stage);
   hud.setMeta({ stage, level: player.level, xpLabel: `${player.xp}/${xpForNext(player.level)} xp` });
   combat.start();
 }
 
-function onStageWon() {
+function onStageWon(bonus) {
   const stage = save.stage;
-  const reward = progression.onStageWon(stage);
+  const reward = progression.onStageWon(stage, bonus);
   recordKill(save.bestiary, combat.enemy);
   persist();
   log.append({
@@ -89,9 +93,9 @@ function onStageWon() {
     kind: 'system',
   });
   pending = reward;
-  if (reward.leveledUp) {
+  if (reward.leveledUp && reward.learnedSkill) {
     sfx.levelup();
-    showLevelUp(reward.choices);
+    showLevelUp(reward);
   } else {
     showStageEnd(reward, stage);
   }
@@ -104,7 +108,7 @@ function onStageLost() {
   screens.show('gameover');
 }
 
-// --- Stage-end screen (skill shop appears on stages ending in 5) ---
+// --- Stage-end screen (shop appears on stages ending in 5) ---
 function isShopStage(stage) {
   return stage % 10 === 5;
 }
@@ -112,7 +116,7 @@ function isShopStage(stage) {
 function showStageEnd(reward, stage) {
   const $ = (id) => document.getElementById(id);
   $('stageend-title').textContent = reward.victory ? 'VICTORY!' : `Stage ${stage} Cleared!`;
-  $('stageend-rewards').textContent = `+${reward.xp} XP  ·  +${reward.gold} gold  ·  ${reward.leveledUp ? 'leveled up' : `healed ${Math.round(reward.healFrac * 100)}%`}`;
+  $('stageend-rewards').textContent = `+${reward.xp} XP  ·  +${reward.gold} gold  ·  healed ${Math.round(reward.healFrac * 100)}%`;
   $('btn-next-stage').textContent = reward.victory ? 'Continue (Endless)' : 'Next Stage';
   const shop = isShopStage(stage);
   document.querySelector('#screen-stageend .shop').classList.toggle('hidden', !shop);
@@ -122,32 +126,79 @@ function showStageEnd(reward, stage) {
   screens.show('stageend');
 }
 
+function itemPrice(id, stage) {
+  const def = TUNING.shop.items[id];
+  return def.priceBase + def.perStage * stage;
+}
+
 function renderShop() {
   const $ = (id) => document.getElementById(id);
+  const stage = save.stage - 1; // the stage just cleared
   const wrap = $('shop-items');
   wrap.textContent = '';
   $('shop-gold').textContent = `${player.gold} gold`;
-  const forSale = SKILLS.filter((s) => s.kind === 'player' && !save.skills.includes(s.id));
-  $('shop-empty').classList.toggle('hidden', forSale.length > 0);
-  for (const sk of forSale) {
+
+  // Bed: full restore, scaling cost.
+  const bed = TUNING.shop.bed;
+  const bedCost = bed.base + bed.perStage * stage;
+  const bedBtn = $('shop-bed-btn');
+  bedBtn.textContent = `${bedCost} gold`;
+  bedBtn.disabled = player.gold < bedCost;
+  bedBtn.onclick = () => {
+    if (player.gold < bedCost) return;
+    player.gold -= bedCost;
+    player.fullRestore();
+    persist();
+    sfx.ui();
+    renderShop();
+  };
+
+  // Items (single-use, consumed in battle).
+  for (const id of ['potion', 'vial', 'elixir']) {
+    const def = TUNING.shop.items[id];
+    const price = itemPrice(id, stage);
     const item = document.createElement('div');
     item.className = 'shop-item';
-    const afford = player.gold >= sk.price;
     item.innerHTML = `
       <div>
-        <div class="s-name">${sk.name} <span style="color:var(--muted);font-weight:400">× ${sk.uses}/battle</span></div>
-        <div class="s-desc">${sk.desc}</div>
+        <div class="s-name">${def.name} <span style="color:var(--muted);font-weight:400">owned × ${player.items[id] ?? 0}</span></div>
+        <div class="s-desc">${def.desc}</div>
       </div>
-      <button class="btn" ${afford ? '' : 'disabled'}>${sk.price} gold</button>`;
+      <button class="btn" ${player.gold >= price ? '' : 'disabled'}>${price} gold</button>`;
     item.querySelector('button').addEventListener('click', () => {
-      if (player.gold < sk.price) return;
-      player.gold -= sk.price;
-      save.skills.push(sk.id);
+      if (player.gold < price) return;
+      player.gold -= price;
+      player.addItem(id);
       persist();
       sfx.ui();
       renderShop();
     });
     wrap.appendChild(item);
+  }
+
+  // Upgrades (permanent, stackable).
+  const uwrap = $('shop-upgrades');
+  uwrap.textContent = '';
+  for (const up of UPGRADES) {
+    const have = stackCount(player.upgrades, up.id);
+    const maxed = have >= up.maxStacks;
+    const item = document.createElement('div');
+    item.className = 'shop-item';
+    item.innerHTML = `
+      <div>
+        <div class="s-name">${up.name} <span style="color:var(--muted);font-weight:400">${have}/${up.maxStacks} stacks</span></div>
+        <div class="s-desc">${up.desc}</div>
+      </div>
+      <button class="btn" ${maxed || player.gold < up.price ? 'disabled' : ''}>${maxed ? 'MAX' : `${up.price} gold`}</button>`;
+    item.querySelector('button').addEventListener('click', () => {
+      if (maxed || player.gold < up.price) return;
+      player.gold -= up.price;
+      player.applyUpgrade(up.id);
+      persist();
+      sfx.ui();
+      renderShop();
+    });
+    uwrap.appendChild(item);
   }
 }
 
@@ -157,53 +208,87 @@ function continueAfterChoice() {
   showStageEnd(pending, save.stage - 1);
 }
 
-// --- Level-up screen ---
-function showLevelUp(choices) {
+// --- Level-up screen: stat gains + a new skill (learn or replace) ---
+function showLevelUp(reward) {
   screens.show('levelup');
-  document.getElementById('levelup-title').textContent = `Level Up! (Lv ${player.level})`;
-  const wrap = document.getElementById('upgrade-cards');
-  wrap.textContent = '';
-  for (const up of choices) {
-    const card = document.createElement('div');
-    card.className = 'card';
-    const have = stackCount(player.upgrades, up.id);
-    card.innerHTML = `
-      <div class="name">${up.name}</div>
-      <div class="desc">${up.desc}</div>
-      <div class="stacks">${have}/${up.max} stacks taken</div>`;
-    card.addEventListener('click', () => {
-      player.applyUpgrade(up.id);
-      persist();
-      continueAfterChoice();
-    });
-    wrap.appendChild(card);
+  const $ = (id) => document.getElementById(id);
+  const g = reward.gain ?? { attack: 0, defense: 0, magic: 0, maxHp: 0 };
+  $('levelup-title').textContent = `Level Up! (Lv ${player.level})`;
+  $('levelup-sub').textContent = 'Your stats increased:';
+  $('levelup-gain').textContent = `+${g.attack} Attack  ·  +${g.defense} Defense  ·  +${g.magic} Magic  ·  +${g.maxHp} Max HP`;
+
+  const sk = reward.learnedSkill;
+  $('levelup-skill').innerHTML = `
+    <div class="name">Learned: ${sk.name}</div>
+    <div class="desc">${sk.desc} — ${sk.cost} energy, ${sk.cooldown}-turn cooldown</div>`;
+
+  const replaceWrap = $('levelup-replace');
+  const skipBtn = $('btn-levelup-skip');
+  if (reward.needsReplace) {
+    replaceWrap.classList.remove('hidden');
+    skipBtn.classList.remove('hidden');
+    const cards = $('levelup-replace-cards');
+    cards.textContent = '';
+    for (const oldId of player.skills) {
+      const old = SKILL_MAP[oldId];
+      const card = document.createElement('button');
+      card.className = 'card';
+      card.innerHTML = `<div class="name">Replace ${old.name}</div><div class="desc">${old.desc}</div>`;
+      card.addEventListener('click', () => {
+        player.replaceSkill(oldId, sk.id);
+        persist();
+        continueAfterChoice();
+      });
+      cards.appendChild(card);
+    }
+  } else {
+    replaceWrap.classList.add('hidden');
+    skipBtn.classList.add('hidden');
   }
 }
 
 // --- Skills dropdown (in-combat) ---
 function toggleSkillsMenu() {
   const menu = document.getElementById('skills-menu');
-  const btn = document.getElementById('action-skills');
   const state = hud.lastState;
   if (menu.classList.contains('hidden')) {
     menu.textContent = '';
-    const owned = SKILLS.filter((s) => s.kind === 'player' && save.skills.includes(s.id));
-    if (owned.length === 0) {
-      const none = document.createElement('button');
-      none.className = 'skill-item';
-      none.disabled = true;
-      none.textContent = 'No skills — buy some in the shop';
-      menu.appendChild(none);
-    }
-    for (const sk of owned) {
-      const uses = state?.player?.skills?.[sk.id] ?? 0;
+    for (const id of player.skills) {
+      const sk = SKILL_MAP[id];
+      const cd = state?.player?.skillCd?.[id] ?? 0;
+      const afford = (state?.player?.energy ?? 0) >= sk.cost;
       const item = document.createElement('button');
       item.className = 'skill-item';
-      item.disabled = uses <= 0;
-      item.innerHTML = `<strong>${sk.name}</strong> (${uses} left)<span class="s-desc">${sk.desc}</span>`;
+      item.disabled = !afford || cd > 0;
+      item.innerHTML = `<strong>${sk.name}</strong> (${sk.cost} energy${cd > 0 ? ` · ${cd}t cooldown` : ''})<span class="s-desc">${sk.desc}</span>`;
       item.addEventListener('click', () => {
         menu.classList.add('hidden');
-        combat?.act('skill', sk.id);
+        combat?.act('skill', id);
+      });
+      menu.appendChild(item);
+    }
+    menu.classList.remove('hidden');
+  } else {
+    menu.classList.add('hidden');
+  }
+}
+
+// --- Items dropdown (in-combat) ---
+function toggleItemsMenu() {
+  const menu = document.getElementById('items-menu');
+  const state = hud.lastState;
+  if (menu.classList.contains('hidden')) {
+    menu.textContent = '';
+    for (const id of ['potion', 'vial', 'elixir']) {
+      const def = TUNING.shop.items[id];
+      const count = state?.player?.items?.[id] ?? 0;
+      const item = document.createElement('button');
+      item.className = 'skill-item';
+      item.disabled = count <= 0;
+      item.innerHTML = `<strong>${def.name}</strong> (× ${count})<span class="s-desc">${def.desc}</span>`;
+      item.addEventListener('click', () => {
+        menu.classList.add('hidden');
+        combat?.act('item', id);
       });
       menu.appendChild(item);
     }
@@ -247,29 +332,32 @@ function showBestiary() {
 function showMenu() {
   screens.show('menu');
   const s = save.stats;
+  const totalItems = player.items.potion + player.items.vial + player.items.elixir;
   document.getElementById('menu-stats').innerHTML =
     `Hero Lv ${player.level} · Stage ${save.stage} · ${player.gold} gold<br>` +
-    `Wins ${s.wins} · Losses ${s.losses} · Kills ${s.kills} · Skills ${save.skills.length}/${SKILLS.filter((x) => x.kind === 'player').length}`;
+    `Wins ${s.wins} · Losses ${s.losses} · Kills ${s.kills} · Skills ${player.skills.length}/4 · Items ${totalItems}`;
   document.getElementById('btn-sound').textContent = `Sound: ${isMuted() ? 'Off' : 'On'}`;
   const fresh = save.stage === 1 && player.level === 1 && player.upgrades.length === 0 && s.wins === 0;
   document.getElementById('btn-start').textContent = fresh ? 'Begin Campaign' : `Continue — Stage ${save.stage}`;
   document.getElementById('menu-hint').textContent =
-    'Attack (blunt) and Power Strike (slash) have different type matchups — check the Bestiary. Buy skills in the shop.';
+    'Skills are learned on level-up (max 4). Items are bought in the shop and consumed in battle. Sleep in a shop bed to fully restore HP.';
 }
 
 // --- Button bindings ---
 const $ = (id) => document.getElementById(id);
 $('action-attack').addEventListener('click', () => combat?.act('attack'));
-$('action-power').addEventListener('click', () => combat?.act('power'));
-$('action-defend').addEventListener('click', () => combat?.act('defend'));
-$('action-potion').addEventListener('click', () => combat?.act('potion'));
+$('action-guard').addEventListener('click', () => combat?.act('guard'));
 $('action-skills').addEventListener('click', () => {
   if (combat && !combat.busy && !combat.done) toggleSkillsMenu();
+});
+$('action-items').addEventListener('click', () => {
+  if (combat && !combat.busy && !combat.done) toggleItemsMenu();
 });
 
 $('btn-start').addEventListener('click', () => startStage(save.stage));
 $('btn-retry').addEventListener('click', () => startStage(save.stage));
-$('btn-skip-levelup').addEventListener('click', () => continueAfterChoice());
+$('btn-levelup-continue').addEventListener('click', () => continueAfterChoice());
+$('btn-levelup-skip').addEventListener('click', () => continueAfterChoice());
 $('btn-next-stage').addEventListener('click', () => {
   if (pending?.victory && !save.victorySeen) {
     save.victorySeen = true;
@@ -280,10 +368,10 @@ $('btn-next-stage').addEventListener('click', () => {
   }
 });
 $('btn-continue').addEventListener('click', () => startStage(save.stage));
-$('btn-menu-1').addEventListener('click', showMenu);
-$('btn-menu-2').addEventListener('click', showMenu);
-$('btn-menu-3').addEventListener('click', showMenu);
-$('btn-menu-4').addEventListener('click', showMenu);
+$('btn-menu-1').addEventListener('click', () => showMenu());
+$('btn-menu-2').addEventListener('click', () => showMenu());
+$('btn-menu-3').addEventListener('click', () => showMenu());
+$('btn-menu-4').addEventListener('click', () => showMenu());
 $('btn-bestiary').addEventListener('click', showBestiary);
 $('btn-sound').addEventListener('click', () => {
   setMuted(!isMuted());
@@ -312,10 +400,10 @@ window.addEventListener('keydown', (e) => {
 });
 function blankBuffs() { return { damage: null, defense: null, hit: null, dot: null }; }
 const DBG_ACTIONS = {
-  'enemy-1': (c) => { c.e.hp = 1; c.enemy.hp = 1; },
+  'enemy-1': (c) => { c.e.hp = 1; },
   'player-1': (c) => { c.p.hp = 1; },
   'heal-both': (c) => { c.p.hp = c.p.maxHp; c.e.hp = c.e.maxHp; },
-  'potion': (c) => { c.p.potions += 1; },
+  'potion': (c) => { c.p.items.potion += 1; },
   'buff-p-dmg': (c) => { c.p.buffs.damage = { bonus: 0.5, turns: 3 }; },
   'buff-p-hit': (c) => { c.p.buffs.hit = { bonus: 0.3, turns: 3 }; },
   'buff-p-def': (c) => { c.p.buffs.defense = { bonus: 0.5, turns: 3 }; },
