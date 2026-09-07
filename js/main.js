@@ -59,7 +59,13 @@ bus.on('phase', (d) => {
       onStageWon();
     }, 1000);
   }
-  if (d.value === 'defeat') onStageLost();
+  if (d.value === 'defeat') {
+    hud.playDeath('player'); // fade out before the game-over screen
+    setTimeout(() => {
+      hud.stopDeath('player');
+      onStageLost();
+    }, 1000);
+  }
 });
 
 // --- Stage / combat lifecycle ---

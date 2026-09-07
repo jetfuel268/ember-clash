@@ -95,12 +95,12 @@ export class HUD {
     sprite.classList.add(crit ? 'hit-crit' : 'hit');
   }
 
-  playDeath() {
-    this.el.enemySprite.classList.add('dying');
+  playDeath(target = 'enemy') {
+    (target === 'player' ? this.el.playerSprite : this.el.enemySprite).classList.add('dying');
   }
 
-  stopDeath() {
-    this.el.enemySprite.classList.remove('dying');
+  stopDeath(target = 'enemy') {
+    (target === 'player' ? this.el.playerSprite : this.el.enemySprite).classList.remove('dying');
   }
 
   setMeta({ stage, level, xpLabel }) {
