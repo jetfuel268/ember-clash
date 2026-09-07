@@ -46,8 +46,8 @@ function newSave() {
   const s = p.stats();
   assert.equal(s.attack, 16, 'base attack');
   assert.equal(s.defense, 0, 'base defense');
-  assert.equal(s.magic, 1, 'base magic');
-  assert.equal(s.maxEnergy, 100, 'base max energy');
+  assert.equal(s.magic, 25, 'base magic');
+  assert.equal(s.maxEnergy, 25, 'max energy = magic');
   assert.equal(p.skills.length, 1, 'starts with Power Strike');
   assert.equal(p.skills[0], 'powerstrike');
 
@@ -59,9 +59,10 @@ function newSave() {
   assert.ok(after.maxHp >= before.maxHp, 'maxHp grows on level-up');
   assert.ok(after.magic >= before.magic, 'magic grows on level-up');
   const g = p._lastLevelUp;
-  for (const k of ['attack', 'defense', 'magic']) {
+  for (const k of ['attack', 'defense']) {
     assert.ok(g[k] >= 0 && g[k] <= 2, `per-level ${k} gain in [0,2] (got ${g[k]})`);
   }
+  assert.ok(g.magic >= 2 && g.magic <= 4, `per-level magic gain in [2,4] (got ${g.magic})`);
   assert.ok(g.maxHp >= 12 && g.maxHp <= 28, `per-level maxHp gain in [12,28] (got ${g.maxHp})`);
 }
 
@@ -141,6 +142,7 @@ async function testCombatBasics() {
   TUNING.combat.enemyActionDelayMs = 0; // timer fires on the next tick
   const tick = () => new Promise((r) => setTimeout(r, 20));
   const p = newPlayer(7);
+  p.stats0.magic = 100; // roomy pool so flat regen is observable
   const e = createEnemy(1);
   e.maxHp = 200; e.hp = 200;
   const bus = new EventBus();
@@ -148,6 +150,7 @@ async function testCombatBasics() {
   c.start();
   assert.equal(c.busy, false);
   assert.ok(c.canAct('attack'));
+  assert.equal(c.p.energy, 50, 'fresh battle starts at default 50');
   assert.ok(c.canAct('skill', 'powerstrike'), 'power strike affordable at 50 energy');
   c.p.guarantee = true; // remove miss variance for a deterministic test
   c.act('attack');
@@ -158,16 +161,21 @@ async function testCombatBasics() {
   // Guard reduces the next hit.
   c.act('guard');
   await tick();
-  // Energy regenerates from magic at the start of the player turn.
-  assert.ok(c.p.energy >= 50, `energy regen from magic (got ${c.p.energy})`);
+  // Energy regens a flat 10 per turn (magic is the pool cap).
+  assert.equal(c.p.energy, 70, `flat energy regen (got ${c.p.energy})`);
   // Skills are gated by energy only.
   c.act('skill', 'powerstrike');
   await tick();
-  assert.equal(c.p.energy, 28, 'energy deducted (50 start + 3 magic regen, -25 cost)');
+  assert.equal(c.p.energy, 55, 'energy deducted (50 start + 30 regen, -25 cost)');
   c.p.energy = 10;
   assert.ok(!c.canAct('skill', 'powerstrike'), 'insufficient energy gates use');
   c.p.energy = 25;
   assert.ok(c.canAct('skill', 'powerstrike'), 'sufficient energy allows use');
+  // Energy carries over between battles (clamped into the pool).
+  const c2 = new Combat(p, e, bus, null, 80);
+  assert.equal(c2.p.energy, 80, 'carried energy used as battle start');
+  const c3 = new Combat(p, e, bus, null, 500);
+  assert.equal(c3.p.energy, 100, 'carried energy clamped to max');
   // Items.
   c.p.hp = 10;
   c.act('item', 'potion');
@@ -184,6 +192,7 @@ async function testCombatBasics() {
 // --- Combat: type-specific skills -------------------------------------------
 async function testTypeSkills() {
   const p = newPlayer(3);
+  p.stats0.magic = 100; // pool large enough for the skill cost
   p.skills = ['beasthunter', 'powerstrike'];
   const beast = createEnemy(1);
   beast.type = 'beast';
@@ -195,6 +204,7 @@ async function testTypeSkills() {
   assert.ok(c.e.hp < 30, 'beasthunter damages');
   // Undead Bane against a non-undead target uses the base multiplier only.
   const p2 = newPlayer(3);
+  p2.stats0.magic = 100;
   p2.skills = ['undeadbane', 'powerstrike'];
   const beast2 = createEnemy(1);
   beast2.type = 'beast';
@@ -210,6 +220,7 @@ async function testTypeSkills() {
 async function testElementSkills() {
   // Fire is 1.5x vs beasts, 0.5x vs demons.
   const p = newPlayer(3);
+  p.stats0.magic = 100;
   p.skills = ['emberjab', 'powerstrike'];
   const beast = createEnemy(1);
   beast.type = 'beast';
@@ -217,10 +228,12 @@ async function testElementSkills() {
   const c = new Combat(p, beast, new EventBus());
   c.start();
   c.p.guarantee = true;
+  c.p.critChance = 0; // keep the weak>resisted comparison deterministic
   c.act('skill', 'emberjab');
   const vsWeak = 300 - c.e.hp;
 
   const p2 = newPlayer(3);
+  p2.stats0.magic = 100;
   p2.skills = ['emberjab', 'powerstrike'];
   const demon = createEnemy(1);
   demon.type = 'demon';
@@ -228,12 +241,14 @@ async function testElementSkills() {
   const c2 = new Combat(p2, demon, new EventBus());
   c2.start();
   c2.p.guarantee = true;
+  c2.p.critChance = 0;
   c2.act('skill', 'emberjab');
   const vsResist = 300 - c2.e.hp;
   assert.ok(vsWeak > vsResist, `fire weakness vs beast (${vsWeak}) > resistance vs demon (${vsResist})`);
 
   // Advanced tier is strictly stronger than the basic tier.
   const p3 = newPlayer(3);
+  p3.stats0.magic = 100;
   p3.skills = ['pyroclasm', 'emberjab'];
   const beast3 = createEnemy(1);
   beast3.type = 'beast';
@@ -241,6 +256,7 @@ async function testElementSkills() {
   const c3 = new Combat(p3, beast3, new EventBus());
   c3.start();
   c3.p.guarantee = true;
+  c3.p.critChance = 0;
   c3.act('skill', 'pyroclasm');
   const adv = 300 - c3.e.hp;
   assert.ok(adv > vsWeak, `advanced tier (${adv}) > basic tier (${vsWeak})`);
@@ -288,6 +304,7 @@ async function testElementSkills() {
   assert.equal(migrated.version, 3);
   assert.equal(migrated.player.level, 5);
   assert.equal(migrated.player.stats.attack, 12 + 4 * 2 + 2, 'v2 attack recomputed');
+  assert.equal(migrated.player.stats.magic, 25 + 4 * 3, 'v2 magic re-scaled to max-energy');
   assert.ok(migrated.player.skills.includes('powerstrike'));
   assert.ok(migrated.player.skills.includes('berserk'), 'v2 skill carried over');
   assert.equal(migrated.player.items.potion, 2, 'default items on migration');

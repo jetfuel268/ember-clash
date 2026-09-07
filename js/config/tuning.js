@@ -4,16 +4,19 @@ export const TUNING = {
     baseAttack: 16,
     baseMaxHp: 100,
     baseDefense: 0,
-    baseMagic: 1,
+    baseMagic: 25, // magic = max energy
     energyCap: 150,
-    startEnergy: 50,
+    startEnergy: 50, // clamped to max energy for a fresh battle
     baseCritChance: 0.1,
     baseCritDamage: 2.0,
     potionHeal: 0.35, // fraction of maxHp
-    // Per level-up: each stat gains a random amount in [min, max].
+    // Per level-up: attack/defense gain a random amount in [statMin, statMax],
+    // magic (max energy) in [magicMin, magicMax], maxHp in [hpMin, hpMax].
     levelUp: {
       statMin: 0,
-      statMax: 2, // attack / defense / magic
+      statMax: 2,
+      magicMin: 2,
+      magicMax: 4,
       hpMin: 12,
       hpMax: 28,
     },
@@ -27,6 +30,7 @@ export const TUNING = {
     enemyChargeMultiplier: 1.6,
     enemyDefendReduction: 0.5,
     enemyActionDelayMs: 650,
+    energyRegen: 10, // flat energy regen per turn (player and enemy)
     boss: { hpMultiplier: 1.8, atkMultiplier: 1.25 },
   },
   xp: { base: 30, perLevel: 20 }, // xpForNext(level) = base + (level-1)*perLevel
@@ -61,12 +65,13 @@ export const TUNING = {
     dmgPerStage: 0.02,
     dmgCap: 2.0,
   },
+  // Enemy magic = the enemy's MAX ENERGY; regen is the flat combat value.
   enemyMagic: {
-    base: 15,
-    perStage: 0.5,
-    cap: 50,
-    bossBonus: 5,
-    startEnergy: 50,
+    base: 30,
+    perStage: 1,
+    cap: 60,
+    bossBonus: 10,
+    startEnergy: 50, // clamped to the enemy's max energy
     skillCost: 25,
     webPenalty: 0.25, // accuracy reduction while webbed (Broodmother)
   },

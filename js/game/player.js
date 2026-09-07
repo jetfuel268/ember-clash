@@ -14,6 +14,7 @@ export class Player {
     skills = null,
     items = null,
     currentHp = null,
+    currentEnergy = null,
     rng,
   }) {
     this.level = level;
@@ -35,6 +36,7 @@ export class Player {
     this.skills = skills ?? SKILLS_STARTER();
     this.items = items ?? { potion: 2, vial: 0, elixir: 0 };
     this.currentHp = currentHp; // null = at full HP
+    this.currentEnergy = currentEnergy; // null = stage-start default
   }
 
   // Fractional heal of maxHp (e.g. post-victory restore). Returns HP gained.
@@ -47,10 +49,11 @@ export class Player {
   }
 
   fullRestore() {
-    const max = this.stats().maxHp;
-    const cur = this.currentHp ?? max;
-    this.currentHp = max;
-    return max - cur;
+    const s = this.stats();
+    const cur = this.currentHp ?? s.maxHp;
+    this.currentHp = s.maxHp;
+    this.currentEnergy = s.maxEnergy; // bed restores HP and energy
+    return s.maxHp - cur;
   }
 
   static defaultStats() {
@@ -69,6 +72,8 @@ export class Player {
     return { potion: 2, vial: 0, elixir: 0 };
   }
 
+  // Magic is the player's MAX ENERGY. The flat per-turn regen is
+  // TUNING.combat.energyRegen; Deep Lungs adds on top (capped).
   stats() {
     const s = { ...this.stats0 };
     const counts = {};
@@ -87,7 +92,7 @@ export class Player {
       TUNING.player.evasionCap
     );
     s.maxEnergy = Math.min(
-      100 + (s.maxEnergyBonus ?? 0),
+      s.magic + (s.maxEnergyBonus ?? 0),
       TUNING.player.energyCap
     );
     delete s.maxEnergyBonus;
@@ -112,14 +117,14 @@ export class Player {
     return gained;
   }
 
-  // Random per-stat growth on level-up: attack/defense/magic in [statMin, statMax],
-  // maxHp in [hpMin, hpMax].
+  // Random per-stat growth on level-up: attack/defense in [statMin, statMax],
+  // magic (max energy) in [magicMin, magicMax], maxHp in [hpMin, hpMax].
   applyLevelUpGain() {
-    const { statMin, statMax, hpMin, hpMax } = TUNING.player.levelUp;
+    const { statMin, statMax, magicMin, magicMax, hpMin, hpMax } = TUNING.player.levelUp;
     const gain = {
       attack: randInt(statMin, statMax, this.rng),
       defense: randInt(statMin, statMax, this.rng),
-      magic: randInt(statMin, statMax, this.rng),
+      magic: randInt(magicMin, magicMax, this.rng),
       maxHp: randInt(hpMin, hpMax, this.rng),
     };
     this.stats0.attack += gain.attack;
@@ -183,6 +188,7 @@ export class Player {
       skills: this.skills,
       items: { ...this.items },
       currentHp: this.currentHp,
+      currentEnergy: this.currentEnergy,
     };
   }
 }

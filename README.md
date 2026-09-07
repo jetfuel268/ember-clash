@@ -9,19 +9,25 @@ step required — the project root **is** the production build.
 - **Skills** (max 4, starting with Power Strike — 150% for 25 energy) are
   **learned on level-up**: each level-up grants a random skill from the pool
   matching your new level; with all 4 slots full you choose which skill to
-  replace. Skills cost **energy** — energy is the only gate — and it
-  regenerates each turn from your **Magic** stat. The pool includes damage,
-  buff, heal, type-specific skills (e.g. Beasthunter is 200% against
-  beasts), and **element skills** (fire / ice / lightning). Elements are
+  replace. Skills cost **energy** — energy is the only gate — and energy
+  regens a flat amount each turn (10, tuned in `tuning.js`).
+  **Magic is your max energy**: it sets the size of your energy pool (plus
+  Deep Lungs, capped at 150), and it grows 2–4 per level. The pool
+  includes damage, buff, heal, type-specific skills (e.g. Beasthunter is
+  200% against beasts), and **element skills** (fire / ice / lightning).
+  Elements are
   attack types only: every creature has an element profile (one weakness
   at 1.5×, one resistance at 0.5×, one neutral), so Ember Jab (fire) hits
   beasts hard but is resisted by demons, and so on — the Bestiary shows
   each creature's element profile.
 - **Items** (Potion, Energy Vial, Elixir) are **single-use**, bought in the
-  shop, consumed in battle. HP is restored **only** by sleeping in a shop
-  bed (cost scales with the stage) — wins and level-ups do not heal, so
-  your HP carries over between battles (after a defeat you rest and retry
-  at full HP).
+  shop, consumed in battle. **HP and energy carry over between battles** —
+  wins and level-ups do not restore anything, so resting in a shop bed
+  (cost scales with the stage) is how you recover (it restores both HP and
+  energy).
+- **Defeat ends the run** — there is no stage retry. When you fall you can
+  start a **New Run** at stage 1 (full HP/energy); your character's
+  progression (level, gold, upgrades, skills, items) is kept.
 
 **Progression:** each stage win grants XP and gold. XP levels you up — stats
 (attack, defense, magic, max HP) grow by a random amount per level, and you
@@ -30,15 +36,16 @@ gold) are permanent stackable boosts bought in the **shop**, which opens on
 every stage ending in 5. **Each stage draws from a limited enemy pool** —
 the pools follow the biomes (forest: spiders/skeletons/slimes, crystal
 cavern, dungeon, walkway, dark castle), cycled in endless mode. Enemies
-also have **Magic**: it regenerates their energy so they can use their
-skills (Enrage, Shell, Venom, Web Spray, Brood Toxin). A **boss** appears
+also have **Magic** — their max energy, which regens (flat, per turn) so
+  they can use their skills (Enrage, Shell, Venom, Web Spray, Brood
+  Toxin). A **boss** appears
 every 10 stages — the forest's is **The Broodmother** (Web Spray lowers
 your accuracy, Brood Toxin poisons you for 5 turns, bite for standard
 damage) — and the campaign is **won at stage 50**: the final boss
 (Umbra, Dark Reflection). The campaign spans **5 biomes of 10 stages each**
 (forest, crystal cavern, dungeon, mountain walkway, dark castle), with
-bosses fighting in their own biome. Losing sends you back to the same
-stage. All progress is persisted in `localStorage`.
+bosses fighting in their own biome. Losing ends the run (New Run from
+stage 1). All progress is persisted in `localStorage`.
 
 ## Running locally
 
@@ -137,11 +144,12 @@ tests/smoke.mjs       Node smoke test for all DOM-free modules
   "version": 3,
   "player": {
     "level": 1, "xp": 0, "gold": 0, "upgrades": ["sharp"],
-    "stats": { "attack": 16, "defense": 0, "magic": 1, "maxHp": 100,
+    "stats": { "attack": 16, "defense": 0, "magic": 25, "maxHp": 100,
                "critChance": 0.1, "critDamage": 2.0 },
     "skills": ["powerstrike"],
     "items": { "potion": 2, "vial": 0, "elixir": 0 },
-    "currentHp": null
+    "currentHp": null,
+    "currentEnergy": null
   },
   "stage": 1,
   "stats": { "wins": 0, "losses": 0, "kills": 0 }

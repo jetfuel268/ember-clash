@@ -49,12 +49,12 @@ export class HUD {
     this.el.playerHpText.textContent = `${p.hp} / ${p.maxHp}`;
     this.el.playerEnergy.style.width = `${(p.energy / p.maxEnergy) * 100}%`;
     this.el.playerEnergyText.textContent = `${p.energy} / ${p.maxEnergy}`;
-    this.el.playerStats.textContent = `Hit ${Math.round(p.hit * 100)}% · Def ${p.defense} · Evade ${Math.round(p.evasion * 100)}% · Magic ${p.magic}`;
+    this.el.playerStats.textContent = `Hit ${Math.round(p.hit * 100)}% · Def ${p.defense} · Evade ${Math.round(p.evasion * 100)}%`;
     this.renderBuffs(this.el.playerBuffs, p.buffs);
     this.el.enemyHp.style.width = `${(e.hp / e.maxHp) * 100}%`;
     this.el.enemyHpText.textContent = `${e.hp} / ${e.maxHp}`;
     this.el.enemyIntent.textContent = e.intentLabel || '';
-    this.el.enemyStats.textContent = `Evade ${Math.round(e.evasion * 100)}% · Armor ${e.armor} · Crit ${Math.round(e.critChance * 100)}% · Magic ${e.magic}`;
+    this.el.enemyStats.textContent = `Evade ${Math.round(e.evasion * 100)}% · Armor ${e.armor} · Crit ${Math.round(e.critChance * 100)}% · Energy ${e.energy}/${e.magic}`;
     this.renderBuffs(this.el.enemyBuffs, e.buffs);
     this.lastState = state;
     this.updateActionButtons();

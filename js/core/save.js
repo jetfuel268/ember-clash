@@ -44,7 +44,8 @@ function v2PlayerToV3(p) {
     stats: {
       attack: 12 + (level - 1) * 2 + 2 * (counts.sharp ?? 0),
       defense: (level - 1) + (counts.iron ?? 0),
-      magic: level - 1,
+      // Old saves stored magic as a small regen value; it is now MAX ENERGY.
+      magic: 25 + (level - 1) * 3,
       maxHp: 100 + (level - 1) * 12 + 20 * (counts.iron ?? 0),
       critChance: 0.1 + 0.08 * (counts.crit ?? 0),
       critDamage: 2.0 + 0.25 * (counts.crip ?? 0),

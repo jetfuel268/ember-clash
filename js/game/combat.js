@@ -19,7 +19,7 @@ function freshBuffs() {
 }
 
 export class Combat {
-  constructor(player, enemy, bus, startHp = null) {
+  constructor(player, enemy, bus, startHp = null, startEnergy = null) {
     this.bus = bus;
     this.player = player;
     this.enemy = { ...enemy };
@@ -30,7 +30,8 @@ export class Combat {
     this.p = {
       hp: Math.max(1, Math.min(startHp ?? s.maxHp, s.maxHp)),
       maxHp: s.maxHp,
-      energy: TUNING.player.startEnergy,
+      // Energy carries over between battles (clamped into the pool).
+      energy: Math.min(startEnergy ?? TUNING.player.startEnergy, s.maxEnergy),
       maxEnergy: s.maxEnergy,
       items: { ...player.items },
       defending: false,
@@ -45,11 +46,11 @@ export class Combat {
     this.e = {
       hp: enemy.maxHp,
       maxHp: enemy.maxHp,
-      energy: TUNING.enemyMagic.startEnergy,
       charging: false,
       defending: false,
       intent: 'attack',
       buffs: freshBuffs(),
+      energy: Math.min(TUNING.enemyMagic.startEnergy, enemy.magic),
     };
     this.eHit = Math.min(
       TUNING.enemyAi.enemyHitBase + TUNING.enemyAi.enemyHitPerStage * (enemy.stage - 1),
@@ -311,7 +312,8 @@ export class Combat {
 
   enemyTurn() {
     if (this.done) return;
-    this.e.energy = Math.min(this.e.energy + this.enemy.magic, 100);
+    // Energy regens a flat amount per turn; magic is the pool's cap.
+    this.e.energy = Math.min(this.e.energy + TUNING.combat.energyRegen, this.enemy.magic);
     const intent = this.e.intent;
     const charged = this.e.charging;
     this.e.charging = false;
@@ -389,7 +391,7 @@ export class Combat {
     this.p.meditating = false;
     // Energy regenerates from Magic.
     const ps = this.player.stats();
-    this.p.energy = Math.min(this.p.energy + ps.magic, this.p.maxEnergy);
+    this.p.energy = Math.min(this.p.energy + TUNING.combat.energyRegen, this.p.maxEnergy);
     this.busy = false;
     this.pushState();
     this.bus.emit('phase', { value: 'player' });
@@ -406,6 +408,7 @@ export class Combat {
   }
 
   finish(playerWon) {
+    if (this.done) return;
     this.done = true;
     this.busy = false;
     this.bus.emit('phase', {

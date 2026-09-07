@@ -73,7 +73,7 @@ bus.on('phase', (d) => {
 // --- Stage / combat lifecycle ---
 function startStage(stage) {
   const enemy = createEnemy(stage);
-  combat = new Combat(player, enemy, bus, player.currentHp);
+  combat = new Combat(player, enemy, bus, player.currentHp, player.currentEnergy);
   screens.show('combat');
   document.getElementById('skills-menu').classList.add('hidden');
   document.getElementById('items-menu').classList.add('hidden');
@@ -85,8 +85,9 @@ function startStage(stage) {
 
 function onStageWon(bonus) {
   const stage = save.stage;
-  // HP carries over between battles — no win or level-up restoration.
+  // HP and energy carry over between battles — no win or level-up restoration.
   player.currentHp = combat.p.hp;
+  player.currentEnergy = combat.p.energy;
   const reward = progression.onStageWon(stage, bonus);
   recordKill(save.bestiary, combat.enemy);
   persist();
@@ -104,12 +105,22 @@ function onStageWon(bonus) {
 }
 
 function onStageLost() {
-  // Resting after a defeat: the retry starts at full HP.
-  player.currentHp = null;
+  // Defeat ends the run — there is no stage retry.
   progression.onStageLost();
   persist();
   sfx.defeat();
   screens.show('gameover');
+}
+
+// New run: the campaign restarts at stage 1 (full HP/energy); progression
+// (level, gold, upgrades, skills, items) is kept.
+function newRun() {
+  save.stage = 1;
+  player.currentHp = null;
+  player.currentEnergy = null;
+  persist();
+  sfx.ui();
+  startStage(1);
 }
 
 // --- Stage-end screen (shop appears on stages ending in 5) ---
@@ -344,7 +355,7 @@ function showMenu() {
   const fresh = save.stage === 1 && player.level === 1 && player.upgrades.length === 0 && s.wins === 0;
   document.getElementById('btn-start').textContent = fresh ? 'Begin Campaign' : `Continue — Stage ${save.stage}`;
   document.getElementById('menu-hint').textContent =
-    'Skills are learned on level-up (max 4). Items are bought in the shop and consumed in battle. Sleep in a shop bed to fully restore HP.';
+    'Skills are learned on level-up (max 4). Items are bought in the shop and consumed in battle. Magic is your max energy; energy regens 10/turn. HP and energy carry over between battles — sleep in a shop bed to restore both.';
 }
 
 // --- Button bindings ---
@@ -359,7 +370,7 @@ $('action-items').addEventListener('click', () => {
 });
 
 $('btn-start').addEventListener('click', () => startStage(save.stage));
-$('btn-retry').addEventListener('click', () => startStage(save.stage));
+$('btn-new-run').addEventListener('click', () => newRun());
 $('btn-levelup-continue').addEventListener('click', () => continueAfterChoice());
 $('btn-levelup-skip').addEventListener('click', () => continueAfterChoice());
 $('btn-next-stage').addEventListener('click', () => {
@@ -386,7 +397,9 @@ $('btn-reset').addEventListener('click', () => {
   store.clear();
   save = store.load();
   player = new Player(save.player);
+  // Re-point progression at the new save object (it holds the stage writes).
   progression.player = player;
+  progression.save = save;
   showMenu();
 });
 
