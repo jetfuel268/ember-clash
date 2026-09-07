@@ -15,7 +15,6 @@ export class HUD {
       playerSprite: document.getElementById('player-sprite'),
       heroSvg: document.getElementById('hero-svg'),
       playerBuffs: document.getElementById('player-buffs'),
-      playerStats: document.getElementById('player-stats'),
       enemySprite: document.getElementById('enemy-sprite'),
       enemySpriteImg: document.getElementById('enemy-sprite-img'),
       enemyName: document.getElementById('enemy-name'),
@@ -23,7 +22,6 @@ export class HUD {
       enemyHpText: document.getElementById('enemy-hp-text'),
       enemyIntent: document.getElementById('enemy-intent'),
       enemyBuffs: document.getElementById('enemy-buffs'),
-      enemyStats: document.getElementById('enemy-stats'),
       actions: {
         attack: document.getElementById('action-attack'),
         guard: document.getElementById('action-guard'),
@@ -63,15 +61,13 @@ export class HUD {
     this.applyHeroSkin(p.equipment);
     this.el.enemyName.textContent = `${e.name}${e.boss ? ' (BOSS)' : ''} · ${e.typeLabel}`;
     this.el.playerHp.style.width = `${(p.hp / p.maxHp) * 100}%`;
-    this.el.playerHpText.textContent = `${p.hp} / ${p.maxHp}`;
+    this.el.playerHpText.textContent = `❤️ ${p.hp} / ${p.maxHp}`;
     this.el.playerEnergy.style.width = `${(p.energy / p.maxEnergy) * 100}%`;
-    this.el.playerEnergyText.textContent = `${p.energy} / ${p.maxEnergy}`;
-    this.el.playerStats.textContent = `Hit ${Math.round(p.hit * 100)}% · Def ${p.defense} · Evade ${Math.round(p.evasion * 100)}%`;
+    this.el.playerEnergyText.textContent = `⭐ ${p.energy} / ${p.maxEnergy}`;
     this.renderBuffs(this.el.playerBuffs, p.buffs);
     this.el.enemyHp.style.width = `${(e.hp / e.maxHp) * 100}%`;
-    this.el.enemyHpText.textContent = `${e.hp} / ${e.maxHp}`;
+    this.el.enemyHpText.textContent = `❤️ ${e.hp} / ${e.maxHp}`;
     this.el.enemyIntent.textContent = e.intentLabel || '';
-    this.el.enemyStats.textContent = `Evade ${Math.round(e.evasion * 100)}% · Armor ${e.armor} · Crit ${Math.round(e.critChance * 100)}% · Energy ${e.energy}/${e.magic}`;
     this.renderBuffs(this.el.enemyBuffs, e.buffs);
     this.lastState = state;
     this.updateActionButtons();

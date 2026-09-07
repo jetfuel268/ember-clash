@@ -215,7 +215,7 @@ export class Combat {
     if (sk.healFrac) {
       const heal = Math.round(this.p.maxHp * sk.healFrac);
       this.p.hp = Math.min(this.p.maxHp, this.p.hp + heal);
-      this.bus.emit('log', { text: `You recover ${heal} HP.`, kind: 'player' });
+      this.bus.emit('log', { text: `You recover ${heal} ❤️.`, kind: 'player' });
     }
     if (sk.meditate) {
       this.p.meditating = true;
@@ -261,7 +261,7 @@ export class Combat {
         if (sk.leech) {
           const heal = Math.round(total * sk.leech);
           this.p.hp = Math.min(this.p.maxHp, this.p.hp + heal);
-          this.bus.emit('log', { text: `You drain ${heal} HP.`, kind: 'player' });
+          this.bus.emit('log', { text: `You drain ${heal} ❤️.`, kind: 'player' });
         }
         if (sk.extraActionOnHit) this.p.extraAction = true;
         if (sk.buffOnHit) this.givePlayerBuff(sk.buffOnHit);
@@ -277,7 +277,7 @@ export class Combat {
       const heal = Math.round(this.p.maxHp * s.potionHeal);
       const before = this.p.hp;
       this.p.hp = Math.min(this.p.maxHp, this.p.hp + heal);
-      this.bus.emit('log', { text: `You drink a ${def.name} and recover ${this.p.hp - before} HP.`, kind: 'player' });
+      this.bus.emit('log', { text: `You drink a ${def.name} and recover ${this.p.hp - before} ❤️.`, kind: 'player' });
     } else if (id === 'vial') {
       const before = this.p.energy;
       this.p.energy = Math.min(this.p.maxEnergy, this.p.energy + 50);

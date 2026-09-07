@@ -39,7 +39,7 @@ export const SKILLS = [
   {
     id: 'minormend',
     name: 'Minor Mend',
-    desc: 'Heal 15% of your max HP.',
+    desc: 'Heal 15% of your max ❤️.',
     cost: 25,
     pool: [1, 9],
     healFrac: 0.15,
@@ -47,7 +47,7 @@ export const SKILLS = [
   {
     id: 'mend',
     name: 'Mend',
-    desc: 'Heal 30% of your max HP.',
+    desc: 'Heal 30% of your max ❤️.',
     cost: 50,
     pool: [11, 13],
     healFrac: 0.3,
@@ -89,7 +89,7 @@ export const SKILLS = [
   {
     id: 'meditate',
     name: 'Meditate',
-    desc: 'Take double damage this turn, but restore 25% energy.',
+    desc: 'Take double damage this turn, but restore 25% ⭐.',
     cost: 10,
     pool: [1, 9],
     meditate: true,
@@ -106,7 +106,7 @@ export const SKILLS = [
   },
   {
     id: 'emberjab',
-    name: 'Ember Jab',
+    name: 'Ember Jab 🔥',
     desc: 'A fire attack dealing 150% damage.',
     cost: 25,
     pool: [1, 9],
@@ -116,7 +116,7 @@ export const SKILLS = [
   },
   {
     id: 'frostbrand',
-    name: 'Frost Brand',
+    name: 'Frost Brand ❄️',
     desc: 'An ice attack dealing 150% damage.',
     cost: 25,
     pool: [1, 9],
@@ -126,7 +126,7 @@ export const SKILLS = [
   },
   {
     id: 'arcbolt',
-    name: 'Arc Bolt',
+    name: 'Arc Bolt ⚡',
     desc: 'A lightning attack dealing 150% damage.',
     cost: 25,
     pool: [1, 9],
@@ -148,7 +148,7 @@ export const SKILLS = [
   // unknown targets, still 1.5x on a weakness / 0.5x resisted.
   {
     id: 'embersnap',
-    name: 'Ember Snap',
+    name: 'Ember Snap 🔥',
     desc: 'A quick fire attack dealing 100% damage.',
     cost: 15,
     pool: [1, 9],
@@ -158,7 +158,7 @@ export const SKILLS = [
   },
   {
     id: 'frostenip',
-    name: 'Frost Nip',
+    name: 'Frost Nip ❄️',
     desc: 'A quick ice attack dealing 100% damage.',
     cost: 15,
     pool: [1, 9],
@@ -168,7 +168,7 @@ export const SKILLS = [
   },
   {
     id: 'staticzap',
-    name: 'Static Zap',
+    name: 'Static Zap ⚡',
     desc: 'A quick lightning attack dealing 100% damage.',
     cost: 15,
     pool: [1, 9],
@@ -190,7 +190,7 @@ export const SKILLS = [
   {
     id: 'reckless',
     name: 'Reckless Strike',
-    desc: 'Deal 175% damage, but lose 20% of your max HP.',
+    desc: 'Deal 175% damage, but lose 20% of your max ❤️.',
     cost: 0,
     pool: [10, 19],
     type: 'damage',
@@ -216,7 +216,7 @@ export const SKILLS = [
   {
     id: 'bloodlet',
     name: 'Bloodlet',
-    desc: 'Purge negative effects. Costs 10% of your max HP.',
+    desc: 'Purge negative effects. Costs 10% of your max ❤️.',
     cost: 0,
     pool: [10, 19],
     hpCostFrac: 0.1,
@@ -266,7 +266,7 @@ export const SKILLS = [
   },
   {
     id: 'pyroclasm',
-    name: 'Pyroclasm',
+    name: 'Pyroclasm 🔥',
     desc: 'A devastating fire attack dealing 225% damage.',
     cost: 50,
     pool: [11, 13],
@@ -276,7 +276,7 @@ export const SKILLS = [
   },
   {
     id: 'permafrost',
-    name: 'Permafrost',
+    name: 'Permafrost ❄️',
     desc: 'A crushing ice attack dealing 225% damage.',
     cost: 50,
     pool: [11, 13],
@@ -286,7 +286,7 @@ export const SKILLS = [
   },
   {
     id: 'stormcall',
-    name: 'Stormcall',
+    name: 'Stormcall ⚡',
     desc: 'A blinding lightning attack dealing 225% damage.',
     cost: 50,
     pool: [11, 13],
@@ -341,7 +341,7 @@ export const SKILLS = [
   {
     id: 'secondwind',
     name: 'Second Wind',
-    desc: 'Heal 20% of your max HP and purge all negative effects.',
+    desc: 'Heal 20% of your max ❤️ and purge all negative effects.',
     cost: 35,
     pool: [20, 999],
     healFrac: 0.2,

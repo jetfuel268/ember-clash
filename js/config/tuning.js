@@ -78,9 +78,9 @@ export const TUNING = {
   shop: {
     bed: { base: 15, perStage: 4 }, // full restore cost = base + perStage * stage
     items: {
-      potion: { name: 'Potion', desc: 'Heal 35% of max HP', priceBase: 25, perStage: 2 },
-      vial: { name: 'Energy Vial', desc: 'Restore 50 energy', priceBase: 35, perStage: 2 },
-      elixir: { name: 'Elixir', desc: 'Fully restore HP and energy', priceBase: 70, perStage: 3 },
+      potion: { name: 'Potion', desc: 'Heal 35% of max ❤️', priceBase: 25, perStage: 2 },
+      vial: { name: '⭐ Vial', desc: 'Restore 50 ⭐', priceBase: 35, perStage: 2 },
+      elixir: { name: 'Elixir', desc: 'Fully restore ❤️ and ⭐', priceBase: 70, perStage: 3 },
     },
   },
 };

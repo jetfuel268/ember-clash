@@ -256,12 +256,12 @@ function showLevelUp(reward) {
   const g = reward.gain ?? { attack: 0, defense: 0, magic: 0, maxHp: 0 };
   $('levelup-title').textContent = `Level Up! (Lv ${player.level})`;
   $('levelup-sub').textContent = 'Your stats increased:';
-  $('levelup-gain').textContent = `+${g.attack} Attack  ·  +${g.defense} Defense  ·  +${g.magic} Magic  ·  +${g.maxHp} Max HP`;
+  $('levelup-gain').textContent = `+${g.attack} Attack  ·  +${g.defense} Defense  ·  +${g.magic} Magic  ·  +${g.maxHp} Max ❤️`;
 
   const sk = reward.learnedSkill;
   $('levelup-skill').innerHTML = `
     <div class="name">Learned: ${sk.name}</div>
-    <div class="desc">${sk.desc} — ${sk.cost} energy</div>`;
+    <div class="desc">${sk.desc} — ${sk.cost} ⭐</div>`;
 
   const replaceWrap = $('levelup-replace');
   const skipBtn = $('btn-levelup-skip');
@@ -300,7 +300,7 @@ function toggleSkillsMenu() {
       const item = document.createElement('button');
       item.className = 'skill-item';
       item.disabled = !afford;
-      item.innerHTML = `<strong>${sk.name}</strong> (${sk.cost} energy)<span class="s-desc">${sk.desc}</span>`;
+      item.innerHTML = `<strong>${sk.name}</strong> (${sk.cost} ⭐)<span class="s-desc">${sk.desc}</span>`;
       item.addEventListener('click', () => {
         menu.classList.add('hidden');
         combat?.act('skill', id);
@@ -381,7 +381,7 @@ function showMenu() {
   const fresh = save.stage === 1 && player.level === 1 && player.upgrades.length === 0 && s.wins === 0;
   document.getElementById('btn-start').textContent = fresh ? 'Begin Campaign' : `Continue — Stage ${save.stage}`;
   document.getElementById('menu-hint').textContent =
-    'Skills are learned on level-up (max 4). Items are bought in the shop and consumed in battle. Magic is your max energy; energy regens 10/turn. HP and energy carry over between battles — sleep in a shop bed to restore both. Buy equipment tiers in the shop (5 tiers per slot) — your hero\u2019s gear updates to match. Defeat ends the run: you restart from scratch at level 1.';
+    'Skills are learned on level-up (max 4). Items are bought in the shop and consumed in battle. Magic is your max ⭐; ⭐ regens 10/turn. Your ❤️ and ⭐ carry over between battles — sleep in a shop bed to restore both. Buy equipment tiers in the shop (5 tiers per slot) — your hero\u2019s gear updates to match. Defeat ends the run: you restart from scratch at level 1.';
 }
 
 // --- Button bindings ---
