@@ -1,54 +1,43 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 14" shape-rendering="crispEdges">
-    <rect x="4" y="0" width="6" height="1" fill="#23263a"/>
-    <rect x="3" y="1" width="1" height="1" fill="#23263a"/>
-    <rect x="4" y="1" width="6" height="1" fill="#58a838"/>
-    <rect x="10" y="1" width="1" height="1" fill="#23263a"/>
-    <rect x="2" y="2" width="1" height="1" fill="#23263a"/>
-    <rect x="3" y="2" width="8" height="1" fill="#58a838"/>
-    <rect x="11" y="2" width="1" height="1" fill="#23263a"/>
-    <rect x="2" y="3" width="1" height="1" fill="#23263a"/>
-    <rect x="3" y="3" width="1" height="1" fill="#58a838"/>
-    <rect x="4" y="3" width="1" height="1" fill="#e8e8d0"/>
-    <rect x="5" y="3" width="4" height="1" fill="#58a838"/>
-    <rect x="9" y="3" width="1" height="1" fill="#e8e8d0"/>
-    <rect x="10" y="3" width="1" height="1" fill="#58a838"/>
-    <rect x="11" y="3" width="1" height="1" fill="#23263a"/>
-    <rect x="2" y="4" width="1" height="1" fill="#23263a"/>
-    <rect x="3" y="4" width="8" height="1" fill="#58a838"/>
-    <rect x="11" y="4" width="1" height="1" fill="#23263a"/>
-    <rect x="3" y="5" width="1" height="1" fill="#23263a"/>
-    <rect x="4" y="5" width="6" height="1" fill="#58a838"/>
-    <rect x="10" y="5" width="1" height="1" fill="#23263a"/>
-    <rect x="12" y="5" width="2" height="1" fill="#23263a"/>
-    <rect x="3" y="6" width="1" height="1" fill="#23263a"/>
-    <rect x="4" y="6" width="1" height="1" fill="#58a838"/>
-    <rect x="5" y="6" width="5" height="1" fill="#7a5230"/>
-    <rect x="10" y="6" width="1" height="1" fill="#23263a"/>
-    <rect x="11" y="6" width="1" height="1" fill="#ffd24a"/>
-    <rect x="12" y="6" width="1" height="1" fill="#23263a"/>
-    <rect x="2" y="7" width="2" height="1" fill="#23263a"/>
-    <rect x="4" y="7" width="6" height="1" fill="#7a5230"/>
-    <rect x="10" y="7" width="3" height="1" fill="#23263a"/>
-    <rect x="2" y="8" width="1" height="1" fill="#23263a"/>
-    <rect x="3" y="8" width="1" height="1" fill="#58a838"/>
-    <rect x="4" y="8" width="6" height="1" fill="#7a5230"/>
-    <rect x="10" y="8" width="1" height="1" fill="#58a838"/>
-    <rect x="11" y="8" width="2" height="1" fill="#23263a"/>
-    <rect x="3" y="9" width="1" height="1" fill="#23263a"/>
-    <rect x="4" y="9" width="1" height="1" fill="#58a838"/>
-    <rect x="5" y="9" width="5" height="1" fill="#7a5230"/>
-    <rect x="10" y="9" width="1" height="1" fill="#23263a"/>
-    <rect x="3" y="10" width="1" height="1" fill="#23263a"/>
-    <rect x="4" y="10" width="6" height="1" fill="#58a838"/>
-    <rect x="10" y="10" width="1" height="1" fill="#23263a"/>
-    <rect x="3" y="11" width="1" height="1" fill="#23263a"/>
-    <rect x="4" y="11" width="2" height="1" fill="#58a838"/>
-    <rect x="8" y="11" width="2" height="1" fill="#58a838"/>
-    <rect x="10" y="11" width="1" height="1" fill="#23263a"/>
-    <rect x="3" y="12" width="1" height="1" fill="#23263a"/>
-    <rect x="4" y="12" width="2" height="1" fill="#58a838"/>
-    <rect x="8" y="12" width="2" height="1" fill="#58a838"/>
-    <rect x="10" y="12" width="1" height="1" fill="#23263a"/>
-    <rect x="2" y="13" width="4" height="1" fill="#23263a"/>
-    <rect x="8" y="13" width="4" height="1" fill="#23263a"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+  <defs>
+    <radialGradient id="skin" cx="0.4" cy="0.35" r="0.9">
+      <stop offset="0" stop-color="#8fd458"/>
+      <stop offset="1" stop-color="#4a8a2a"/>
+    </radialGradient>
+    <linearGradient id="tunic" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9a6a3a"/>
+      <stop offset="1" stop-color="#6a4420"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="400" cy="740" rx="190" ry="38" fill="#000" opacity="0.35"/>
+  </g>
+  <g id="legs" stroke="#23263a" stroke-width="10">
+    <rect x="330" y="560" width="60" height="140" rx="26" fill="url(#skin)"/>
+    <rect x="412" y="560" width="60" height="140" rx="26" fill="url(#skin)"/>
+    <rect x="318" y="678" width="84" height="52" rx="16" fill="#5a3a1a"/>
+    <rect x="400" y="678" width="84" height="52" rx="16" fill="#5a3a1a"/>
+  </g>
+  <g id="body" stroke="#23263a" stroke-width="10">
+    <path d="M 330 400 C 330 380 350 368 400 368 C 450 368 470 380 470 400 L 482 560 C 482 586 452 598 400 598 C 348 598 318 586 318 560 Z" fill="url(#tunic)"/>
+    <polygon points="318,560 358,540 338,580 318,556" fill="#5a3a1a"/>
+  </g>
+  <g id="arms" stroke="#23263a" stroke-width="10">
+    <rect x="268" y="392" width="52" height="128" rx="24" fill="url(#skin)"/>
+    <rect x="480" y="392" width="52" height="128" rx="24" fill="url(#skin)"/>
+  </g>
+  <g id="dagger" stroke="#23263a" stroke-width="8">
+    <polygon points="546,470 566,462 596,540 576,548" fill="#c8c8d8"/>
+    <rect x="538" y="446" width="40" height="22" rx="8" fill="#5a3a1a" transform="rotate(-15 558 457)"/>
+  </g>
+  <g id="head" stroke="#23263a" stroke-width="10">
+    <polygon points="300,270 236,180 322,224" fill="url(#skin)"/>
+    <polygon points="500,270 564,180 478,224" fill="url(#skin)"/>
+    <circle cx="400" cy="262" r="106" fill="url(#skin)"/>
+    <circle cx="364" cy="252" r="24" fill="#f2f2e4" stroke="none"/>
+    <circle cx="436" cy="252" r="24" fill="#f2f2e4" stroke="none"/>
+    <circle cx="368" cy="256" r="10" fill="#23263a" stroke="none"/>
+    <circle cx="440" cy="256" r="10" fill="#23263a" stroke="none"/>
+    <path d="M 362 322 Q 400 344 438 322" fill="none" stroke-linecap="round"/>
+  </g>
 </svg>

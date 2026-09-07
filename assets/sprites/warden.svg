@@ -1,78 +1,46 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 18" shape-rendering="crispEdges">
-    <rect x="3" y="0" width="9" height="1" fill="#23263a"/>
-    <rect x="2" y="1" width="1" height="1" fill="#23263a"/>
-    <rect x="3" y="1" width="9" height="1" fill="#8a9078"/>
-    <rect x="12" y="1" width="1" height="1" fill="#23263a"/>
-    <rect x="2" y="2" width="1" height="1" fill="#23263a"/>
-    <rect x="3" y="2" width="1" height="1" fill="#8a9078"/>
-    <rect x="4" y="2" width="2" height="1" fill="#4a8a30"/>
-    <rect x="6" y="2" width="6" height="1" fill="#8a9078"/>
-    <rect x="12" y="2" width="1" height="1" fill="#23263a"/>
-    <rect x="2" y="3" width="1" height="1" fill="#23263a"/>
-    <rect x="3" y="3" width="9" height="1" fill="#8a9078"/>
-    <rect x="12" y="3" width="1" height="1" fill="#23263a"/>
-    <rect x="2" y="4" width="1" height="1" fill="#23263a"/>
-    <rect x="3" y="4" width="1" height="1" fill="#8a9078"/>
-    <rect x="4" y="4" width="1" height="1" fill="#e8a020"/>
-    <rect x="5" y="4" width="4" height="1" fill="#8a9078"/>
-    <rect x="9" y="4" width="1" height="1" fill="#e8a020"/>
-    <rect x="10" y="4" width="2" height="1" fill="#8a9078"/>
-    <rect x="12" y="4" width="1" height="1" fill="#23263a"/>
-    <rect x="2" y="5" width="1" height="1" fill="#23263a"/>
-    <rect x="3" y="5" width="9" height="1" fill="#8a9078"/>
-    <rect x="12" y="5" width="1" height="1" fill="#23263a"/>
-    <rect x="2" y="6" width="1" height="1" fill="#23263a"/>
-    <rect x="3" y="6" width="2" height="1" fill="#8a9078"/>
-    <rect x="5" y="6" width="2" height="1" fill="#a8ae92"/>
-    <rect x="7" y="6" width="2" height="1" fill="#8a9078"/>
-    <rect x="9" y="6" width="2" height="1" fill="#a8ae92"/>
-    <rect x="11" y="6" width="1" height="1" fill="#8a9078"/>
-    <rect x="12" y="6" width="1" height="1" fill="#23263a"/>
-    <rect x="1" y="7" width="1" height="1" fill="#23263a"/>
-    <rect x="2" y="7" width="11" height="1" fill="#8a9078"/>
-    <rect x="13" y="7" width="1" height="1" fill="#23263a"/>
-    <rect x="1" y="8" width="1" height="1" fill="#23263a"/>
-    <rect x="2" y="8" width="1" height="1" fill="#8a9078"/>
-    <rect x="3" y="8" width="2" height="1" fill="#4a8a30"/>
-    <rect x="5" y="8" width="6" height="1" fill="#8a9078"/>
-    <rect x="11" y="8" width="1" height="1" fill="#4a8a30"/>
-    <rect x="12" y="8" width="2" height="1" fill="#8a9078"/>
-    <rect x="14" y="8" width="1" height="1" fill="#23263a"/>
-    <rect x="1" y="9" width="1" height="1" fill="#23263a"/>
-    <rect x="2" y="9" width="12" height="1" fill="#8a9078"/>
-    <rect x="14" y="9" width="1" height="1" fill="#23263a"/>
-    <rect x="1" y="10" width="1" height="1" fill="#23263a"/>
-    <rect x="2" y="10" width="1" height="1" fill="#8a9078"/>
-    <rect x="3" y="10" width="1" height="1" fill="#a8ae92"/>
-    <rect x="4" y="10" width="8" height="1" fill="#8a9078"/>
-    <rect x="12" y="10" width="1" height="1" fill="#a8ae92"/>
-    <rect x="13" y="10" width="1" height="1" fill="#8a9078"/>
-    <rect x="14" y="10" width="1" height="1" fill="#23263a"/>
-    <rect x="1" y="11" width="1" height="1" fill="#23263a"/>
-    <rect x="2" y="11" width="12" height="1" fill="#8a9078"/>
-    <rect x="14" y="11" width="1" height="1" fill="#23263a"/>
-    <rect x="2" y="12" width="1" height="1" fill="#23263a"/>
-    <rect x="3" y="12" width="10" height="1" fill="#8a9078"/>
-    <rect x="13" y="12" width="1" height="1" fill="#23263a"/>
-    <rect x="2" y="13" width="1" height="1" fill="#23263a"/>
-    <rect x="3" y="13" width="2" height="1" fill="#8a9078"/>
-    <rect x="5" y="13" width="1" height="1" fill="#a8ae92"/>
-    <rect x="6" y="13" width="4" height="1" fill="#8a9078"/>
-    <rect x="10" y="13" width="1" height="1" fill="#a8ae92"/>
-    <rect x="11" y="13" width="2" height="1" fill="#8a9078"/>
-    <rect x="13" y="13" width="1" height="1" fill="#23263a"/>
-    <rect x="2" y="14" width="1" height="1" fill="#23263a"/>
-    <rect x="3" y="14" width="4" height="1" fill="#8a9078"/>
-    <rect x="9" y="14" width="4" height="1" fill="#8a9078"/>
-    <rect x="13" y="14" width="1" height="1" fill="#23263a"/>
-    <rect x="2" y="15" width="1" height="1" fill="#23263a"/>
-    <rect x="3" y="15" width="3" height="1" fill="#8a9078"/>
-    <rect x="10" y="15" width="3" height="1" fill="#8a9078"/>
-    <rect x="13" y="15" width="1" height="1" fill="#23263a"/>
-    <rect x="2" y="16" width="1" height="1" fill="#23263a"/>
-    <rect x="3" y="16" width="3" height="1" fill="#8a9078"/>
-    <rect x="10" y="16" width="3" height="1" fill="#8a9078"/>
-    <rect x="13" y="16" width="1" height="1" fill="#23263a"/>
-    <rect x="2" y="17" width="4" height="1" fill="#23263a"/>
-    <rect x="10" y="17" width="4" height="1" fill="#23263a"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+  <defs>
+    <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b8be9c"/>
+      <stop offset="0.6" stop-color="#8a9078"/>
+      <stop offset="1" stop-color="#5e6450"/>
+    </linearGradient>
+    <radialGradient id="stoneLight" cx="0.35" cy="0.3" r="1">
+      <stop offset="0" stop-color="#c8ceac"/>
+      <stop offset="1" stop-color="#7a8068"/>
+    </radialGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="400" cy="750" rx="240" ry="44" fill="#000" opacity="0.35"/>
+  </g>
+  <g id="legs" stroke="#23263a" stroke-width="10">
+    <rect x="286" y="540" width="104" height="170" rx="36" fill="url(#stone)"/>
+    <rect x="410" y="540" width="104" height="170" rx="36" fill="url(#stone)"/>
+  </g>
+  <g id="body" stroke="#23263a" stroke-width="10">
+    <rect x="272" y="290" width="256" height="300" rx="70" fill="url(#stoneLight)"/>
+    <g id="moss" stroke="none">
+      <ellipse cx="330" cy="350" rx="34" ry="24" fill="#4a8a30" opacity="0.8"/>
+      <ellipse cx="474" cy="430" rx="40" ry="28" fill="#4a8a30" opacity="0.7"/>
+      <ellipse cx="352" cy="520" rx="28" ry="20" fill="#3c7a26" opacity="0.75"/>
+      <ellipse cx="452" cy="330" rx="24" ry="16" fill="#4a8a30" opacity="0.6"/>
+    </g>
+    <g id="cracks" fill="none" stroke-linecap="round" stroke-width="6" opacity="0.7">
+      <path d="M 380 420 L 396 448 L 384 478"/>
+      <path d="M 440 480 L 428 508"/>
+    </g>
+  </g>
+  <g id="arms" stroke="#23263a" stroke-width="10">
+    <rect x="188" y="300" width="88" height="230" rx="40" fill="url(#stone)"/>
+    <rect x="524" y="300" width="88" height="230" rx="40" fill="url(#stone)"/>
+    <circle cx="232" cy="560" r="52" fill="url(#stoneLight)"/>
+    <circle cx="568" cy="560" r="52" fill="url(#stoneLight)"/>
+  </g>
+  <g id="head" stroke="#23263a" stroke-width="10">
+    <rect x="330" y="150" width="140" height="120" rx="34" fill="url(#stoneLight)"/>
+    <ellipse cx="368" cy="216" rx="18" ry="24" fill="#e8a020" stroke="none"/>
+    <ellipse cx="432" cy="216" rx="18" ry="24" fill="#e8a020" stroke="none"/>
+    <circle cx="368" cy="216" r="34" fill="#e8a020" opacity="0.25" stroke="none"/>
+    <circle cx="432" cy="216" r="34" fill="#e8a020" opacity="0.25" stroke="none"/>
+  </g>
 </svg>

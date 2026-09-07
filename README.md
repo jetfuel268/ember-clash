@@ -71,8 +71,7 @@ Option B — **`gh-pages` branch:**
 index.html            DOM skeleton for all screens; loads js/main.js as an ES module
 css/styles.css        All styling
 assets/bg/            Battle environment pixel art (AI-generated, studio pipeline)
-assets/sprites/       Character SVGs — regenerate with `python3 tools/make_sprites.py`
-tools/make_sprites.py Sprite generator (pixel-grid maps -> merged-rect SVGs)
+assets/sprites/       Hand-crafted vector SVG characters (primitives + Bezier paths, layered <g> groups, gradient shading)
 js/config/tuning.js   Every balance number. Tune the game here only.
 js/core/events.js     Tiny typed event bus — the contract between game and UI
 js/core/rng.js        Random helpers
@@ -98,8 +97,8 @@ tests/smoke.mjs       Node smoke test for all DOM-free modules
 - **New upgrade** → add one entry to `UPGRADES` in `js/game/upgrades.js`
   (use an existing stat key, or add a key handled in `Player.stats()`).
 - **New enemy type** → add one entry to `BASES` in `js/game/enemies.js`.
-- **New/changed sprite** → edit the pixel map in `tools/make_sprites.py` and
-  run it; SVGs scale crisply at any size with zero post-processing.
+- **New/changed sprite** → edit the SVG in `assets/sprites/` directly; keep the
+  conventions (clean viewBox 0 0 800 800, layered <g> ids, gradients in <defs>).
 - **New screen** → add a `<section class="screen hidden" id="screen-…">` to
   `index.html` and a case in the flow in `js/main.js`.
 - **New action** → add handling in `Combat.act()` / `canAct()` and a button in
