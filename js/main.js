@@ -219,11 +219,9 @@ function renderShop() {
     const iconTier = maxed ? 5 : buying; // show the piece you own/max or will buy
     item.innerHTML = `
       <div class="equip-icon"></div>
-      <div class="equip-info">
-        <div class="s-name">${pieceName(slot, maxed ? 5 : buying)} <span style="color:var(--muted);font-weight:400">tier ${owned}/5</span></div>
-        <div class="s-desc">${maxed ? 'Highest tier equipped.' : statLine(pieceStats(slot, buying))}</div>
-      </div>
-      <button class="btn" ${maxed || player.gold < price ? 'disabled' : ''}>${maxed ? 'MAX' : `${price} gold`}</button>`;
+      <div class="s-name">${pieceName(slot, maxed ? 5 : buying)} <span style="color:var(--muted);font-weight:400">tier ${owned}/5</span></div>
+      <div class="s-desc">${maxed ? 'Highest tier equipped.' : statLine(pieceStats(slot, buying))}</div>
+      <button class="btn" ${maxed || player.gold < price ? 'disabled' : ''}>${maxed ? 'MAX' : `Buy · ${price} gold`}</button>`;
     item.querySelector('.equip-icon').innerHTML = equipIconSvg(slot, iconTier);
     item.querySelector('button').addEventListener('click', () => {
       if (maxed || player.gold < price) return;

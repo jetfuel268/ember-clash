@@ -147,11 +147,14 @@ body {
 .shop-item .s-price { color: var(--accent); white-space: nowrap; }
 .shop-item.owned { opacity: 0.5; }
 
-/* Equipment cards: inline item SVG + info + price */
-.shop-equip { align-items: center; gap: 12px; }
-.shop-equip .equip-icon { width: 56px; height: 56px; flex: 0 0 auto; }
+/* Equipment cards: 4 in a row; big centered item SVG with name, stats
+   and the purchase button stacked directly beneath it. */
+#shop-equipment { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+@media (max-width: 700px) { #shop-equipment { grid-template-columns: repeat(2, 1fr); } }
+.shop-equip { flex-direction: column; align-items: center; text-align: center; gap: 8px; }
+.shop-equip .equip-icon { width: 110px; height: 110px; flex: 0 0 auto; }
 .shop-equip .equip-icon svg { width: 100%; height: 100%; display: block; }
-.shop-equip .equip-info { flex: 1 1 auto; }
+.shop-equip .btn { width: 100%; }
 
 /* Hero model: equipment tiers drive CSS variables (set by the HUD). */
 #hero-svg { width: 100%; height: 100%; display: block; }
