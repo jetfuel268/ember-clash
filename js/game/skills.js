@@ -144,6 +144,38 @@ export const SKILLS = [
     mult: 1.25,
     buffOnHit: { damage: { bonus: 0.2, turns: 2 } },
   },
+  // Weak element basics: 100% (neutral), 15 energy — cheap, safe against
+  // unknown targets, still 1.5x on a weakness / 0.5x resisted.
+  {
+    id: 'embersnap',
+    name: 'Ember Snap',
+    desc: 'A quick fire attack dealing 100% damage.',
+    cost: 15,
+    pool: [1, 9],
+    type: 'damage',
+    mult: 1,
+    element: 'fire',
+  },
+  {
+    id: 'frostenip',
+    name: 'Frost Nip',
+    desc: 'A quick ice attack dealing 100% damage.',
+    cost: 15,
+    pool: [1, 9],
+    type: 'damage',
+    mult: 1,
+    element: 'ice',
+  },
+  {
+    id: 'staticzap',
+    name: 'Static Zap',
+    desc: 'A quick lightning attack dealing 100% damage.',
+    cost: 15,
+    pool: [1, 9],
+    type: 'damage',
+    mult: 1,
+    element: 'lightning',
+  },
   // ---- Pool 10-19 ----------------------------------------------------
   {
     id: 'vampirefang',
@@ -262,7 +294,9 @@ export const SKILLS = [
     mult: 2.25,
     element: 'lightning',
   },
-  // ---- Pool 20+ ------------------------------------------------------
+  // ---- Late game ------------------------------------------------------
+  // (True Edge / Volley / Adrenaline / Second Wind are 20+; Opportune
+  // Moment belongs to the 11-13 window.)
   {
     id: 'trueedge',
     name: 'True Edge',
@@ -282,6 +316,36 @@ export const SKILLS = [
     type: 'damage',
     mult: 1,
     extraActionOnHit: true,
+  },
+  {
+    id: 'volley',
+    name: 'Volley',
+    desc: 'Strike three times at 70% strength. Each hit can miss and crit.',
+    cost: 40,
+    pool: [20, 999],
+    type: 'damage',
+    mult: 0.7,
+    hits: 3,
+  },
+  {
+    id: 'adrenaline',
+    name: 'Adrenaline',
+    desc: 'Gain +35% damage and +35% hit rate for 2 turns.',
+    cost: 45,
+    pool: [20, 999],
+    buff: {
+      damage: { bonus: 0.35, turns: 2 },
+      hit: { bonus: 0.35, turns: 2 },
+    },
+  },
+  {
+    id: 'secondwind',
+    name: 'Second Wind',
+    desc: 'Heal 20% of your max HP and purge all negative effects.',
+    cost: 35,
+    pool: [20, 999],
+    healFrac: 0.2,
+    cleanse: true,
   },
 ];
 

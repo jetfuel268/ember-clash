@@ -101,6 +101,13 @@ function newSave() {
   assert.ok(earlyIds.includes('swiftedge'), 'early pool has the cheaper on-hit skill (Swift Edge)');
   assert.ok(earlyIds.includes('emberjab') && earlyIds.includes('frostbrand') && earlyIds.includes('arcbolt'),
     'early pool has the 150% element variants of the 225% trios');
+  assert.ok(earlyIds.includes('embersnap') && earlyIds.includes('frostenip') && earlyIds.includes('staticzap'),
+    'early pool has the weak 100% element basics');
+  // Late pool (20+) is populated.
+  const lateIds = poolFor(25).map((s) => s.id);
+  for (const id of ['trueedge', 'volley', 'adrenaline', 'secondwind']) {
+    assert.ok(lateIds.includes(id), `late pool has ${id} at lv25`);
+  }
   for (let i = 0; i < 50; i++) {
     const pick = pickSkillToLearn(15, [], makeRng(i));
     if (pick) assert.ok(pick.pool[0] <= 15 && pick.pool[1] >= 15, 'pick matches level range');
@@ -423,12 +430,48 @@ async function testEarlyVariants() {
     `Swift Edge grants +20% dmg buff on hit (got ${JSON.stringify(c.p.buffs.damage)})`);
 }
 
+// --- Late-pool skills: Volley (3 hits), Adrenaline (dual buff), Second Wind (heal + cleanse) --
+async function testLateSkills() {
+  TUNING.combat.enemyActionDelayMs = 0;
+  const tick = () => new Promise((r) => setTimeout(r, 30));
+  const p = newPlayer(3);
+  p.stats0.magic = 150; // pool big enough for all three skills (120 total)
+  p.stats0.critChance = 0;
+  p.skills = ['volley', 'adrenaline', 'secondwind', 'powerstrike'];
+  const e = createEnemy(1);
+  e.type = 'beast'; // neutral 1.0 blunt matchup (deterministic damage math)
+  e.maxHp = 300; e.hp = 300;
+  e.armor = 0;
+  const c = new Combat(p, e, new EventBus(), null, 150);
+  c.start();
+  // Force every Volley hit to land (guarantee only covers the first).
+  const strike = c.playerStrike.bind(c);
+  c.playerStrike = (s, mult, opts) => strike(s, mult, { ...opts, forceHit: true });
+  c.act('skill', 'volley');
+  const dmg = 300 - c.e.hp;
+  // 3 hits x 70% x 16 atk, +/-15% variance -> 30..39 (no crits)
+  assert.ok(dmg >= 28 && dmg <= 42, `Volley deals 3x70% (got ${dmg})`);
+  await tick();
+  c.act('skill', 'adrenaline');
+  assert.ok(c.p.buffs.damage && c.p.buffs.damage.bonus === 0.35 && c.p.buffs.damage.turns === 2,
+    'Adrenaline grants +35% damage buff');
+  assert.ok(c.p.buffs.hit && c.p.buffs.hit.bonus === 0.35 && c.p.buffs.hit.turns === 2,
+    'Adrenaline grants +35% hit buff');
+  await tick();
+  c.p.buffs.dot = { amount: 5, turns: 3 }; // simulate a poison
+  c.p.hp = Math.max(1, Math.round(c.p.maxHp * 0.5));
+  c.act('skill', 'secondwind');
+  assert.equal(c.p.buffs.dot, null, 'Second Wind purges the dot');
+  assert.ok(c.p.hp > Math.round(c.p.maxHp * 0.5), `Second Wind heals (hp ${c.p.hp})`);
+}
+
 async function main() {
   await testCombatBasics();
   await testHpCarryover();
   await testTypeSkills();
   await testElementSkills();
   await testEarlyVariants();
+  await testLateSkills();
   const win = await playBossFight(23, UPGRADES.filter((u) => ['sharp', 'iron', 'crit'].includes(u.id)));
   assert.ok(win, `Lv 23 player (with upgrades) defeats the stage-50 final boss (shortened)`);
 }
