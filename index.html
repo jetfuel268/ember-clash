@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ember Clash</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>" />
+</head>
+<body>
+  <main id="app">
+
+    <section id="screen-menu" class="screen">
+      <h1 class="title">⚔️ Ember Clash</h1>
+      <p class="subtitle">A turn-based combat journey. Win stages, gain levels, choose upgrades, face bosses.</p>
+      <div class="menu-stats" id="menu-stats"></div>
+      <div class="menu-buttons">
+        <button id="btn-start" class="btn btn-primary">Begin Campaign</button>
+        <button id="btn-reset" class="btn">Reset Progress</button>
+      </div>
+      <p class="hint" id="menu-hint"></p>
+    </section>
+
+    <section id="screen-combat" class="screen hidden">
+      <div id="stage-label" class="stage-label"></div>
+      <div class="battlefield">
+        <div class="combatant" id="player-panel">
+          <div class="sprite" id="player-sprite">🗡️</div>
+          <div class="stat-name" id="player-name">Hero</div>
+          <div class="stat-level" id="player-level">Lv 1</div>
+          <div class="bar hp"><div class="bar-fill" id="player-hp-fill"></div><span class="bar-text" id="player-hp-text"></span></div>
+          <div class="bar energy"><div class="bar-fill" id="player-energy-fill"></div><span class="bar-text" id="player-energy-text"></span></div>
+          <div class="potions" id="player-potions"></div>
+        </div>
+        <div class="combatant" id="enemy-panel">
+          <div class="sprite enemy" id="enemy-sprite">👺</div>
+          <div class="stat-name" id="enemy-name"></div>
+          <div class="bar hp"><div class="bar-fill enemy" id="enemy-hp-fill"></div><span class="bar-text" id="enemy-hp-text"></span></div>
+          <div class="intent" id="enemy-intent"></div>
+        </div>
+      </div>
+      <div id="log" class="log" aria-live="polite"></div>
+      <div id="actions" class="actions">
+        <button id="action-attack" class="btn">⚔️ Attack<span class="cost">+10 ⚡</span></button>
+        <button id="action-power" class="btn">💥 Power Strike<span class="cost">175% · 25 ⚡</span></button>
+        <button id="action-defend" class="btn">🛡️ Defend<span class="cost">-50% dmg · +20 ⚡</span></button>
+        <button id="action-potion" class="btn">🧪 Potion<span class="cost">heal 35%</span></button>
+      </div>
+    </section>
+
+    <section id="screen-levelup" class="screen hidden">
+      <h2 class="title" id="levelup-title">Level Up!</h2>
+      <p class="subtitle" id="levelup-sub">Choose one upgrade:</p>
+      <div id="upgrade-cards" class="cards"></div>
+      <button id="btn-skip-levelup" class="btn">Skip — next stage</button>
+    </section>
+
+    <section id="screen-gameover" class="screen hidden">
+      <h2 class="title">☠️ Defeated</h2>
+      <p class="subtitle" id="gameover-text">You fall... but the campaign continues from this stage.</p>
+      <div class="menu-buttons">
+        <button id="btn-retry" class="btn btn-primary">Retry Stage</button>
+        <button id="btn-menu-1" class="btn">Main Menu</button>
+      </div>
+    </section>
+
+    <section id="screen-victory" class="screen hidden">
+      <h2 class="title">🏆 Victory!</h2>
+      <p class="subtitle" id="victory-text">You have conquered the campaign. The endless horde awaits beyond.</p>
+      <div class="menu-buttons">
+        <button id="btn-continue" class="btn btn-primary">Continue (Endless)</button>
+        <button id="btn-menu-2" class="btn">Main Menu</button>
+      </div>
+    </section>
+
+  </main>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+# ⚔️ Ember Clash
+
+A turn-based combat game that runs entirely in the browser. No server, no build
+step required — the project root **is** the production build.
+
+## How to play
+
+- **Attack** deals damage and grants energy.
+- **Power Strike** (25 energy) deals 175% damage.
+- **Defend** halves the next enemy hit and grants 20 energy.
+- **Potion** heals 35% of max HP (refilled between stages).
+
+**Progression:** each stage win grants XP and gold. XP levels you up; each level
+offers a choice of 3 stackable upgrades (attack, HP, energy, crit, potions, gold).
+A **boss** appears every 5 stages, the campaign is **won at stage 10**, and you
+can continue into endless mode with escalating enemies. Losing sends you back to
+the same stage. All progress is persisted in `localStorage`.
+
+## Running locally
+
+```bash
+# any static server works, e.g.:
+python3 -m http.server 8000
+# then open http://localhost:8000
+```
+
+(Or just open `index.html` via a server; ES modules require `http://`, not `file://`.)
+
+## Tests
+
+```bash
+node tests/smoke.mjs   # exercises save, stats, upgrades, progression, enemies, full combat fights
+```
+
+## Building (there is no build step)
+
+The production output is the project root as-is:
+
+```
+index.html
+css/
+js/
+```
+
+All asset references are **relative** (`css/styles.css`, `js/main.js`), and the
+game uses no fetch/XHR, web workers, or server-side code. This means it works
+when deployed from **any base path**, including a GitHub Pages repository
+subdirectory (e.g. `https://user.github.io/repo-name/`) — no path
+configuration is needed.
+
+If you add assets (images, audio), keep referencing them with relative paths so
+the subdirectory deployment guarantee holds.
+
+## Deploying to GitHub Pages
+
+Option A — **docs folder** (recommended, no extra branch):
+
+1. Copy the production files (`index.html`, `css/`, `js/`) into a `docs/` folder.
+2. Commit and push.
+3. In the repository's GitHub settings, enable Pages with `docs/` as the source.
+
+Option B — **`gh-pages` branch:**
+
+1. Create a `gh-pages` branch containing `index.html`, `css/`, `js/` at its root.
+2. Push it; GitHub Pages serves it at `https://user.github.io/repo-name/`.
+
+## Architecture (locality of change)
+
+```
+index.html            DOM skeleton for all screens; loads js/main.js as an ES module
+css/styles.css        All styling
+js/config/tuning.js   Every balance number. Tune the game here only.
+js/core/events.js     Tiny typed event bus — the contract between game and UI
+js/core/rng.js        Random helpers
+js/core/save.js       Versioned localStorage persistence (key: combat-game.save.v1)
+js/game/player.js     Player model: persisted fields + derived stats
+js/game/upgrades.js   Data-driven upgrade catalog + XP curve (add an entry to add an upgrade)
+js/game/enemies.js    Enemy types, bosses, per-stage scaling, AI intents
+js/game/combat.js     Turn-based combat state machine (no DOM access)
+js/game/progression.js  XP/levels, stage rewards, stage advancing
+js/ui/screens.js      Screen switching
+js/ui/hud.js          Bars/sprites from 'state'/'phase' events
+js/ui/log.js         Combat log from 'log' events
+js/main.js            Wiring only: owns the save object and routes events
+tests/smoke.mjs       Node smoke test for all DOM-free modules
+```
+
+**Rules that keep changes local:**
+
+- **Game modules never import UI modules, and UI modules never import game
+  modules.** They communicate only through the `EventBus` names documented in
+  `js/core/events.js` (`log`, `state`, `phase`, `hit`).
+- **Balance changes** → edit `js/config/tuning.js` only.
+- **New upgrade** → add one entry to `UPGRADES` in `js/game/upgrades.js`
+  (use an existing stat key, or add a key handled in `Player.stats()`).
+- **New enemy type** → add one entry to `BASES` in `js/game/enemies.js`.
+- **New screen** → add a `<section class="screen hidden" id="screen-…">` to
+  `index.html` and a case in the flow in `js/main.js`.
+- **New action** → add handling in `Combat.act()` / `canAct()` and a button in
+  `index.html` + `js/main.js` binding.
+
+## Save format (v1)
+
+```json
+{
+  "version": 1,
+  "player": { "level": 1, "xp": 0, "gold": 0, "upgrades": ["sharp"] },
+  "stage": 1,
+  "stats": { "wins": 0, "losses": 0, "kills": 0 }
+}
+```
+
+Stored under the `localStorage` key `combat-game.save.v1`. Changing the schema?
+Bump `VERSION` in `js/core/save.js` — old saves are safely discarded.
