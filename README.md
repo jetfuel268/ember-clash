@@ -40,6 +40,7 @@ The production output is the project root as-is:
 index.html
 css/
 js/
+assets/
 ```
 
 All asset references are **relative** (`css/styles.css`, `js/main.js`), and the
@@ -69,6 +70,7 @@ Option B — **`gh-pages` branch:**
 ```
 index.html            DOM skeleton for all screens; loads js/main.js as an ES module
 css/styles.css        All styling
+assets/bg/            Battle environment pixel art (generated, see README)
 js/config/tuning.js   Every balance number. Tune the game here only.
 js/core/events.js     Tiny typed event bus — the contract between game and UI
 js/core/rng.js        Random helpers

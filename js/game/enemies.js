@@ -3,17 +3,17 @@ import { TUNING } from '../config/tuning.js';
 import { pick, weightedPick } from '../core/rng.js';
 
 const BASES = [
-  { id: 'grunt', name: 'Grunt', emoji: '👺', hp: 60, atk: 9 },
-  { id: 'brute', name: 'Brute', emoji: '👹', hp: 48, atk: 13 },
-  { id: 'tank', name: 'Warden', emoji: '🧟', hp: 85, atk: 7 },
-  { id: 'stinger', name: 'Stinger', emoji: '🕷️', hp: 55, atk: 11 },
+  { id: 'grunt', name: 'Grunt', sprite: 'grunt', hp: 60, atk: 9 },
+  { id: 'brute', name: 'Brute', sprite: 'brute', hp: 48, atk: 13 },
+  { id: 'tank', name: 'Warden', sprite: 'warden', hp: 85, atk: 7 },
+  { id: 'stinger', name: 'Stinger', sprite: 'stinger', hp: 55, atk: 11 },
 ];
 
 const BOSSES = [
-  { name: 'Overlord Malgrath', emoji: '💀' },
-  { name: 'Warden Prime', emoji: '🐲' },
-  { name: 'The Hollow King', emoji: '👑' },
-  { name: 'Revenant Colossus', emoji: '⚔️' },
+  { name: 'Overlord Malgrath', sprite: 'brute' },
+  { name: 'Warden Prime', sprite: 'warden' },
+  { name: 'The Hollow King', sprite: 'brute' },
+  { name: 'Revenant Colossus', sprite: 'warden' },
 ];
 
 export function isBossStage(stage) {
@@ -26,16 +26,16 @@ export function createEnemy(stage, baseIndex) {
   const atkScale = 1 + t.stage.enemyAtkPerStage * (stage - 1);
   const boss = isBossStage(stage);
 
-  let base, name, emoji;
+  let base, name, emoji, sprite;
   if (boss) {
     base = { hp: 60, atk: 10 };
     const b = BOSSES[(stage / t.stage.bossEvery - 1) % BOSSES.length];
     name = b.name;
-    emoji = b.emoji;
+    sprite = b.sprite;
   } else {
     base = baseIndex != null ? BASES[baseIndex] : pick(BASES);
     name = base.name;
-    emoji = base.emoji;
+    sprite = base.sprite;
   }
 
   const hpMult = boss ? t.combat.boss.hpMultiplier : 1;
@@ -44,7 +44,7 @@ export function createEnemy(stage, baseIndex) {
   const atk = Math.round(base.atk * atkScale * atkMult);
   return {
     name,
-    emoji,
+    sprite,
     maxHp,
     hp: maxHp,
     atk,
@@ -65,6 +65,6 @@ export function rollIntent() {
 
 export const INTENT_LABELS = {
   attack: 'Unsheathing blade',
-  charge: 'Gathering power ⚡',
+  charge: 'Gathering power',
   defend: 'Raising guard',
 };

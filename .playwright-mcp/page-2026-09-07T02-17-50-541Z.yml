@@ -1,0 +1,9 @@
+- main [ref=f1e2]:
+  - generic [ref=f1e3]:
+    - heading "Ember Clash" [level=1] [ref=f1e4]
+    - paragraph [ref=f1e5]: A turn-based combat journey. Win stages, gain levels, choose upgrades, face bosses.
+    - generic [ref=f1e6]: Hero Lv 1 · Stage 1 · 0 goldWins 0 · Losses 0 · Kills 0
+    - generic [ref=f1e7]:
+      - button "Begin Campaign" [ref=f1e8] [cursor=pointer]
+      - button "Reset Progress" [ref=f1e9] [cursor=pointer]
+    - paragraph [ref=f1e10]: Attack for energy, spend it on Power Strikes, Defend to halve incoming damage, Potion to heal.

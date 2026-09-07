@@ -1,0 +1,19 @@
+{
+  "id": "b7c33fe90",
+  "name": "Regenerate sprites at 128px",
+  "command": "cd ~/pixel-art-studio && source .venv/bin/activate && \\\npython generate.py character -p \"16-bit pixel art sprite, lone character, an armored knight with a glowing sword, front-facing battle stance, on a plain flat solid dark gray background\" -o test/sprites/hero.png --downscale 4 --seed 11 && \\\npython generate.py character -p \"16-bit pixel art sprite, lone character, a goblin bandit with tattered clothes and a small dagger, front-facing, on a plain flat solid dark gray background\" -o test/sprites/grunt.png --downscale 4 --seed 21 && \\\npython generate.py character -p \"16-bit pixel art sprite, lone character, a huge red demon brute with sharp claws and horns, front-facing, on a plain flat solid dark gray background\" -o test/sprites/brute.png --downscale 4 --seed 31 && \\\npython generate.py character -p \"16-bit pixel art sprite, lone character, a mossy stone golem with glowing amber eyes, front-facing, on a plain flat solid dark gray background\" -o test/sprites/warden.png --downscale 4 --seed 41 && \\\npython generate.py character -p \"16-bit pixel art sprite, lone creature, a giant venomous purple spider with eight legs and glowing eyes, front-facing, on a plain flat solid dark gray background\" -o test/sprites/stinger.png --downscale 4 --seed 51",
+  "status": "completed",
+  "outputPath": ".pi/tasks/session-62408-62408/b7c33fe90.output",
+  "cwd": "/home/andy/combat-game",
+  "startTime": 1788747464627,
+  "endTime": 1788747540110,
+  "exitCode": 0,
+  "signal": null,
+  "pid": 72203,
+  "bytesWritten": 21702,
+  "isAgent": false,
+  "notified": true,
+  "notifyOnCompletion": true,
+  "triggerOnCompletion": true,
+  "timeoutSeconds": 600
+}

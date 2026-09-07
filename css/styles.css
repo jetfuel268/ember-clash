@@ -37,13 +37,51 @@ body {
 .hint { text-align: center; color: var(--muted); font-size: 13px; }
 
 .stage-label { text-align: center; font-size: 18px; color: var(--accent); letter-spacing: 1px; }
-.battlefield { display: flex; justify-content: space-between; gap: 12px; }
-.combatant {
-  flex: 1; background: var(--panel); border: 1px solid var(--border);
-  border-radius: 14px; padding: 14px; display: flex; flex-direction: column; align-items: center; gap: 8px;
+/* The arena is the stage: spans ~80% of the viewport (capped so it never
+   exceeds native art resolution), 2:1 to match the art. */
+.scene {
+  position: relative;
+  width: min(80vw, 1000px);
+  margin: 0 auto;
+  aspect-ratio: 2 / 1;
+  background: url("../assets/bg/arena.png") center / cover no-repeat;
+  image-rendering: pixelated;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
 }
-.sprite { font-size: 56px; line-height: 1; }
-.sprite.enemy { font-size: 56px; }
+.actor {
+  position: absolute;
+  bottom: 4%;
+  width: 26%;
+  display: flex;
+  justify-content: center;
+}
+.actor img {
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.5));
+}
+.actor-player { left: 6%; }
+.actor-enemy { right: 6%; bottom: 6%; }
+.hud-corner {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: min(38%, 300px);
+  background: rgba(18, 20, 28, 0.72);
+  border: 1px solid rgba(49, 58, 85, 0.7);
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(1px);
+}
+.hud-corner.right { left: auto; right: 10px; }
+.sprite { display: none; } /* legacy class kept so old flash() targets still exist */
 .stat-name { font-weight: 600; }
 .stat-level { color: var(--accent); font-size: 13px; }
 .bar {
@@ -103,5 +141,5 @@ body {
 @media (max-width: 560px) {
   .actions { grid-template-columns: repeat(2, 1fr); }
   .cards { grid-template-columns: 1fr; }
-  .battlefield { flex-direction: column; }
+  .hud-corner { width: 46%; }
 }

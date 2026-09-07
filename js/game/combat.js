@@ -32,7 +32,7 @@ export class Combat {
 
   start() {
     this.e.intent = rollIntent();
-    this.bus.emit('log', { text: `A ${this.enemy.boss ? 'boss: ' : ''}${this.enemy.name} ${this.enemy.emoji} appears (stage ${this.enemy.stage})`, kind: 'system' });
+    this.bus.emit('log', { text: `A ${this.enemy.boss ? 'boss: ' : ''}${this.enemy.name} appears (stage ${this.enemy.stage})`, kind: 'system' });
     this.pushState();
     this.bus.emit('phase', { value: 'player' });
   }
@@ -141,7 +141,7 @@ export class Combat {
       },
       enemy: {
         name: this.enemy.name,
-        emoji: this.enemy.emoji,
+        sprite: this.enemy.sprite,
         hp: this.e.hp,
         maxHp: this.e.maxHp,
         intent: this.e.intent,

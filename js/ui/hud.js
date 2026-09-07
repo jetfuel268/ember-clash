@@ -12,7 +12,9 @@ export class HUD {
       playerEnergyText: document.getElementById('player-energy-text'),
       playerPotions: document.getElementById('player-potions'),
       playerSprite: document.getElementById('player-sprite'),
+      playerSpriteImg: document.getElementById('player-sprite-img'),
       enemySprite: document.getElementById('enemy-sprite'),
+      enemySpriteImg: document.getElementById('enemy-sprite-img'),
       enemyName: document.getElementById('enemy-name'),
       enemyHp: document.getElementById('enemy-hp-fill'),
       enemyHpText: document.getElementById('enemy-hp-text'),
@@ -38,14 +40,16 @@ export class HUD {
 
   update(state) {
     const { player: p, enemy: e } = state;
+    this.el.playerSpriteImg.src = 'assets/sprites/hero.png';
+    this.el.enemySpriteImg.src = `assets/sprites/${e.sprite}.png`;
+    this.el.enemyName.textContent = `${e.name}${e.boss ? ' (BOSS)' : ''}`;
     this.el.playerHp.style.width = `${(p.hp / p.maxHp) * 100}%`;
     this.el.playerHpText.textContent = `${p.hp} / ${p.maxHp}`;
     this.el.playerEnergy.style.width = `${(p.energy / p.maxEnergy) * 100}%`;
     this.el.playerEnergyText.textContent = `${p.energy} / ${p.maxEnergy}`;
-    this.el.playerPotions.textContent = '🧪'.repeat(p.potions) || '—';
+    this.el.playerPotions.textContent = p.potions > 0 ? `× ${p.potions}` : '× 0';
     this.el.enemyHp.style.width = `${(e.hp / e.maxHp) * 100}%`;
     this.el.enemyHpText.textContent = `${e.hp} / ${e.maxHp}`;
-    this.el.enemyName.textContent = `${e.emoji} ${e.name}${e.boss ? ' (BOSS)' : ''}`;
     this.el.enemyIntent.textContent = e.intentLabel || '';
     this.lastState = state;
     this.updateActionButtons();

@@ -1,0 +1,30 @@
+- main [ref=f1e2]:
+  - generic [ref=f1e11]:
+    - generic [ref=f1e12]: Stage 1
+    - generic [ref=f1e13]:
+      - generic [ref=f1e14]:
+        - generic [ref=f1e15]: Hero · 0/30 xp
+        - generic [ref=f1e16]: Lv 1
+        - generic [ref=f1e17]: 100 / 100
+        - generic [ref=f1e20]: 25 / 50
+        - generic [ref=f1e23]: × 2
+      - generic [ref=f1e24]:
+        - generic [ref=f1e25]: Grunt
+        - generic [ref=f1e26]: 60 / 60
+        - generic [ref=f1e29]: Gathering power
+      - img "Hero" [ref=f1e31]
+      - img "Enemy" [ref=f1e33]
+    - generic [ref=f1e34]: A Grunt appears (stage 1)
+    - generic [ref=f1e36]:
+      - button "Attack +10 energy" [ref=f1e37] [cursor=pointer]:
+        - text: Attack
+        - generic [ref=f1e38]: +10 energy
+      - button "Power Strike 175% · 25 energy" [ref=f1e39] [cursor=pointer]:
+        - text: Power Strike
+        - generic [ref=f1e40]: 175% · 25 energy
+      - button "Defend -50% dmg · +20 energy" [ref=f1e41] [cursor=pointer]:
+        - text: Defend
+        - generic [ref=f1e42]: "-50% dmg · +20 energy"
+      - button "Potion heals 35%" [ref=f1e43] [cursor=pointer]:
+        - text: Potion
+        - generic [ref=f1e44]: heals 35%
