@@ -106,7 +106,7 @@ export const SKILLS = [
   },
   {
     id: 'emberjab',
-    name: 'Ember Jab 🔥',
+    name: 'Ember Jab',
     desc: 'A 150% 🔥 attack.',
     cost: 25,
     pool: [1, 9],
@@ -116,7 +116,7 @@ export const SKILLS = [
   },
   {
     id: 'frostbrand',
-    name: 'Frost Brand ❄️',
+    name: 'Frost Brand',
     desc: 'A 150% ❄️ attack.',
     cost: 25,
     pool: [1, 9],
@@ -126,7 +126,7 @@ export const SKILLS = [
   },
   {
     id: 'arcbolt',
-    name: 'Arc Bolt ⚡',
+    name: 'Arc Bolt',
     desc: 'A 150% ⚡ attack.',
     cost: 25,
     pool: [1, 9],
@@ -148,7 +148,7 @@ export const SKILLS = [
   // unknown targets, still 1.5x on a weakness / 0.5x resisted.
   {
     id: 'embersnap',
-    name: 'Ember Snap 🔥',
+    name: 'Ember Snap',
     desc: 'A 100% 🔥 attack.',
     cost: 15,
     pool: [1, 9],
@@ -158,7 +158,7 @@ export const SKILLS = [
   },
   {
     id: 'frostenip',
-    name: 'Frost Nip ❄️',
+    name: 'Frost Nip',
     desc: 'A 100% ❄️ attack.',
     cost: 15,
     pool: [1, 9],
@@ -168,7 +168,7 @@ export const SKILLS = [
   },
   {
     id: 'staticzap',
-    name: 'Static Zap ⚡',
+    name: 'Static Zap',
     desc: 'A 100% ⚡ attack.',
     cost: 15,
     pool: [1, 9],
@@ -266,7 +266,7 @@ export const SKILLS = [
   },
   {
     id: 'pyroclasm',
-    name: 'Pyroclasm 🔥',
+    name: 'Pyroclasm',
     desc: 'A devastating 225% 🔥 attack.',
     cost: 50,
     pool: [11, 13],
@@ -276,7 +276,7 @@ export const SKILLS = [
   },
   {
     id: 'permafrost',
-    name: 'Permafrost ❄️',
+    name: 'Permafrost',
     desc: 'A crushing 225% ❄️ attack.',
     cost: 50,
     pool: [11, 13],
@@ -286,7 +286,7 @@ export const SKILLS = [
   },
   {
     id: 'stormcall',
-    name: 'Stormcall ⚡',
+    name: 'Stormcall',
     desc: 'A blinding 225% ⚡ attack.',
     cost: 50,
     pool: [11, 13],
