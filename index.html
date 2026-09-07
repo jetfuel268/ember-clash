@@ -108,5 +108,24 @@
 
   </main>
   <script type="module" src="js/main.js"></script>
+<!-- Debug panel: hidden; only appears after the Konami code. Not advertised anywhere. -->
+<div id="debug-panel" class="hidden">
+  <div class="debug-title">Debug (Esc to hide)</div>
+  <div class="debug-grid">
+    <button data-dbg="enemy-1">Enemy 1 HP</button>
+    <button data-dbg="player-1">Hero 1 HP</button>
+    <button data-dbg="heal-both">Heal both</button>
+    <button data-dbg="potion">+1 potion</button>
+    <button data-dbg="buff-p-dmg">Hero +50% dmg</button>
+    <button data-dbg="buff-p-hit">Hero +30% hit</button>
+    <button data-dbg="buff-p-def">Hero +50% def</button>
+    <button data-dbg="dot-p">Poison hero</button>
+    <button data-dbg="buff-e-dmg">Enemy +40% dmg</button>
+    <button data-dbg="buff-e-def">Enemy +50% def</button>
+    <button data-dbg="defend">Defend both</button>
+    <button data-dbg="clear-buffs">Clear buffs</button>
+  </div>
+</div>
+
 </body>
 </html>

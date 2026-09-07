@@ -167,11 +167,9 @@ body {
 .buff-chip.poison { background: rgba(144, 64, 200, 0.15); color: #b070e8; border-color: rgba(144, 64, 200, 0.4); }
 @keyframes die {
   0% { transform: none; opacity: 1; }
-  60% { transform: rotate(8deg) scale(0.9); opacity: 0.8; }
-  100% { transform: translateY(30px) rotate(24deg); opacity: 0; }
+  30% { transform: none; opacity: 0.9; }
+  100% { transform: translateY(12px); opacity: 0; }
 }
-.dying { animation: die 0.9s ease forwards; }
-
 .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .card {
   background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
@@ -197,9 +195,16 @@ body {
   60% { transform: translateX(10px) scale(1.08); filter: brightness(1.6) saturate(2); }
 }
 .hit-crit { animation: shakeCrit 0.45s ease; }
+.actor.dying { animation: die 0.9s ease forwards; }
 
 @media (max-width: 560px) {
   .actions { grid-template-columns: repeat(2, 1fr); }
   .cards { grid-template-columns: 1fr; }
   .hud-corner { width: 46%; }
 }
+
+#debug-panel { position: fixed; right: 16px; bottom: 16px; z-index: 50; background: rgba(20, 18, 38, 0.95); border: 1px solid var(--border); border-radius: 12px; padding: 12px; width: 230px; }
+.debug-title { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.debug-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.debug-grid button { background: var(--panel); border: 1px solid var(--border); color: var(--text); font-size: 12px; padding: 6px 4px; border-radius: 8px; cursor: pointer; }
+.debug-grid button:hover { border-color: var(--accent); }

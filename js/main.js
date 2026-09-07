@@ -286,5 +286,43 @@ $('btn-reset').addEventListener('click', () => {
   showMenu();
 });
 
+// --- Hidden debug mode (Konami code) ---
+const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'KeyB', 'KeyA'];
+let konamiIndex = 0;
+const debugPanel = document.getElementById('debug-panel');
+window.addEventListener('keydown', (e) => {
+  konamiIndex = e.code === KONAMI[konamiIndex] ? konamiIndex + 1 : (e.code === KONAMI[0] ? 1 : 0);
+  if (konamiIndex === KONAMI.length) {
+    konamiIndex = 0;
+    debugPanel.classList.remove('hidden');
+  }
+  if (e.code === 'Escape') debugPanel.classList.add('hidden');
+});
+function blankBuffs() { return { damage: null, defense: null, hit: null, dot: null }; }
+const DBG_ACTIONS = {
+  'enemy-1': (c) => { c.e.hp = 1; c.enemy.hp = 1; },
+  'player-1': (c) => { c.p.hp = 1; },
+  'heal-both': (c) => { c.p.hp = c.p.maxHp; c.e.hp = c.e.maxHp; },
+  'potion': (c) => { c.p.potions += 1; },
+  'buff-p-dmg': (c) => { c.p.buffs.damage = { bonus: 0.5, turns: 3 }; },
+  'buff-p-hit': (c) => { c.p.buffs.hit = { bonus: 0.3, turns: 3 }; },
+  'buff-p-def': (c) => { c.p.buffs.defense = { bonus: 0.5, turns: 3 }; },
+  'dot-p': (c) => { c.p.buffs.dot = { amount: 5, turns: 3 }; },
+  'buff-e-dmg': (c) => { c.e.buffs.damage = { bonus: 0.4, turns: 3 }; },
+  'buff-e-def': (c) => { c.e.buffs.defense = { bonus: 0.5, turns: 3 }; },
+  'defend': (c) => { c.p.defending = true; c.e.defending = true; },
+  'clear-buffs': (c) => { c.p.buffs = blankBuffs(); c.e.buffs = blankBuffs(); },
+};
+document.querySelectorAll('#debug-panel [data-dbg]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const c = combat;
+    if (!c || c.done || c.busy) return;
+    const fn = DBG_ACTIONS[btn.dataset.dbg];
+    if (!fn) return;
+    fn(c);
+    c.pushState();
+  });
+});
+
 // Boot
 showMenu();
