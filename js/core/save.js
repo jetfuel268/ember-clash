@@ -1,16 +1,18 @@
-// Versioned localStorage persistence. Save shape (v3):
+// Versioned localStorage persistence. Save shape (v4):
 // {
-//   version: 3,
-//   player: { level, xp, gold, upgrades: [ids], stats: { attack, defense,
-//             magic, maxHp, critChance, critDamage },
-//             skills: [ids], items: { potion, vial, elixir }, currentHp },
+//   version: 4,
+//   player: { level, xp, gold, upgrades: [legacy ids],
+//             stats: { attack, defense, magic, maxHp, critChance, critDamage },
+//             skills: [ids], items: { potion, vial, elixir },
+//             equipment: { helmet, chest, legs, sword },  // tiers 0-5
+//             currentHp, currentEnergy },
 //   bestiary: { [enemyId]: { name, type, sprite, skills, weakness, kills } },
 //   stage: 1,
 //   stats: { wins, losses, kills },
 //   victorySeen: false,
 // }
-const KEY = 'combat-game.save.v3';
-const VERSION = 3;
+const KEY = 'combat-game.save.v4';
+const VERSION = 4;
 
 export const DEFAULT_SAVE = () => ({
   version: VERSION,
@@ -22,7 +24,9 @@ export const DEFAULT_SAVE = () => ({
     stats: null, // null = derive defaults (Player fills base stats)
     skills: ['powerstrike'],
     items: { potion: 2, vial: 0, elixir: 0 },
+    equipment: { helmet: 0, chest: 0, legs: 0, sword: 0 },
     currentHp: null,
+    currentEnergy: null,
   },
   bestiary: {},
   stage: 1,
@@ -30,32 +34,32 @@ export const DEFAULT_SAVE = () => ({
   victorySeen: false,
 });
 
-// v2 player (no stored stats: level-derived) -> v3.
-function v2PlayerToV3(p) {
-  // v2 growth: +2 atk, +12 maxHp, +1 defense per level; upgrades applied on top.
-  const counts = {};
-  for (const id of p.upgrades) counts[id] = (counts[id] ?? 0) + 1;
-  const level = p.level ?? 1;
+// v3 upgrades (stackable text boosts) -> equipment tiers.
+// lung (Deep Lungs) is dropped: max energy is the magic stat itself.
+// bounty (gold bonus) is dropped: no slot for it.
+function upgradesToEquipment(ids) {
+  const c = {};
+  for (const id of ids ?? []) c[id] = (c[id] ?? 0) + 1;
   return {
-    level,
-    xp: p.xp ?? 0,
-    gold: p.gold ?? 0,
-    upgrades: p.upgrades ?? [],
-    stats: {
-      attack: 12 + (level - 1) * 2 + 2 * (counts.sharp ?? 0),
-      defense: (level - 1) + (counts.iron ?? 0),
-      // Old saves stored magic as a small regen value; it is now MAX ENERGY.
-      magic: 25 + (level - 1) * 3,
-      maxHp: 100 + (level - 1) * 12 + 20 * (counts.iron ?? 0),
-      critChance: 0.1 + 0.08 * (counts.crit ?? 0),
-      critDamage: 2.0 + 0.25 * (counts.crip ?? 0),
-    },
-    // Old shop-purchased skills map 1:1 onto the new learned-skill ids.
-    skills: ['powerstrike', ...(p.skills ?? []).filter((s) =>
-      ['berserk', 'stone', 'focus', 'mend'].includes(s)
-    )],
-    items: { potion: 2, vial: 0, elixir: 0 },
-    currentHp: null,
+    helmet: Math.min(5, Math.ceil((c.alchem ?? 0) * 2.5)), // 2 stacks -> tier 5
+    chest: Math.min(5, c.iron ?? 0),
+    legs: Math.min(5, c.mana ?? 0),
+    sword: Math.min(
+      5,
+      Math.max(
+        c.sharp ?? 0,
+        Math.ceil(((c.crit ?? 0) * 5) / 3),
+        Math.ceil(((c.crip ?? 0) * 5) / 3)
+      )
+    ),
+  };
+}
+
+// v3 player -> v4 (adds equipment, keeps everything else).
+function v3PlayerToV4(p) {
+  return {
+    ...p,
+    equipment: p.equipment ?? upgradesToEquipment(p.upgrades),
   };
 }
 
@@ -63,13 +67,19 @@ export class SaveStore {
   load() {
     try {
       const data =
-        this._read(KEY) ?? this._read('combat-game.save.v2') ?? this._read('combat-game.save.v1');
+        this._read(KEY) ??
+        this._read('combat-game.save.v3') ??
+        this._read('combat-game.save.v2') ??
+        this._read('combat-game.save.v1');
       if (!data) return DEFAULT_SAVE();
-      if (data.version === 1) {
-        return { ...DEFAULT_SAVE(), ...this._upgradePlayer(data), version: VERSION };
+      if (data.version === 1 || data.version === 2) {
+        // Older saves: rebuild the player the old way, then run it through
+        // the v3->v4 upgrade (equipment from legacy upgrades).
+        const player = data.version === 1 ? this._upgradePlayer(data) : v2PlayerToV3(data.player);
+        return { ...DEFAULT_SAVE(), player: v3PlayerToV4(player), version: VERSION };
       }
-      if (data.version === 2) {
-        return { ...data, player: v2PlayerToV3(data.player), version: VERSION };
+      if (data.version === 3) {
+        return { ...data, player: v3PlayerToV4(data.player), version: VERSION };
       }
       if (data.version !== VERSION) return DEFAULT_SAVE();
       return data;
@@ -95,10 +105,39 @@ export class SaveStore {
   clear() {
     try {
       localStorage.removeItem(KEY);
+      localStorage.removeItem('combat-game.save.v3');
       localStorage.removeItem('combat-game.save.v2');
       localStorage.removeItem('combat-game.save.v1');
     } catch {
       // ignore
     }
   }
+}
+
+// v2 player (no stored stats: level-derived) -> v3 shape.
+// NOTE: upgrade effects are intentionally NOT baked in here — they now
+// come from the equipment tiers (see upgradesToEquipment).
+function v2PlayerToV3(p) {
+  const level = p.level ?? 1;
+  return {
+    level,
+    xp: p.xp ?? 0,
+    gold: p.gold ?? 0,
+    upgrades: p.upgrades ?? [],
+    stats: {
+      attack: 12 + (level - 1) * 2,
+      defense: level - 1,
+      // Old saves stored magic as a small regen value; it is now MAX ENERGY.
+      magic: 25 + (level - 1) * 3,
+      maxHp: 100 + (level - 1) * 12,
+      critChance: 0.1,
+      critDamage: 2.0,
+    },
+    // Old shop-purchased skills map 1:1 onto the new learned-skill ids.
+    skills: ['powerstrike', ...(p.skills ?? []).filter((s) =>
+      ['berserk', 'stone', 'focus', 'mend'].includes(s)
+    )],
+    items: { potion: 2, vial: 0, elixir: 0 },
+    currentHp: null,
+  };
 }

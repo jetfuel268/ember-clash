@@ -435,6 +435,7 @@ export class Combat {
         maxEnergy: this.p.maxEnergy,
         magic: ps.magic,
         items: { ...this.p.items },
+        equipment: { ...this.player.equipment },
         defending: this.p.defending,
         hit: ps.hit,
         defense: ps.defense,

@@ -1,5 +1,7 @@
 // Renders combat state (bars, labels, intent) from 'state' and 'phase'
 // events. Holds element refs only — no game rules here.
+import { TIER_COLORS } from './equipIcons.js';
+
 export class HUD {
   constructor() {
     this.el = {
@@ -11,7 +13,7 @@ export class HUD {
       playerEnergy: document.getElementById('player-energy-fill'),
       playerEnergyText: document.getElementById('player-energy-text'),
       playerSprite: document.getElementById('player-sprite'),
-      playerSpriteImg: document.getElementById('player-sprite-img'),
+      heroSvg: document.getElementById('hero-svg'),
       playerBuffs: document.getElementById('player-buffs'),
       playerStats: document.getElementById('player-stats'),
       enemySprite: document.getElementById('enemy-sprite'),
@@ -32,6 +34,20 @@ export class HUD {
     this.currentPhase = 'player';
   }
 
+  // Recolor the inline hero model to the equipped tiers.
+  // (public so the shop can update the model right after a purchase)
+  applyHeroSkin(equipment) {
+    const svg = this.el.heroSvg;
+    if (!svg) return;
+    for (const slot of Object.keys(TIER_COLORS)) {
+      const t = Math.max(0, Math.min(5, equipment?.[slot] ?? 0));
+      const pal = TIER_COLORS[slot][t];
+      const prefix = slot === 'helmet' ? 'helm' : slot;
+      svg.style.setProperty(`--${prefix}-main`, pal.main);
+      svg.style.setProperty(`--${prefix}-dark`, pal.dark);
+    }
+  }
+
   setPhase(phase) {
     this.currentPhase = phase;
     const enabled = phase === 'player';
@@ -44,6 +60,7 @@ export class HUD {
   update(state) {
     const { player: p, enemy: e } = state;
     this.el.enemySpriteImg.src = `assets/sprites/${e.sprite}.svg`;
+    this.applyHeroSkin(p.equipment);
     this.el.enemyName.textContent = `${e.name}${e.boss ? ' (BOSS)' : ''} · ${e.typeLabel}`;
     this.el.playerHp.style.width = `${(p.hp / p.maxHp) * 100}%`;
     this.el.playerHpText.textContent = `${p.hp} / ${p.maxHp}`;

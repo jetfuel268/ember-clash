@@ -6,10 +6,12 @@ import { Player } from './game/player.js';
 import { Progression } from './game/progression.js';
 import { createEnemy, KNOWN_ENEMY_IDS } from './game/enemies.js';
 import { Combat } from './game/combat.js';
-import { stackCount, xpForNext, UPGRADES } from './game/upgrades.js';
+import { xpForNext } from './game/upgrades.js';
 import { SKILL_MAP } from './game/skills.js';
 import { TUNING } from './config/tuning.js';
 import { recordKill } from './game/bestiary.js';
+import { EQUIPMENT, EQUIPMENT_SLOTS, pieceName, nextTier, statLine } from './game/equipment.js';
+import { equipIconSvg } from './ui/equipIcons.js';
 import { Screens } from './ui/screens.js';
 import { HUD } from './ui/hud.js';
 import { Log } from './ui/log.js';
@@ -112,12 +114,25 @@ function onStageLost() {
   screens.show('gameover');
 }
 
-// New run: the campaign restarts at stage 1 (full HP/energy); progression
-// (level, gold, upgrades, skills, items) is kept.
+// Defeat is a full reset: level 1, no gold, no items, no equipment —
+// "back to the beginning". Bestiary and win/loss records stay (they are
+// records, not collected items).
 function newRun() {
+  save.player = {
+    level: 1,
+    xp: 0,
+    gold: 0,
+    upgrades: [],
+    stats: null,
+    skills: ['powerstrike'],
+    items: { potion: 2, vial: 0, elixir: 0 },
+    equipment: { helmet: 0, chest: 0, legs: 0, sword: 0 },
+    currentHp: null,
+    currentEnergy: null,
+  };
+  player = new Player(save.player);
+  progression.player = player;
   save.stage = 1;
-  player.currentHp = null;
-  player.currentEnergy = null;
   persist();
   sfx.ui();
   startStage(1);
@@ -191,30 +206,43 @@ function renderShop() {
     wrap.appendChild(item);
   }
 
-  // Upgrades (permanent, stackable).
-  const uwrap = $('shop-upgrades');
+  // Equipment: one card per slot, showing the NEXT tier you can buy.
+  const uwrap = $('shop-equipment');
   uwrap.textContent = '';
-  for (const up of UPGRADES) {
-    const have = stackCount(player.upgrades, up.id);
-    const maxed = have >= up.maxStacks;
+  for (const slot of EQUIPMENT_SLOTS) {
+    const owned = player.equipment[slot] ?? 0;
+    const buying = nextTier(player.equipment, slot);
+    const maxed = buying === null;
+    const price = maxed ? 0 : priceOf(slot, buying);
     const item = document.createElement('div');
-    item.className = 'shop-item';
+    item.className = 'shop-item shop-equip';
+    const iconTier = maxed ? 5 : buying; // show the piece you own/max or will buy
     item.innerHTML = `
-      <div>
-        <div class="s-name">${up.name} <span style="color:var(--muted);font-weight:400">${have}/${up.maxStacks} stacks</span></div>
-        <div class="s-desc">${up.desc}</div>
+      <div class="equip-icon"></div>
+      <div class="equip-info">
+        <div class="s-name">${pieceName(slot, maxed ? 5 : buying)} <span style="color:var(--muted);font-weight:400">tier ${owned}/5</span></div>
+        <div class="s-desc">${maxed ? 'Highest tier equipped.' : statLine(pieceStats(slot, buying))}</div>
       </div>
-      <button class="btn" ${maxed || player.gold < up.price ? 'disabled' : ''}>${maxed ? 'MAX' : `${up.price} gold`}</button>`;
+      <button class="btn" ${maxed || player.gold < price ? 'disabled' : ''}>${maxed ? 'MAX' : `${price} gold`}</button>`;
+    item.querySelector('.equip-icon').innerHTML = equipIconSvg(slot, iconTier);
     item.querySelector('button').addEventListener('click', () => {
-      if (maxed || player.gold < up.price) return;
-      player.gold -= up.price;
-      player.applyUpgrade(up.id);
+      if (maxed || player.gold < price) return;
+      player.gold -= price;
+      player.buyEquipmentTier(slot);
       persist();
       sfx.ui();
+      hud.applyHeroSkin(player.equipment);
       renderShop();
     });
     uwrap.appendChild(item);
   }
+}
+
+function priceOf(slot, tier) {
+  return EQUIPMENT[slot].pieces[tier].price;
+}
+function pieceStats(slot, tier) {
+  return EQUIPMENT[slot].pieces[tier].stats;
 }
 
 function continueAfterChoice() {
@@ -355,7 +383,7 @@ function showMenu() {
   const fresh = save.stage === 1 && player.level === 1 && player.upgrades.length === 0 && s.wins === 0;
   document.getElementById('btn-start').textContent = fresh ? 'Begin Campaign' : `Continue — Stage ${save.stage}`;
   document.getElementById('menu-hint').textContent =
-    'Skills are learned on level-up (max 4). Items are bought in the shop and consumed in battle. Magic is your max energy; energy regens 10/turn. HP and energy carry over between battles — sleep in a shop bed to restore both.';
+    'Skills are learned on level-up (max 4). Items are bought in the shop and consumed in battle. Magic is your max energy; energy regens 10/turn. HP and energy carry over between battles — sleep in a shop bed to restore both. Buy equipment tiers in the shop (5 tiers per slot) — your hero\u2019s gear updates to match. Defeat ends the run: you restart from scratch at level 1.';
 }
 
 // --- Button bindings ---

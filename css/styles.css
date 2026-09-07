@@ -146,6 +146,23 @@ body {
 .shop-item .s-desc { color: var(--muted); font-size: 12px; margin-top: 2px; }
 .shop-item .s-price { color: var(--accent); white-space: nowrap; }
 .shop-item.owned { opacity: 0.5; }
+
+/* Equipment cards: inline item SVG + info + price */
+.shop-equip { align-items: center; gap: 12px; }
+.shop-equip .equip-icon { width: 56px; height: 56px; flex: 0 0 auto; }
+.shop-equip .equip-icon svg { width: 100%; height: 100%; display: block; }
+.shop-equip .equip-info { flex: 1 1 auto; }
+
+/* Hero model: equipment tiers drive CSS variables (set by the HUD). */
+#hero-svg { width: 100%; height: 100%; display: block; }
+#hero-svg .helm-main  { fill: var(--helm-main,  #c3cadb); }
+#hero-svg .helm-dark  { fill: var(--helm-dark,  #8792ac); }
+#hero-svg .chest-main { fill: var(--chest-main, #d5dbea); }
+#hero-svg .chest-dark { fill: var(--chest-dark, #9aa4bd); }
+#hero-svg .legs-main  { fill: var(--legs-main,  #a7b0c4); }
+#hero-svg .legs-dark  { fill: var(--legs-dark,  #76819c); }
+#hero-svg .sword-main { fill: var(--sword-main, #f2c94c); }
+#hero-svg .sword-dark { fill: var(--sword-dark, #a8801a); }
 .shop-empty { color: var(--muted); font-size: 13px; padding: 8px 2px; }
 
 /* bestiary */

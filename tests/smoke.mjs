@@ -19,7 +19,8 @@ import { EventBus } from '../js/core/events.js';
 import { SaveStore, DEFAULT_SAVE } from '../js/core/save.js';
 import { TUNING } from '../js/config/tuning.js';
 import { pickSkillToLearn, poolFor } from '../js/game/skills.js';
-import { UPGRADES, xpForNext, stackCount } from '../js/game/upgrades.js';
+import { xpForNext } from '../js/game/upgrades.js';
+import { EQUIPMENT, pieceName, nextTier } from '../js/game/equipment.js';
 
 // Deterministic RNG: a 32-bit xorshift seeded by the caller.
 function makeRng(seed) {
@@ -306,14 +307,101 @@ async function testElementSkills() {
   assert.ok(p2.skills.length <= 4, 'max 4 skills');
 }
 
-// --- Save v3: round-trip + migration ----------------------------------------
+// --- Equipment: tiers, cumulative stats, purchase cap ---------------------
+{
+  const p = newPlayer();
+  const base = p.stats();
+  assert.equal(p.equipment.helmet, 0, 'starts with no equipment');
+
+  assert.ok(p.buyEquipmentTier('chest'));
+  assert.ok(p.buyEquipmentTier('chest'));
+  assert.equal(p.stats().maxHp, base.maxHp + 20 + 25, 'chest tiers are cumulative');
+
+  assert.ok(p.buyEquipmentTier('sword'));
+  const s3 = p.stats();
+  assert.equal(s3.attack, base.attack + 2, 'sword tier 1 attack');
+  assert.equal(s3.critChance, base.critChance + 0.04, 'sword tier 1 crit chance');
+  assert.equal(s3.critDamage, base.critDamage + 0.1, 'sword tier 1 crit damage');
+
+  p.buyEquipmentTier('helmet');
+  assert.ok(p.stats().potionHeal > TUNING.player.potionHeal, 'helmet boosts item healing');
+
+  const magicBefore = p.stats().magic;
+  p.buyEquipmentTier('legs');
+  assert.equal(p.stats().magic, magicBefore + 3, 'legs tier 1 magic');
+  assert.equal(p.stats().maxEnergy, p.stats().magic, 'max energy = magic (no Deep Lungs)');
+
+  for (let i = 0; i < 6; i++) p.buyEquipmentTier('chest');
+  assert.equal(p.equipment.chest, 5, 'equipment caps at tier 5');
+  assert.ok(!p.buyEquipmentTier('chest'), 'cannot buy past tier 5');
+
+  const swordPrices = [1, 2, 3, 4, 5].map((t) => EQUIPMENT.sword.pieces[t].price);
+  assert.ok(
+    swordPrices.every((v, i) => i === 0 || v > swordPrices[i - 1]),
+    'sword tier prices increase'
+  );
+
+  assert.equal(pieceName('sword', 2), 'Steel Sword');
+  assert.equal(nextTier({ helmet: 0 }, 'helmet'), 1);
+  assert.equal(nextTier({ helmet: 5 }, 'helmet'), null);
+
+  const data = p.serialize();
+  const p2 = new Player(data);
+  assert.equal(p2.equipment.chest, 5, 'equipment serialized');
+  assert.equal(p2.equipment.sword, 1, 'equipment serialized (sword)');
+}
+
+// --- Save v4: round-trip + migration ---------------------------------------
 {
   const store = new SaveStore();
   const data = store.load();
-  assert.equal(data.version, 3, 'v3 by default');
+  assert.equal(data.version, 4, 'v4 by default');
   assert.equal(data.player.skills[0], 'powerstrike', 'starter skill');
+  assert.equal(data.player.equipment.sword, 0, 'default equipment empty');
 
-  // v2 -> v3 migration: level-derived stats.
+  // Round-trip keeps equipment.
+  const p = newPlayer();
+  p.buyEquipmentTier('legs');
+  p.buyEquipmentTier('legs');
+  p.gold = 77;
+  localStorage.setItem('combat-game.save.v4', JSON.stringify({
+    version: 4,
+    player: p.serialize(),
+    stage: 9,
+    stats: { wins: 3, losses: 1, kills: 4 },
+    victorySeen: false,
+  }));
+  const rt = store.load();
+  assert.equal(rt.version, 4);
+  assert.equal(rt.player.equipment.legs, 2, 'round-trip keeps equipment');
+  assert.equal(rt.player.gold, 77, 'round-trip keeps gold');
+  assert.equal(rt.stage, 9, 'round-trip keeps stage');
+
+  // v3 -> v4 migration: text upgrades become equipment tiers.
+  localStorage.clear();
+  localStorage.setItem('combat-game.save.v3', JSON.stringify({
+    version: 3,
+    player: {
+      level: 7, xp: 0, gold: 120, upgrades: ['iron', 'iron', 'mana', 'lung', 'sharp'],
+      stats: { attack: 18, defense: 6, magic: 40, maxHp: 140, critChance: 0.1, critDamage: 2 },
+      skills: ['powerstrike', 'berserk'],
+      items: { potion: 2, vial: 1, elixir: 0 },
+      currentHp: null, currentEnergy: null,
+    },
+    stage: 8,
+    stats: { wins: 7, losses: 0, kills: 8 },
+    victorySeen: false,
+  }));
+  const m34 = store.load();
+  assert.equal(m34.version, 4);
+  assert.equal(m34.player.equipment.chest, 2, 'iron x2 -> chest tier 2');
+  assert.equal(m34.player.equipment.legs, 1, 'mana x1 -> legs tier 1 (lung dropped)');
+  assert.equal(m34.player.equipment.sword, 1, 'sharp x1 -> sword tier 1');
+  assert.equal(m34.player.level, 7, 'level preserved');
+  assert.equal(m34.stage, 8, 'stage preserved');
+
+  // v2 -> v4 migration: level-derived stats, upgrades -> equipment.
+  localStorage.clear();
   localStorage.setItem('combat-game.save.v2', JSON.stringify({
     version: 2,
     player: { level: 5, xp: 0, gold: 40, upgrades: ['sharp'], skills: ['berserk'] },
@@ -321,10 +409,11 @@ async function testElementSkills() {
     stats: { wins: 5, losses: 1, kills: 6 },
   }));
   const migrated = store.load();
-  assert.equal(migrated.version, 3);
+  assert.equal(migrated.version, 4);
   assert.equal(migrated.player.level, 5);
-  assert.equal(migrated.player.stats.attack, 12 + 4 * 2 + 2, 'v2 attack recomputed');
+  assert.equal(migrated.player.stats.attack, 12 + 4 * 2, 'v2 attack recomputed (no upgrade bake-in)');
   assert.equal(migrated.player.stats.magic, 25 + 4 * 3, 'v2 magic re-scaled to max-energy');
+  assert.equal(migrated.player.equipment.sword, 1, 'v2 sharp -> sword tier 1');
   assert.ok(migrated.player.skills.includes('powerstrike'));
   assert.ok(migrated.player.skills.includes('berserk'), 'v2 skill carried over');
   assert.equal(migrated.player.items.potion, 2, 'default items on migration');
@@ -349,10 +438,10 @@ async function testElementSkills() {
 }
 
 // --- Winability: a level-N player beats the stage-50 final boss ------------
-async function playBossFight(level, upgrades, seed) {
+async function playBossFight(level, equipment, seed) {
   const p = new Player({
     level,
-    upgrades: upgrades.map((u) => u.id),
+    equipment,
     stats: null,
     skills: ['powerstrike', 'giantswing', 'mend', 'aim'],
     items: { potion: 3, vial: 0, elixir: 1 },
@@ -472,8 +561,8 @@ async function main() {
   await testElementSkills();
   await testEarlyVariants();
   await testLateSkills();
-  const win = await playBossFight(23, UPGRADES.filter((u) => ['sharp', 'iron', 'crit'].includes(u.id)));
-  assert.ok(win, `Lv 23 player (with upgrades) defeats the stage-50 final boss (shortened)`);
+  const win = await playBossFight(23, { helmet: 3, chest: 5, legs: 5, sword: 5 });
+  assert.ok(win, 'Lv 23 player (full equipment) defeats the stage-50 final boss (shortened)');
 }
 
 main().then(() => {

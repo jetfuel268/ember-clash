@@ -29,8 +29,7 @@ export class Progression {
     const boss = this.isBossStage(stage);
 
     let gold =
-      (randInt(s.rewards.goldMin, s.rewards.goldMax) + s.rewards.goldPerStage * stage) *
-      (1 + p.stats().goldBonus);
+      randInt(s.rewards.goldMin, s.rewards.goldMax) + s.rewards.goldPerStage * stage;
     let xp = s.rewards.xpBase + s.rewards.xpPerStage * stage;
     if (boss) xp += s.rewards.xpBossBonus;
     if (bonus === 'gold') gold *= 2;

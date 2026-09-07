@@ -1,5 +1,5 @@
 import { TUNING } from '../config/tuning.js';
-import { UPGRADE_MAP } from './upgrades.js';
+import { EQUIPMENT, EQUIPMENT_SLOTS } from './equipment.js';
 import { xpForNext } from './upgrades.js';
 import { randInt } from '../core/rng.js';
 import { MAX_SKILLS as MAX_SKILLS_CAP, SKILLS } from './skills.js';
@@ -9,10 +9,11 @@ export class Player {
     level = 1,
     xp = 0,
     gold = 0,
-    upgrades = [],
+    upgrades = [], // legacy (v3 saves); no longer applied to stats
     stats = null,
     skills = null,
     items = null,
+    equipment = null,
     currentHp = null,
     currentEnergy = null,
     rng,
@@ -35,6 +36,7 @@ export class Player {
       };
     this.skills = skills ?? SKILLS_STARTER();
     this.items = items ?? { potion: 2, vial: 0, elixir: 0 };
+    this.equipment = equipment ?? this.constructor.defaultEquipment();
     this.currentHp = currentHp; // null = at full HP
     this.currentEnergy = currentEnergy; // null = stage-start default
   }
@@ -72,19 +74,37 @@ export class Player {
     return { potion: 2, vial: 0, elixir: 0 };
   }
 
-  // Magic is the player's MAX ENERGY. The flat per-turn regen is
-  // TUNING.combat.energyRegen; Deep Lungs adds on top (capped).
+  static defaultEquipment() {
+    return { helmet: 0, chest: 0, legs: 0, sword: 0 };
+  }
+
+  // Buy the next tier of an equipment slot. Returns true on success.
+  buyEquipmentTier(slot) {
+    const t = this.equipment[slot] ?? 0;
+    if (!EQUIPMENT[slot] || t >= 5) return false;
+    this.equipment[slot] = t + 1;
+    return true;
+  }
+
+  // Equipment (tier 1..5 per slot) is the source of all purchased stat
+  // boosts; effects are cumulative. Max energy is the magic stat itself
+  // (capped); Deep Lungs no longer exists.
   stats() {
     const s = { ...this.stats0 };
-    const counts = {};
-    for (const id of this.upgrades) counts[id] = (counts[id] ?? 0) + 1;
-
-    if (counts.sharp) s.attack += 2 * counts.sharp;
-    if (counts.iron) s.maxHp += 20 * counts.iron;
-    if (counts.mana) s.magic += 3 * counts.mana;
-    if (counts.lung) s.maxEnergyBonus = 15 * counts.lung;
-    if (counts.crit) s.critChance += 0.08 * counts.crit;
-    if (counts.crip) s.critDamage += 0.25 * counts.crip;
+    for (const slot of EQUIPMENT_SLOTS) {
+      const tier = this.equipment[slot] ?? 0;
+      if (!tier) continue;
+      // Effects are cumulative: tiers 1..tier all apply.
+      for (let t = 1; t <= tier; t++) {
+        const st = EQUIPMENT[slot].pieces[t].stats;
+        if (st.maxHp) s.maxHp += st.maxHp;
+        if (st.magic) s.magic += st.magic;
+        if (st.attack) s.attack += st.attack;
+        if (st.critChance) s.critChance += st.critChance;
+        if (st.critDamage) s.critDamage += st.critDamage;
+        if (st.potionHeal) s.potionHealBonus = (s.potionHealBonus ?? 0) + st.potionHeal;
+      }
+    }
 
     s.hit = Math.min(0.8 + (this.level - 1) * 0.01, 0.9);
     s.evasion = Math.min(
@@ -92,12 +112,11 @@ export class Player {
       TUNING.player.evasionCap
     );
     s.maxEnergy = Math.min(
-      s.magic + (s.maxEnergyBonus ?? 0),
+      s.magic,
       TUNING.player.energyCap
     );
-    delete s.maxEnergyBonus;
-    s.goldBonus = counts.bounty ? 0.2 * counts.bounty : 0;
-    s.potionHeal = TUNING.player.potionHeal + (counts.alchem ? 0.1 * counts.alchem : 0);
+    s.potionHeal = TUNING.player.potionHeal + (s.potionHealBonus ?? 0);
+    delete s.potionHealBonus;
     return s;
   }
 
@@ -132,19 +151,6 @@ export class Player {
     this.stats0.magic += gain.magic;
     this.stats0.maxHp += gain.maxHp;
     return gain;
-  }
-
-  hasUpgrade(id) {
-    const max = UPGRADE_MAP[id]?.maxStacks ?? Infinity;
-    return this.upgrades.filter((u) => u === id).length < max;
-  }
-
-  applyUpgrade(id) {
-    const max = UPGRADE_MAP[id]?.maxStacks ?? Infinity;
-    const owned = this.upgrades.filter((u) => u === id).length;
-    if (owned >= max) return false;
-    this.upgrades.push(id);
-    return true;
   }
 
   learnSkill(id) {
@@ -187,6 +193,7 @@ export class Player {
       stats: { ...this.stats0 },
       skills: this.skills,
       items: { ...this.items },
+      equipment: { ...this.equipment },
       currentHp: this.currentHp,
       currentEnergy: this.currentEnergy,
     };

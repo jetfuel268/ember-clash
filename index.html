@@ -41,7 +41,42 @@
           <div class="buff-chips" id="enemy-buffs"></div>
           <div class="stat-line" id="enemy-stats"></div>
         </div>
-        <div class="actor actor-player" id="player-sprite"><img id="player-sprite-img" src="assets/sprites/hero.svg" alt="Hero"></div>
+        <div class="actor actor-player" id="player-sprite">
+          <svg id="hero-svg" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+            <g id="hero-shadow">
+              <ellipse cx="400" cy="745" rx="230" ry="42" fill="#000" opacity="0.35"/>
+            </g>
+            <g id="hero-sword" stroke="#23263a" stroke-width="10">
+              <rect class="sword-main" x="212" y="150" width="54" height="390" rx="16"/>
+              <rect class="sword-dark" x="176" y="540" width="126" height="36" rx="12"/>
+              <rect class="sword-dark" x="224" y="576" width="40" height="92" rx="12"/>
+              <circle class="sword-main" cx="244" cy="690" r="20"/>
+            </g>
+            <g id="hero-legs" stroke="#23263a" stroke-width="10">
+              <rect class="legs-main" x="312" y="556" width="72" height="136" rx="28"/>
+              <rect class="legs-main" x="416" y="556" width="72" height="136" rx="28"/>
+              <rect class="legs-dark" x="300" y="672" width="96" height="56" rx="18"/>
+              <rect class="legs-dark" x="404" y="672" width="96" height="56" rx="18"/>
+            </g>
+            <g id="hero-body" stroke="#23263a" stroke-width="10">
+              <path class="chest-main" d="M 320 388 C 318 336 344 316 400 316 C 456 316 482 336 480 388 L 494 556 C 494 592 460 604 400 604 C 340 604 306 592 306 556 Z"/>
+              <rect x="310" y="516" width="180" height="42" rx="14" fill="#a03828"/>
+              <circle cx="400" cy="537" r="20" fill="#d8a030"/>
+            </g>
+            <g id="hero-arms" stroke="#23263a" stroke-width="10">
+              <rect x="248" y="416" width="54" height="134" rx="26" fill="#8a94ad"/>
+              <rect x="498" y="416" width="54" height="134" rx="26" fill="#8a94ad"/>
+              <circle cx="244" cy="576" r="28" fill="#8a94ad"/>
+              <circle class="chest-dark" cx="300" cy="372" r="56"/>
+              <circle class="chest-dark" cx="500" cy="372" r="56"/>
+            </g>
+            <g id="hero-head" stroke="#23263a" stroke-width="10">
+              <path class="helm-main" d="M 350 254 C 350 202 366 176 400 176 C 434 176 450 202 450 254 C 450 292 428 308 400 308 C 372 308 350 292 350 254 Z"/>
+              <rect x="360" y="234" width="80" height="24" rx="12" fill="#1a1c2a" stroke="none"/>
+              <rect class="helm-dark" x="394" y="142" width="12" height="44" rx="6"/>
+            </g>
+          </svg>
+        </div>
         <div class="actor actor-enemy" id="enemy-sprite"><img id="enemy-sprite-img" alt="Enemy"></div>
       </div>
       <div id="log" class="log" aria-live="polite"></div>
@@ -74,8 +109,8 @@
         </div>
         <div class="shop-section">Items (single-use, consumed in battle)</div>
         <div id="shop-items" class="shop-items"></div>
-        <div class="shop-section">Upgrades (permanent, stackable)</div>
-        <div id="shop-upgrades" class="shop-items"></div>
+        <div class="shop-section">Equipment (one tier per slot, 5 tiers each)</div>
+        <div id="shop-equipment" class="shop-items"></div>
       </div>
       <div class="menu-buttons">
         <button id="btn-next-stage" class="btn btn-primary">Next Stage</button>
@@ -109,7 +144,7 @@
 
     <section id="screen-gameover" class="screen hidden">
       <h2 class="title">Run Over</h2>
-      <p class="subtitle" id="gameover-text">You fall, and the run ends. Start a new run at stage 1 — your character's progress is kept.</p>
+      <p class="subtitle" id="gameover-text">You fall, and the run ends. You return to the beginning: level 1, no gold, no items, no equipment.</p>
       <div class="menu-buttons">
         <button id="btn-new-run" class="btn btn-primary">New Run</button>
         <button id="btn-menu-1" class="btn">Main Menu</button>

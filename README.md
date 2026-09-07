@@ -25,15 +25,24 @@ step required — the project root **is** the production build.
   wins and level-ups do not restore anything, so resting in a shop bed
   (cost scales with the stage) is how you recover (it restores both HP and
   energy).
-- **Defeat ends the run** — there is no stage retry. When you fall you can
-  start a **New Run** at stage 1 (full HP/energy); your character's
-  progression (level, gold, upgrades, skills, items) is kept.
+- **Defeat ends the run completely** — there is no retry and **no
+  carried-over progress**. When you fall, a New Run starts you back at the
+  beginning: level 1, no gold, no items, no equipment (bestiary and
+  win/loss records stay, as they are records).
+- **Equipment** replaces the old text upgrades: the shop sells **four
+  pieces — Helmet, Chestplate, Leggings, Sword — in five tiers each**
+  (Iron, Steel, Mithril, Runed, Dragon). Each tier has its own color
+  scheme, and your hero's model recolors the matching part as you buy
+  (the shop shows the item's SVG and the next tier you can purchase).
+  Helmet boosts item healing, Chestplate max HP, Leggings magic (your max
+  energy — the old Deep Lungs was removed for this reason), and the Sword
+  combines attack + crit chance + crit damage with prices rising per tier.
 
 **Progression:** each stage win grants XP and gold. XP levels you up — stats
 (attack, defense, magic, max HP) grow by a random amount per level, and you
-learn a skill. **Upgrades** (attack, HP, magic, energy, crit, item strength,
-gold) are permanent stackable boosts bought in the **shop**, which opens on
-every stage ending in 5. **Each stage draws from a limited enemy pool** —
+learn a skill. **Equipment tiers** (shop, stages ending in 5) are the
+permanent boosts: 5 tiers per slot, cumulative effects, each tier a distinct
+color on your hero. **Each stage draws from a limited enemy pool** —
 the pools follow the biomes (forest: spiders/skeletons/slimes, crystal
 cavern, dungeon, walkway, dark castle), cycled in endless mode. Enemies
 also have **Magic** — their max energy, which regens (flat, per turn) so
@@ -45,7 +54,7 @@ damage) — and the campaign is **won at stage 50**: the final boss
 (Umbra, Dark Reflection). The campaign spans **5 biomes of 10 stages each**
 (forest, crystal cavern, dungeon, mountain walkway, dark castle), with
 bosses fighting in their own biome. Losing ends the run (New Run from
-stage 1). All progress is persisted in `localStorage`.
+scratch at level 1). All progress is persisted in `localStorage`.
 
 ## Running locally
 
@@ -108,14 +117,16 @@ js/core/events.js     Tiny typed event bus — the contract between game and UI
 js/core/rng.js        Random helpers
 js/core/save.js       Versioned localStorage persistence (key: combat-game.save.v3)
 js/game/player.js     Player model: persisted fields + derived stats
-js/game/upgrades.js   Data-driven upgrade catalog + XP curve (add an entry to add an upgrade)
-js/game/skills.js     Data-driven skill catalog: effects, energy cost, cooldown, learnable level ranges
+js/game/upgrades.js   XP curve (stat boosts live in equipment.js now)
+js/game/equipment.js   Data-driven equipment catalog: 4 slots x 5 tiers (add a piece = add an entry)
+js/game/skills.js     Data-driven skill catalog: effects, energy cost, learnable level ranges
 js/game/bestiary.js   Bestiary records of defeated creatures
 js/game/enemies.js    Enemy types, bosses, per-stage scaling, AI intents, limited per-stage pools
 js/game/combat.js     Turn-based combat state machine (no DOM access)
 js/game/progression.js  XP/levels, stage rewards, stage advancing
 js/ui/screens.js      Screen switching
-js/ui/hud.js          Bars/sprites from 'state'/'phase' events
+js/ui/hud.js          Bars/sprites from 'state'/'phase' events; recolors the hero model per equipment
+js/ui/equipIcons.js   Tier color schemes + inline item SVGs for the shop
 js/ui/log.js         Combat log from 'log' events
 js/main.js            Wiring only: owns the save object and routes events
 tests/smoke.mjs       Node smoke test for all DOM-free modules
@@ -127,27 +138,31 @@ tests/smoke.mjs       Node smoke test for all DOM-free modules
   modules.** They communicate only through the `EventBus` names documented in
   `js/core/events.js` (`log`, `state`, `phase`, `hit`).
 - **Balance changes** → edit `js/config/tuning.js` only.
-- **New upgrade** → add one entry to `UPGRADES` in `js/game/upgrades.js`
-  (use an existing stat key, or add a key handled in `Player.stats()`).
+- **New equipment piece** → add an entry to `EQUIPMENT` in `js/game/
+  equipment.js` (and its color scheme in `js/ui/equipIcons.js`).
+- **New upgrade** (old system, retired) → see equipment.
 - **New enemy type** → add one entry to `BASES` in `js/game/enemies.js`.
 - **New/changed sprite** → edit the SVG in `assets/sprites/` directly; keep the
   conventions (clean viewBox 0 0 800 800, layered <g> ids, gradients in <defs>).
+  The **hero** is an inline `<svg>` in `index.html` (four recolorable
+  equipment groups driven by CSS variables; see `js/ui/equipIcons.js`).
 - **New screen** → add a `<section class="screen hidden" id="screen-…">` to
   `index.html` and a case in the flow in `js/main.js`.
 - **New action** → add handling in `Combat.act()` / `canAct()` and a button in
   `index.html` + `js/main.js` binding.
 
-## Save format (v3)
+## Save format (v4)
 
 ```json
 {
-  "version": 3,
+  "version": 4,
   "player": {
-    "level": 1, "xp": 0, "gold": 0, "upgrades": ["sharp"],
+    "level": 1, "xp": 0, "gold": 0,
     "stats": { "attack": 16, "defense": 0, "magic": 25, "maxHp": 100,
                "critChance": 0.1, "critDamage": 2.0 },
     "skills": ["powerstrike"],
     "items": { "potion": 2, "vial": 0, "elixir": 0 },
+    "equipment": { "helmet": 0, "chest": 0, "legs": 0, "sword": 0 },
     "currentHp": null,
     "currentEnergy": null
   },
@@ -156,6 +171,8 @@ tests/smoke.mjs       Node smoke test for all DOM-free modules
 }
 ```
 
-Stored under the `localStorage` key `combat-game.save.v3`. v2/v1 saves are
-migrated automatically on load. Changing the schema? Bump `VERSION` in
-`js/core/save.js` and add a migration for the previous version.
+Stored under the `localStorage` key `combat-game.save.v4`. v3/v2/v1 saves
+are migrated automatically on load (old text upgrades map onto equipment
+tiers; Deep Lungs and Bounty Hunter are dropped). Changing the schema?
+Bump `VERSION` in `js/core/save.js` and add a migration for the previous
+version.
