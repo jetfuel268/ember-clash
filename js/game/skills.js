@@ -569,21 +569,41 @@ export function skillLine(s) {
   return null;
 }
 
-// A random learnable skill the player does not already own, or null.
-// `energy` excludes skills you cannot currently use (cost > energy);
-// owning a higher-tier skill of a line hides the lower tiers of that
-// line (e.g. a Cataclysmic fire spell hides all weaker fire spells).
-export function pickSkillToLearn(level, ownedIds, energy = Infinity, rng) {
+// A damage skill that is plain single-hit damage only - no extra effect
+// fields (multi-hit, poison, lifesteal, type bonus, armor pierce, on-hit
+// buffs, kill bonuses, charges, HP costs, ...). Only these take part in
+// tier suppression: multi-effect skills are build tradeoffs, so they are
+// never hidden by tier ownership, and they never suppress other tiers.
+export function isPlainDamage(s) {
+  if (s.type !== 'damage') return false;
+  const plain = ['id', 'name', 'desc', 'cost', 'pool', 'starter', 'type', 'mult', 'element', 'weapon'];
+  return Object.keys(s).every((k) => plain.includes(k));
+}
+
+// The damage-line candidates for a level-up: not owned, payable at
+// `energy`, and - for plain single-hit damage skills only - not below a
+// higher-tier skill of the same line that the player already owns.
+export function candidatesFor(level, ownedIds, energy = Infinity) {
   const ownedSkills = ownedIds.map((id) => SKILL_MAP[id]).filter(Boolean);
-  const candidates = poolFor(level).filter((s) => {
+  return poolFor(level).filter((s) => {
     if (ownedIds.includes(s.id)) return false;
     if (s.cost > energy) return false;
     const line = skillLine(s);
-    if (!line) return true;
+    if (!line || !isPlainDamage(s)) return true; // utility / multi-effect: always offered
     return !ownedSkills.some(
-      (o) => o.type === 'damage' && skillLine(o) === line && o.mult > s.mult,
+      (o) => isPlainDamage(o) && skillLine(o) === line && o.mult > s.mult,
     );
   });
+}
+
+// A random learnable skill the player does not already own, or null.
+// `energy` excludes skills you cannot currently use (cost > energy);
+// owning a higher-tier plain skill of a line hides the lower plain tiers
+// of that line (e.g. a Cataclysmic fire spell hides weaker fire spells).
+// Multi-effect skills (Double Strike, Vampire Fang, Beasthunter, ...)
+// never block and are never blocked.
+export function pickSkillToLearn(level, ownedIds, energy = Infinity, rng) {
+  const candidates = candidatesFor(level, ownedIds, energy);
   if (candidates.length === 0) return null;
   const roll = rng ? rng() : Math.random();
   return candidates[Math.min(candidates.length - 1, Math.floor(roll * candidates.length))];

@@ -18,7 +18,7 @@ import { Combat } from '../js/game/combat.js';
 import { EventBus } from '../js/core/events.js';
 import { SaveStore, DEFAULT_SAVE } from '../js/core/save.js';
 import { TUNING } from '../js/config/tuning.js';
-import { pickSkillToLearn, poolFor, skillLine, SKILLS } from '../js/game/skills.js';
+import { pickSkillToLearn, poolFor, skillLine, candidatesFor, SKILLS } from '../js/game/skills.js';
 import { xpForNext } from '../js/game/upgrades.js';
 import { EQUIPMENT, pieceName, nextTier } from '../js/game/equipment.js';
 
@@ -127,6 +127,23 @@ function newSave() {
         `no lower blade tier under Power Strike (got ${pick.id})`,
       );
   }
+  // Multi-effect skills are never suppressed: Double Strike stays offered
+  // under a higher blade tier, plain lower blade tiers stay suppressed.
+  const underBlade = candidatesFor(5, ['powerstrike'], Infinity).map((s) => s.id);
+  assert.ok(underBlade.includes('doublestrike'), 'Double Strike offered despite higher blade tier owned');
+  assert.ok(underBlade.includes('poisonedblade'), 'Poisoned Blade offered despite higher blade tier owned');
+  for (const blocked of ['flickcut', 'fleetcut', 'fairblade'])
+    assert.ok(!underBlade.includes(blocked), `${blocked} still suppressed under Power Strike`);
+  // A multi-effect owner (Beasthunter, 150% + type bonus) suppresses
+  // nothing: line skills stay offered in their own pool windows.
+  const underType5 = candidatesFor(5, ['beasthunter'], Infinity).map((s) => s.id);
+  assert.ok(underType5.includes('doublestrike'), 'multi-effect owner does not hide Double Strike');
+  const underType15 = candidatesFor(15, ['beasthunter'], Infinity).map((s) => s.id);
+  assert.ok(underType15.includes('vampirefang'), 'multi-effect owner does not hide Vampire Fang');
+  // A plain Cataclysmic owner suppresses plain lower tiers of its line.
+  const underSunder = candidatesFor(5, ['sunderingstroke'], Infinity).map((s) => s.id);
+  for (const blocked of ['flickcut', 'fleetcut', 'fairblade', 'keenedge'])
+    assert.ok(!underSunder.includes(blocked), `${blocked} suppressed under Sundering Stroke`);
   for (let i = 0; i < 50; i++) {
     const pick = pickSkillToLearn(3, ['emberjab'], Infinity, makeRng(i));
     if (pick)
