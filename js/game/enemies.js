@@ -12,13 +12,28 @@ export const TYPES = {
   beast: { label: 'Beast', slash: 1.0, blunt: 1.0, element: { fire: 1.5, ice: 0.5, lightning: 1.0 } },
   demon: { label: 'Demon', slash: 1.25, blunt: 0.75, element: { fire: 0.5, ice: 1.5, lightning: 1.0 } },
   undead: { label: 'Undead', slash: 0.75, blunt: 1.25, element: { fire: 0.5, ice: 1.0, lightning: 1.5 } },
-  insect: { label: 'Insect', slash: 0.75, blunt: 1.25, element: { fire: 1.0, ice: 1.5, lightning: 0.5 } },
+  insect: { label: 'Insect', slash: 0.75, blunt: 1.25, element: { fire: 1.5, ice: 1.5, lightning: 0.5 } },
   construct: { label: 'Construct', slash: 0.9, blunt: 0.9, element: { fire: 1.0, ice: 0.5, lightning: 1.5 } },
 };
 
+// The effective element map for one enemy: the creature-type affinities,
+// overridden by the enemy's own `elementWeakness` when present (e.g. Slimes
+// are weak to every element).
+export function elementMapFor(enemy) {
+  const base = TYPES[enemy.type]?.element ?? {};
+  const w = enemy.elementWeakness ?? {};
+  const merged = { ...base };
+  for (const k of Object.keys(w)) merged[k] = w[k];
+  return merged;
+}
+
+export function elementMultFor(enemy, element) {
+  return elementMapFor(enemy)[element] ?? 1;
+}
+
 // Human-readable element line for the bestiary, e.g. "weak to lightning, resists fire".
-export function elementSummary(type) {
-  const el = TYPES[type]?.element;
+export function elementSummaryFor(enemy) {
+  const el = elementMapFor(enemy);
   if (!el) return '';
   const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
   const weak = Object.entries(el).filter(([, m]) => m > 1).map(([k]) => cap(k));
@@ -42,7 +57,7 @@ export const ENEMY_DEFS = {
   stinger: { id: 'stinger', name: 'Stinger', sprite: 'stinger', type: 'insect', hp: 55, atk: 11, skills: ['venom'] },
   skeleton: { id: 'skeleton', name: 'Skeleton', sprite: 'skeleton', type: 'undead', hp: 58, atk: 12, skills: ['shell'] },
   wyvern: { id: 'wyvern', name: 'Wyvern', sprite: 'wyvern', type: 'beast', hp: 52, atk: 12, skills: ['enrage'] },
-  slime: { id: 'slime', name: 'Slime', sprite: 'slime', type: 'beast', hp: 45, atk: 8, skills: ['shell'] },
+  slime: { id: 'slime', name: 'Slime', sprite: 'slime', type: 'beast', hp: 45, atk: 8, skills: ['shell'], elementWeakness: { fire: 1.5, ice: 1.5, lightning: 1.5 } },
   // The Loot Goblin: appears in place of any non-boss stage enemy (10%).
   // It never attacks: it waits, and flees the turn after you attack it.
   // Kill it for a 200-gold + potion/vial drop.
@@ -138,6 +153,7 @@ export function createEnemy(stage, baseIndex) {
     sprite: base.sprite,
     type: base.type,
     typeLabel: TYPES[base.type].label,
+    elementWeakness: base.elementWeakness ?? null,
     skills: [...base.skills],
     maxHp,
     hp: maxHp,

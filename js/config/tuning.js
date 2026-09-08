@@ -38,6 +38,11 @@ export const TUNING = {
   spawn: {
     lootGoblinChance: 0.10, // a Loot Goblin can replace any non-boss stage's enemy
   },
+  status: {
+    // Burning: set by fire-type skills. Damage per turn as a fraction of the
+    // enemy's max HP, for `turns` turns (refreshed to full on re-apply).
+    burn: { chance: 0.15, turns: 3, fracOfMaxHp: 0.05 },
+  },
   rewards: {
     xpBase: 12,
     xpPerStage: 4,

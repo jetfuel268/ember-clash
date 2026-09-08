@@ -125,7 +125,7 @@ export const SKILLS = [
   {
     id: 'embersnap',
     name: 'Ember Snap',
-    desc: 'A Keen 🔥 attack.',
+    desc: 'A Keen 🔥 attack (15% chance to set Burning).',
     cost: 15,
     pool: [1, 10],
     type: 'damage',
@@ -135,7 +135,7 @@ export const SKILLS = [
   {
     id: 'emberjab',
     name: 'Ember Jab',
-    desc: 'A Mighty 🔥 attack.',
+    desc: 'A Mighty 🔥 attack (15% chance to set Burning).',
     cost: 25,
     pool: [11, 20],
     type: 'damage',
@@ -145,7 +145,7 @@ export const SKILLS = [
   {
     id: 'hellfireburst',
     name: 'Hellfire Burst',
-    desc: 'A Brutal 🔥 attack.',
+    desc: 'A Brutal 🔥 attack (15% chance to set Burning).',
     cost: 35,
     pool: [21, 30],
     type: 'damage',
@@ -155,7 +155,7 @@ export const SKILLS = [
   {
     id: 'conflagration',
     name: 'Conflagration',
-    desc: 'A Crushing 🔥 attack.',
+    desc: 'A Crushing 🔥 attack (15% chance to set Burning).',
     cost: 45,
     pool: [31, 40],
     type: 'damage',
@@ -165,7 +165,7 @@ export const SKILLS = [
   {
     id: 'pyroclasm',
     name: 'Pyroclasm',
-    desc: 'A Cataclysmic 🔥 attack.',
+    desc: 'A Cataclysmic 🔥 attack (15% chance to set Burning).',
     cost: 55,
     pool: [41, 50],
     type: 'damage',

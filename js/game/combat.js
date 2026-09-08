@@ -8,7 +8,7 @@
 //   enemy.evasion, enemy.armor, enemy.critChance, enemy.critDamage,
 //   enemy.magic, enemy.energy, enemy.buffs
 import { TUNING } from '../config/tuning.js';
-import { rollIntent, INTENT_LABELS, TYPES } from './enemies.js';
+import { rollIntent, INTENT_LABELS, TYPES, elementMultFor } from './enemies.js';
 import { SKILL_MAP, ENEMY_SKILLS } from './skills.js';
 import { chance } from '../core/rng.js';
 
@@ -119,8 +119,8 @@ export class Combat {
       const sk = SKILL_MAP[arg];
       this.p.energy -= sk.cost;
       this.usePlayerSkill(s, sk);
-      // Any skill can set the enemy burning (15% chance).
-      if (this.e.hp > 0 && Math.random() < 0.15) this.applyBurn();
+      // Fire-type skills can set the enemy burning (15% chance).
+      if (this.e.hp > 0 && sk.element === 'fire' && Math.random() < TUNING.status.burn.chance) this.applyBurn();
     } else if (action === 'item') {
       this.useItem(arg);
     }
@@ -162,7 +162,7 @@ export class Combat {
     const t = TYPES[this.enemy.type];
     let totalMult;
     if (element) {
-      totalMult = mult * (t.element[element] ?? 1);
+      totalMult = mult * elementMultFor(this.enemy, element);
     } else if (vsType && this.enemy.type === vsType) {
       totalMult = vsMult;
     } else {
@@ -214,7 +214,7 @@ export class Combat {
   // Log label for a skill's matchup against the current enemy.
   matchupLabel(sk) {
     if (sk.element) {
-      const m = TYPES[this.enemy.type]?.element?.[sk.element];
+      const m = elementMultFor(this.enemy, sk.element);
       if (m > 1) return ' (weakness!)';
       if (m < 1) return ' (resisted)';
       return '';
@@ -406,12 +406,12 @@ export class Combat {
   }
 
   // Apply/refresh the burning status on the enemy: 5% of its max HP per
-  // turn for 3 turns (any skill can trigger it, 15% chance).
+  // turn for 3 turns (fire-type skills, 15% chance).
   applyBurn() {
     const prev = this.e.buffs.burn;
     this.e.buffs.burn = {
-      amount: Math.max(1, Math.round(this.e.maxHp * 0.05)),
-      turns: Math.max(prev?.turns ?? 0, 3),
+      amount: Math.max(1, Math.round(this.e.maxHp * TUNING.status.burn.fracOfMaxHp)),
+      turns: Math.max(prev?.turns ?? 0, TUNING.status.burn.turns),
     };
     this.bus.emit('log', { text: prev ? `The flames around ${this.enemy.name} intensify!` : `${this.enemy.name} catches fire!`, kind: 'system' });
   }
@@ -463,7 +463,7 @@ export class Combat {
       this.pushState();
       if (this.e.hp <= 0) return this.finish(true);
     }
-    // Enemy burning tick (any skill, 15% chance).
+    // Enemy burning tick (fire-type skills, 15% chance).
     if (this.e.buffs.burn) {
       this.e.hp = Math.max(0, this.e.hp - this.e.buffs.burn.amount);
       this.bus.emit('log', { text: `Burn sears ${this.enemy.name} for ${this.e.buffs.burn.amount}.`, kind: 'system' });

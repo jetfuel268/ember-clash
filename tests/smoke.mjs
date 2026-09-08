@@ -13,7 +13,7 @@ if (typeof globalThis.localStorage === 'undefined') {
 }
 import { Player } from '../js/game/player.js';
 import { Progression } from '../js/game/progression.js';
-import { createEnemy, isBossStage, poolForStage } from '../js/game/enemies.js';
+import { createEnemy, isBossStage, poolForStage, elementMultFor } from '../js/game/enemies.js';
 import { Combat } from '../js/game/combat.js';
 import { EventBus } from '../js/core/events.js';
 import { SaveStore, DEFAULT_SAVE } from '../js/core/save.js';
@@ -476,30 +476,84 @@ async function testBurning() {
   c.start();
   Math.random = () => 0.05;
   c.p.energy = 200;
-  c.act('skill', 'powerstrike');
+  c.act('skill', 'embersnap'); // fire
   Math.random = realRandom;
-  assert.ok(c.e.buffs.burn, 'skill can set the enemy burning (15% chance)');
+  assert.ok(c.e.buffs.burn, 'a fire skill can set the enemy burning (15% chance)');
   assert.equal(c.e.buffs.burn.turns, 3, 'burn lasts 3 turns');
   assert.equal(c.e.buffs.burn.amount, Math.max(1, Math.round(c.e.maxHp * 0.05)), 'burn is 5% of the enemy max HP per turn');
 
-  // No burn when the roll misses the window.
+  // Non-fire skills never burn, even inside the 15% window.
   const p2 = newPlayer(7);
   p2.stats0.magic = 200;
   p2.stats0.critChance = 0;
   const e2 = createEnemy(1);
   const c2 = new Combat(p2, e2, new EventBus());
   c2.start();
-  Math.random = () => 0.99;
+  Math.random = () => 0.05;
   c2.p.energy = 200;
   c2.act('skill', 'powerstrike');
   Math.random = realRandom;
-  assert.equal(c2.e.buffs.burn, null, 'no burn outside the 15% window');
+  assert.equal(c2.e.buffs.burn, null, 'non-fire skills cannot set burning');
+
+  // No burn when the fire skill misses the window.
+  const p3 = newPlayer(7);
+  p3.stats0.magic = 200;
+  p3.stats0.critChance = 0;
+  const e3 = createEnemy(1);
+  const c3 = new Combat(p3, e3, new EventBus());
+  c3.start();
+  Math.random = () => 0.99;
+  c3.p.energy = 200;
+  c3.act('skill', 'embersnap');
+  Math.random = realRandom;
+  assert.equal(c3.e.buffs.burn, null, 'no burn outside the 15% window');
 
   // The burn ticks on the enemy turn.
   c.e.hp = c.e.maxHp;
   const hpBefore = c.e.hp;
   c.enemyTurn();
   assert.ok(c.e.hp <= hpBefore - c.e.buffs.burn.amount + 1, 'burn ticks damage on the enemy turn');
+}
+
+// --- Element weaknesses: slimes weak to everything, insects to fire -------
+async function testElementWeaknesses() {
+  TUNING.combat.enemyActionDelayMs = 0;
+  const prevVariance = TUNING.combat.damageVariance;
+  TUNING.combat.damageVariance = 0;
+  const realRandom = Math.random;
+
+  const slime = createEnemy(1, 2); // forest pool index 2
+  assert.equal(slime.id, 'slime', 'forest pool index 2 is the Slime');
+  assert.equal(elementMultFor(slime, 'fire'), 1.5, 'slime weak to fire (1.5x)');
+  assert.equal(elementMultFor(slime, 'ice'), 1.5, 'slime weak to ice (1.5x)');
+  assert.equal(elementMultFor(slime, 'lightning'), 1.5, 'slime weak to lightning (1.5x)');
+
+  const stinger = createEnemy(1, 0); // forest pool index 0 (insect)
+  assert.equal(stinger.id, 'stinger', 'forest pool index 0 is the Stinger');
+  assert.equal(elementMultFor(stinger, 'fire'), 1.5, 'insects weak to fire (1.5x)');
+  assert.equal(elementMultFor(stinger, 'lightning'), 0.5, 'insects still resist lightning');
+
+  // A beast without overrides keeps its type affinities (grunt resists ice).
+  const grunt = createEnemy(11, 2); // cavern pool index 2
+  assert.equal(grunt.id, 'grunt', 'cavern pool index 2 is the Grunt');
+  assert.equal(elementMultFor(grunt, 'ice'), 0.5, 'grunts still resist ice');
+
+  // Damage math: Ember Snap (1.25x fire) vs a slime = 1.25 x 1.5 of attack.
+  const p = new Player({ level: 10 });
+  p.stats0.magic = 100;
+  p.stats0.critChance = 0;
+  const e = createEnemy(1, 2);
+  const c = new Combat(p, e, new EventBus());
+  c.start();
+  c.p.guarantee = true; // hits land
+  c.p.energy = 100;
+  Math.random = () => 0.99; // never crits, misses the 15% burn window
+  const hpBefore = c.e.hp;
+  c.act('skill', 'embersnap');
+  Math.random = realRandom;
+  const atk = p.stats0.attack;
+  assert.equal(hpBefore - c.e.hp, Math.max(1, Math.round(atk * 1.25 * 1.5)), 'fire skill deals 1.5x vs a slime');
+  TUNING.combat.damageVariance = prevVariance;
 }
 
 // --- Wardens: lightning attacks at the tier of their 10-stage area -----
@@ -636,6 +690,7 @@ async function testElementSkills() {
   p.skills = ['emberjab', 'powerstrike'];
   const beast = createEnemy(1);
   beast.type = 'beast';
+  beast.elementWeakness = null;
   beast.maxHp = 300; beast.hp = 300;
   const c = new Combat(p, beast, new EventBus());
   c.start();
@@ -649,6 +704,7 @@ async function testElementSkills() {
   p2.skills = ['emberjab', 'powerstrike'];
   const demon = createEnemy(1);
   demon.type = 'demon';
+  demon.elementWeakness = null;
   demon.maxHp = 300; demon.hp = 300;
   const c2 = new Combat(p2, demon, new EventBus());
   c2.start();
@@ -664,6 +720,7 @@ async function testElementSkills() {
   p3.skills = ['pyroclasm', 'emberjab'];
   const beast3 = createEnemy(1);
   beast3.type = 'beast';
+  beast3.elementWeakness = null;
   beast3.maxHp = 300; beast3.hp = 300;
   const c3 = new Combat(p3, beast3, new EventBus());
   c3.start();
@@ -1012,6 +1069,7 @@ async function main() {
   await testLootGoblin();
   await testHealLine();
   await testBurning();
+  await testElementWeaknesses();
   await testWardenLightning();
   await testHpCarryover();
   await testTypeSkills();
