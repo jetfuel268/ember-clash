@@ -108,13 +108,13 @@ export class AttackFx {
       s ^= s << 13; s >>>= 0;
       s ^= s >> 17;
       s ^= s << 5; s >>>= 0;
-      return s / 42949627;
+      return s / 4294967296;
     };
   }
 
   makeClip(kind, tier, from, to, scale) {
     switch (kind) {
-      case 'slash': return this.slash(from, to, scale);
+      case 'slash': return this.slash(from, to, tier, scale);
       case 'blunt': return this.blunt(from, to, tier, scale);
       case 'fire': return this.fire(from, to, tier, scale);
       case 'ice': return this.ice(from, to, tier, scale);
@@ -125,8 +125,9 @@ export class AttackFx {
   }
 
   // --- Blade air swoosh: three staggered arced streaks sweep to target ---
-  slash(from, to, scale) {
+  slash(from, to, tier = 0, scale = 1) {
     const dur = 320;
+    const s = (0.5 + 0.125 * tier) * scale; // tier 4 = full size, tier 0 = ~half
     const streaks = [0, 70, 140].map((off, i) => ({
       off,
       bow: (i - 1) * 0.35 + (Math.random() - 0.5) * 0.15,
@@ -135,7 +136,7 @@ export class AttackFx {
     const impact = 0.55;
     return {
       dur,
-      shake: 2 * scale,
+      shake: 2 * s,
       draw(p, ctx) {
         if (p > 1) return;
         const dx = to.x - from.x;
@@ -156,9 +157,9 @@ export class AttackFx {
             const by = from.y + dy * u + ny * s.bow * len * 0.18 * Math.sin(Math.PI * u);
             const a = Math.sin(Math.PI * (i / 14));
             ctx.strokeStyle = `rgba(220, 240, 255, ${0.75 * a})`;
-            ctx.lineWidth = (10 - i * 0.35) * scale;
+            ctx.lineWidth = (10 - i * 0.35) * s;
             ctx.beginPath();
-            ctx.arc(bx, by, (34 - i * 1.9) * scale, Math.atan2(ny, nx) - 1.15, Math.atan2(ny, nx) + 1.15);
+            ctx.arc(bx, by, (34 - i * 1.9) * s, Math.atan2(ny, nx) - 1.15, Math.atan2(ny, nx) + 1.15);
             ctx.stroke();
           }
           ctx.restore();
@@ -168,12 +169,12 @@ export class AttackFx {
         if (f > 0 && f < 1) {
           ctx.save();
           ctx.globalCompositeOperation = 'lighter';
-          const g = ctx.createRadialGradient(to.x, to.y, 0, to.x, to.y, 46 * scale);
+          const g = ctx.createRadialGradient(to.x, to.y, 0, to.x, to.y, 46 * s);
           g.addColorStop(0, `rgba(235, 245, 255, ${0.8 * (1 - f)})`);
           g.addColorStop(1, 'rgba(235, 245, 255, 0)');
           ctx.fillStyle = g;
           ctx.beginPath();
-          ctx.arc(to.x, to.y, 46 * scale, 0, Math.PI * 2);
+          ctx.arc(to.x, to.y, 46 * s, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
         }
@@ -184,22 +185,23 @@ export class AttackFx {
   // --- Blunt: my pick — a radial shockwave burst with dust + cracks ---
   blunt(from, to, tier, scale) {
     const dur = 420;
+    const ts = (0.5 + 0.125 * tier) * scale; // tier 4 = full size, tier 0 = ~half
     const rnd = this.rnd(7 + tier);
     const dust = Array.from({ length: 14 + tier * 6 }, () => ({
       a: rnd() * Math.PI * 2,
-      sp: 40 + rnd() * 90,
-      r: 2 + rnd() * 4,
-      drift: (rnd() - 0.5) * 20,
+      sp: (40 + rnd() * 90) * ts,
+      r: (2 + rnd() * 4) * ts,
+      drift: (rnd() - 0.5) * 20 * ts,
     }));
     const cracks = Array.from({ length: 5 + tier }, () => ({
       a: rnd() * Math.PI * 2,
-      len: 20 + rnd() * 46,
-      w: 1 + rnd() * 2,
+      len: (20 + rnd() * 46) * ts,
+      w: (1 + rnd() * 2) * ts,
     }));
     const impact = 0.35;
     return {
       dur,
-      shake: (4 + tier * 2) * scale,
+      shake: (4 + tier * 2) * ts,
       draw(p, ctx) {
         if (p > 1) return;
         const f = Math.max(0, (p - impact) / (1 - impact));
@@ -216,30 +218,30 @@ export class AttackFx {
           ctx.stroke();
         }
         // Core flash.
-        const g = ctx.createRadialGradient(to.x, to.y, 0, to.x, to.y, 60 * scale);
+        const g = ctx.createRadialGradient(to.x, to.y, 0, to.x, to.y, 60 * ts);
         g.addColorStop(0, `rgba(255, 240, 210, ${0.85 * (1 - f * 1.4)})`);
         g.addColorStop(1, 'rgba(255, 240, 210, 0)');
         if (f < 0.72) {
           ctx.fillStyle = g;
           ctx.beginPath();
-          ctx.arc(to.x, to.y, 60 * scale, 0, Math.PI * 2);
+          ctx.arc(to.x, to.y, 60 * ts, 0, Math.PI * 2);
           ctx.fill();
         }
         // Dust particles (radial + gravity).
         for (const d of dust) {
-          const dist = d.sp * f * scale;
+          const dist = d.sp * f * ts;
           const x = to.x + Math.cos(d.a) * dist + d.drift * f;
           const y = to.y + Math.sin(d.a) * dist * 0.8 + 40 * f * f;
           ctx.fillStyle = `rgba(210, 190, 160, ${0.7 * (1 - f)})`;
           ctx.beginPath();
-          ctx.arc(x, y, d.r * (1 - f * 0.5) * scale, 0, Math.PI * 2);
+          ctx.arc(x, y, d.r * (1 - f * 0.5) * ts, 0, Math.PI * 2);
           ctx.fill();
         }
         // Ground cracks.
         for (const c of cracks) {
           const a = (1 - f) * 0.9;
           ctx.strokeStyle = `rgba(255, 220, 170, ${a})`;
-          ctx.lineWidth = c.w * scale;
+          ctx.lineWidth = c.w * ts;
           const grow = 0.35 + 0.65 * Math.min(1, f * 2);
           ctx.beginPath();
           ctx.moveTo(to.x + Math.cos(c.a) * 8, to.y + Math.sin(c.a) * 8);
@@ -254,18 +256,19 @@ export class AttackFx {
   // --- Fire: a fireball crossing the screen; hotter + bigger per tier ---
   fire(from, to, tier, scale) {
     const dur = 640;
+    const ts = (0.5 + 0.125 * tier) * scale; // tier 4 = full size, tier 0 = ~half
     const rnd = this.rnd(101 + tier);
     const n = 16 + tier * 16;
     const parts = Array.from({ length: n }, () => ({
       o: (rnd() - 0.5) * 0.16, // vertical offset along the path
       sp: 0.85 + rnd() * 0.3, // travel speed variance
-      r: (4 + rnd() * 9) * (0.8 + tier * 0.15),
+      r: (4 + rnd() * 9) * (0.8 + tier * 0.15) * ts,
       wob: rnd() * Math.PI * 2,
     }));
     const burst = Array.from({ length: 14 + tier * 12 }, () => ({
       a: rnd() * Math.PI * 2,
-      sp: 50 + rnd() * 130,
-      r: 3 + rnd() * 7,
+      sp: (50 + rnd() * 130) * ts,
+      r: (3 + rnd() * 7) * ts,
     }));
     const impact = 0.58;
     // Whiter core as the tier climbs (T1 deep orange -> T5 white-hot).
@@ -287,9 +290,9 @@ export class AttackFx {
               from.y +
               (to.y - from.y) * t +
               pt.o * (to.y - from.y) +
-              Math.sin(p * 14 + pt.wob) * 6 * scale;
+              Math.sin(p * 14 + pt.wob) * 6 * ts;
             const fade = t > 0.85 ? (1 - t) / 0.15 : 1;
-            const r = pt.r * (0.75 + 0.25 * Math.sin(p * 20 + pt.wob)) * scale;
+            const r = pt.r * (0.75 + 0.25 * Math.sin(p * 20 + pt.wob)) * ts;
             const g = ctx.createRadialGradient(x, y, 0, x, y, r);
             g.addColorStop(0, `rgba(255, 255, ${Math.round(180 + coreA * 120)}, ${0.9 * fade})`);
             g.addColorStop(0.45, `rgba(255, ${150 + tier * 20}, 40, ${0.75 * fade})`);
@@ -304,7 +307,7 @@ export class AttackFx {
         const f = (p - impact) / (1 - impact);
         if (f > 0 && f < 1) {
           // Explosion glow, bigger and whiter on higher tiers.
-          const R = (46 + tier * 26) * f * 1.6 * scale;
+          const R = (46 + tier * 26) * f * 1.6 * ts;
           const g = ctx.createRadialGradient(to.x, to.y, 0, to.x, to.y, Math.max(1, R));
           g.addColorStop(0, `rgba(255, 255, ${Math.round(140 + coreA * 140)}, ${0.95 * (1 - f)})`);
           g.addColorStop(0.4, `rgba(255, ${120 + tier * 25}, 30, ${0.8 * (1 - f)})`);
@@ -314,22 +317,22 @@ export class AttackFx {
           ctx.arc(to.x, to.y, Math.max(1, R), 0, Math.PI * 2);
           ctx.fill();
           for (const b of burst) {
-            const dist = b.sp * f * (1 + tier * 0.12) * scale;
+            const dist = b.sp * f * (1 + tier * 0.12) * ts;
             const x = to.x + Math.cos(b.a) * dist;
             const y = to.y + Math.sin(b.a) * dist * 0.8 + 30 * f * f;
-            const g2 = ctx.createRadialGradient(x, y, 0, x, y, b.r * (1 - f * 0.6) * scale);
+            const g2 = ctx.createRadialGradient(x, y, 0, x, y, b.r * (1 - f * 0.6) * ts);
             g2.addColorStop(0, `rgba(255, 220, 120, ${0.85 * (1 - f)})`);
             g2.addColorStop(1, 'rgba(255, 90, 20, 0)');
             ctx.fillStyle = g2;
             ctx.beginPath();
-            ctx.arc(x, y, Math.max(0.5, b.r * (1 - f * 0.6) * scale), 0, Math.PI * 2);
+            ctx.arc(x, y, Math.max(0.5, b.r * (1 - f * 0.6) * ts), 0, Math.PI * 2);
             ctx.fill();
           }
           // Tier 4+: an outer shock ring; tier 5: a full-canvas heat flash.
           if (tier >= 3) {
-            const rr = (60 + 130 * f) * scale;
+            const rr = (60 + 130 * f) * ts;
             ctx.strokeStyle = `rgba(255, 190, 90, ${0.5 * (1 - f)})`;
-            ctx.lineWidth = (5 - 3 * f) * scale;
+            ctx.lineWidth = (5 - 3 * f) * ts;
             ctx.beginPath();
             ctx.arc(to.x, to.y, Math.max(1, rr), 0, Math.PI * 2);
             ctx.stroke();
@@ -369,26 +372,27 @@ export class AttackFx {
 
   ice(from, to, tier, scale) {
     const dur = 640;
+    const ts = (0.5 + 0.125 * tier) * scale; // tier 4 = full size, tier 0 = ~half
     const flake = this.snowflake; // bind before the closure (this = clip there)
     const rnd = this.rnd(300 + tier);
     const n = 12 + tier * 10;
     const flakes = Array.from({ length: n }, () => ({
       o: (rnd() - 0.5) * 0.2,
       sp: 0.85 + rnd() * 0.3,
-      r: (5 + rnd() * 8) * (0.8 + tier * 0.18),
+      r: (5 + rnd() * 8) * (0.8 + tier * 0.18) * ts,
       rot: rnd() * Math.PI,
       spin: (rnd() - 0.5) * 6,
     }));
     const shards = Array.from({ length: 10 + tier * 8 }, () => ({
       a: rnd() * Math.PI * 2,
-      sp: 60 + rnd() * 120,
-      s: 3 + rnd() * 6,
+      sp: (60 + rnd() * 120) * ts,
+      s: (3 + rnd() * 6) * ts,
       rot: rnd() * Math.PI,
     }));
     const impact = 0.58;
     return {
       dur,
-      shake: (2 + tier * 0.8) * scale,
+      shake: (2 + tier * 0.8) * ts,
       draw(p, ctx) {
         if (p > 1) return;
         ctx.save();
@@ -399,15 +403,15 @@ export class AttackFx {
             if (t > 1) continue;
             const x = from.x + (to.x - from.x) * t;
             const y =
-              from.y + (to.y - from.y) * t + f.o * (to.y - from.y) + Math.sin(t * 9 + f.rot) * 7 * scale;
+              from.y + (to.y - from.y) * t + f.o * (to.y - from.y) + Math.sin(t * 9 + f.rot) * 7 * ts;
             const fade = t > 0.85 ? (1 - t) / 0.15 : 1;
-            flake(ctx, x, y, f.r * scale, f.rot + t * f.spin, 0.85 * fade);
+            flake(ctx, x, y, f.r * ts, f.rot + t * f.spin, 0.85 * fade);
           }
         }
         const f = (p - impact) / (1 - impact);
         if (f > 0 && f < 1) {
           // Frost burst glow.
-          const R = (40 + tier * 24) * f * 1.5 * scale;
+          const R = (40 + tier * 24) * f * 1.5 * ts;
           const g = ctx.createRadialGradient(to.x, to.y, 0, to.x, to.y, Math.max(1, R));
           g.addColorStop(0, `rgba(230, 250, 255, ${0.9 * (1 - f)})`);
           g.addColorStop(0.5, `rgba(150, 210, 255, ${0.65 * (1 - f)})`);
@@ -418,10 +422,10 @@ export class AttackFx {
           ctx.fill();
           // Shattering crystal shards.
           for (const s of shards) {
-            const dist = s.sp * f * (1 + tier * 0.1) * scale;
+            const dist = s.sp * f * (1 + tier * 0.1) * ts;
             const x = to.x + Math.cos(s.a) * dist;
             const y = to.y + Math.sin(s.a) * dist * 0.8 + 44 * f * f;
-            const sz = s.s * (1 - f * 0.5) * scale;
+            const sz = s.s * (1 - f * 0.5) * ts;
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(s.rot + f * 4);
@@ -435,9 +439,9 @@ export class AttackFx {
             ctx.restore();
           }
           // Crystalline ring: 8 short arc segments.
-          const rr = (30 + 90 * f) * scale;
+          const rr = (30 + 90 * f) * ts;
           ctx.strokeStyle = `rgba(200, 240, 255, ${0.6 * (1 - f)})`;
-          ctx.lineWidth = 2.5 * scale;
+          ctx.lineWidth = 2.5 * ts;
           for (let i = 0; i < 8; i++) {
             const a0 = (i / 8) * Math.PI * 2 + f * 0.4;
             ctx.beginPath();
@@ -457,19 +461,20 @@ export class AttackFx {
   // --- Lightning: jagged bolts from the sky; more bolts/brightness per tier ---
   lightning(from, to, tier, scale) {
     const dur = 400;
+    const ts = (0.5 + 0.125 * tier) * scale; // tier 4 = full size, tier 0 = ~half
     const rnd = this.rnd(500 + tier);
     const bolts = 1 + Math.floor(tier / 2);
     const defs = Array.from({ length: bolts }, (_, i) => ({
-      ox: (i - (bolts - 1) / 2) * 46 * scale,
+      ox: (i - (bolts - 1) / 2) * 46 * ts,
       pts: Array.from({ length: 9 }, (_, j) => ({
         u: j / 8,
-        jx: (rnd() - 0.5) * (26 + tier * 14),
-        jy: (rnd() - 0.5) * (18 + tier * 8),
+        jx: (rnd() - 0.5) * (26 + tier * 14) * ts,
+        jy: (rnd() - 0.5) * (18 + tier * 8) * ts,
       })),
       branches: tier >= 2
         ? Array.from({ length: 1 + Math.floor(tier / 2) }, () => ({
             u: 0.25 + rnd() * 0.5,
-            len: 20 + rnd() * 50,
+            len: (20 + rnd() * 50) * ts,
             a: (rnd() - 0.5) * 2.2 + (rnd() > 0.5 ? 0 : Math.PI),
           }))
         : [],
@@ -477,7 +482,7 @@ export class AttackFx {
     }));
     return {
       dur,
-      shake: (3 + tier * 1.6) * scale,
+      shake: (3 + tier * 1.6) * ts,
       draw(p, ctx) {
         if (p > 1) return;
         const flicker = 0.75 + 0.25 * Math.sin(p * 40);
@@ -505,8 +510,8 @@ export class AttackFx {
           ];
           // Wide glow pass, then bright core.
           for (const [w, a] of [
-            [(9 + tier * 2.4) * scale, alpha * 0.28 * flicker],
-            [(3 + tier * 0.8) * scale, alpha * 0.85 * flicker],
+            [(9 + tier * 2.4) * ts, alpha * 0.28 * flicker],
+            [(3 + tier * 0.8) * ts, alpha * 0.85 * flicker],
           ]) {
             ctx.strokeStyle =
               w > 5
@@ -522,17 +527,17 @@ export class AttackFx {
           // Branches.
           for (const br of b.branches) {
             const base = point({ u: br.u, jx: b.ox * 0.4, jy: 0 });
-            const ex = base.x + Math.cos(br.a) * br.len * (1 + tier * 0.1) * scale * 0.8;
-            const ey = base.y + Math.abs(Math.sin(br.a)) * br.len * 0.6 * scale;
+            const ex = base.x + Math.cos(br.a) * br.len * (1 + tier * 0.1) * ts * 0.8;
+            const ey = base.y + Math.abs(Math.sin(br.a)) * br.len * 0.6 * ts;
             ctx.strokeStyle = `rgba(190, 215, 255, ${alpha * 0.6 * flicker})`;
-            ctx.lineWidth = (2 + tier * 0.5) * scale;
+            ctx.lineWidth = (2 + tier * 0.5) * ts;
             ctx.beginPath();
             ctx.moveTo(base.x, base.y);
             ctx.lineTo(ex, ey);
             ctx.stroke();
           }
           // Impact flare.
-          const R = (26 + tier * 16) * (0.5 + 0.5 * Math.sin(Math.PI * Math.min(1, p * 1.6))) * scale;
+          const R = (26 + tier * 16) * (0.5 + 0.5 * Math.sin(Math.PI * Math.min(1, p * 1.6))) * ts;
           const g = ctx.createRadialGradient(to.x + b.ox, to.y, 0, to.x + b.ox, to.y, Math.max(1, R));
           g.addColorStop(0, `rgba(230, 240, 255, ${alpha * 0.8 * flicker})`);
           g.addColorStop(1, 'rgba(150, 180, 255, 0)');
@@ -543,7 +548,7 @@ export class AttackFx {
         }
         // Screen flash, stronger per tier.
         if (tier >= 2 && p < 0.5) {
-          ctx.fillStyle = `rgba(170, 195, 255, ${(p * (0.1 + tier * 0.05) * scale).toFixed(3)})`;
+          ctx.fillStyle = `rgba(170, 195, 255, ${(p * (0.1 + tier * 0.05) * ts).toFixed(3)})`;
           ctx.fillRect(-20, -20, this.w + 40, this.h + 40);
         }
         ctx.restore();
