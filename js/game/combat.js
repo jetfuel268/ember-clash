@@ -51,6 +51,8 @@ export class Combat {
       intent: 'attack',
       buffs: freshBuffs(),
       energy: Math.min(TUNING.enemyMagic.startEnergy, enemy.magic),
+      goblin: enemy.id === 'lootgoblin',
+      provoked: false, // Loot Goblin: did the hero strike it?
     };
     this.eHit = Math.min(
       TUNING.enemyAi.enemyHitBase + TUNING.enemyAi.enemyHitPerStage * (enemy.stage - 1),
@@ -67,6 +69,12 @@ export class Combat {
   }
 
   rollEnemyIntent() {
+    if (this.e.goblin) {
+      // The Loot Goblin never attacks: it waits for the hero to strike,
+      // then flees on the following turn.
+      this.e.intent = this.e.provoked ? 'flee' : 'wait';
+      return;
+    }
     const canSkill =
       this.enemy.skills.length > 0 &&
       this.e.energy >= TUNING.enemyMagic.skillCost;
@@ -111,6 +119,16 @@ export class Combat {
       this.usePlayerSkill(s, sk);
     } else if (action === 'item') {
       this.useItem(arg);
+    }
+    // Attacking (basic or skill) provokes the Loot Goblin: it flees next turn.
+    if (
+      (action === 'attack' || action === 'skill') &&
+      this.e.goblin &&
+      !this.e.provoked &&
+      this.e.hp > 0
+    ) {
+      this.e.provoked = true;
+      this.bus.emit('log', { text: `${this.enemy.name} prepares to flee!`, kind: 'enemy' });
     }
     this.pushState();
 
@@ -388,6 +406,13 @@ export class Combat {
     this.e.charging = false;
     this.rollEnemyIntent();
 
+    if (this.e.goblin && this.e.provoked) {
+      // It was attacked last turn and runs off now: the stage is cleared,
+      // but its loot is lost.
+      this.bus.emit('log', { text: `${this.enemy.name} flees! (its loot is lost)`, kind: 'system' });
+      return this.finish(true, true);
+    }
+
     if (intent === 'defend') {
       this.e.defending = true;
       this.bus.emit('log', { text: `${this.enemy.name} raises its guard.`, kind: 'enemy' });
@@ -395,6 +420,8 @@ export class Combat {
       this.e.energy -= TUNING.enemyMagic.skillCost;
       const sid = this.enemy.skills[Math.floor(Math.random() * this.enemy.skills.length)];
       this.enemySkill(sid);
+    } else if (intent === 'wait') {
+      this.bus.emit('log', { text: `${this.enemy.name} crouches, waiting for you to attack.`, kind: 'enemy' });
     } else {
       const mult =
         (intent === 'charge' ? TUNING.combat.enemyChargeMultiplier : 1) *
@@ -443,16 +470,17 @@ export class Combat {
     }
   }
 
-  finish(playerWon) {
+  finish(playerWon, fled = false) {
     if (this.done) return;
     this.done = true;
     this.busy = false;
     this.bus.emit('phase', {
       value: playerWon ? 'victory' : 'defeat',
       bonus: playerWon ? this.lastKillBonus : undefined,
+      fled,
     });
     if (playerWon) {
-      this.bus.emit('log', { text: `${this.enemy.name} is defeated!`, kind: 'system' });
+      this.bus.emit('log', { text: fled ? `${this.enemy.name} escapes with its loot!` : `${this.enemy.name} is defeated!`, kind: 'system' });
     } else {
       this.bus.emit('log', { text: 'You have fallen...', kind: 'system' });
     }

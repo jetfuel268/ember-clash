@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+  <defs>
+    <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8fd46a"/>
+      <stop offset="0.6" stop-color="#63b044"/>
+      <stop offset="1" stop-color="#3f8a2e"/>
+    </linearGradient>
+    <linearGradient id="skinDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5aa53e"/>
+      <stop offset="1" stop-color="#2f6e22"/>
+    </linearGradient>
+    <linearGradient id="vest" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7a5630"/>
+      <stop offset="1" stop-color="#4c3418"/>
+    </linearGradient>
+    <linearGradient id="bag" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e8cf8a"/>
+      <stop offset="1" stop-color="#b3934e"/>
+    </linearGradient>
+    <radialGradient id="coin" cx="0.35" cy="0.3" r="1">
+      <stop offset="0" stop-color="#ffe9a0"/>
+      <stop offset="1" stop-color="#d9a52f"/>
+    </radialGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#dfe4ea"/>
+      <stop offset="1" stop-color="#9aa3ad"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="400" cy="742" rx="240" ry="44" fill="#000" opacity="0.35"/>
+  </g>
+  <g id="legs" stroke="#1e3a14" stroke-width="10">
+    <path d="M 300 596 C 288 648 282 690 292 720 C 318 734 356 730 366 706 C 372 672 368 630 356 596 Z" fill="url(#skinDark)"/>
+    <path d="M 500 596 C 512 648 518 690 508 720 C 482 734 444 730 434 706 C 428 672 432 630 444 596 Z" fill="url(#skinDark)"/>
+    <g id="feet" stroke="#1e3a14" stroke-width="8">
+      <path d="M 282 706 C 268 716 262 730 268 742 C 300 754 348 752 372 740 C 376 728 372 716 362 708 C 336 700 306 700 282 706 Z" fill="url(#skin)"/>
+      <path d="M 518 706 C 532 716 538 730 532 742 C 500 754 452 752 428 740 C 424 728 428 716 438 708 C 464 700 494 700 518 706 Z" fill="url(#skin)"/>
+    </g>
+  </g>
+  <g id="body" stroke="#1e3a14" stroke-width="10">
+    <path d="M 322 400 C 292 428 278 488 282 548 C 286 606 306 640 400 644 C 494 640 514 606 518 548 C 522 488 508 428 478 400 C 428 382 372 382 322 400 Z" fill="url(#vest)"/>
+    <g id="vest-trim" fill="none" stroke="#2e1f0d" stroke-width="6" stroke-linecap="round" opacity="0.8">
+      <path d="M 336 420 C 322 470 318 530 322 590"/>
+      <path d="M 464 420 C 478 470 482 530 478 590"/>
+    </g>
+    <path id="belt" d="M 300 566 C 350 590 450 590 500 566 L 500 598 C 450 622 350 622 300 598 Z" fill="#2e1f0d"/>
+    <rect x="384" y="572" width="32" height="32" rx="8" fill="#d9a52f" stroke="#2e1f0d" stroke-width="6"/>
+  </g>
+  <g id="arm-left" stroke="#1e3a14" stroke-width="10">
+    <path d="M 318 416 C 268 428 238 462 228 508 C 224 534 234 552 258 556 C 292 552 316 522 324 484 C 330 456 330 432 318 416 Z" fill="url(#skin)"/>
+    <g id="dagger">
+      <path d="M 246 380 C 240 416 238 448 244 478 C 258 482 272 478 276 466 C 272 436 272 406 274 380 C 264 372 254 372 246 380 Z" fill="url(#steel)"/>
+      <rect x="228" y="472" width="64" height="18" rx="8" fill="#6b4a2a"/>
+      <rect x="252" y="490" width="16" height="34" rx="7" fill="#6b4a2a"/>
+    </g>
+    <circle cx="258" cy="548" r="30" fill="url(#skinDark)"/>
+  </g>
+  <g id="bag" stroke="#1e3a14" stroke-width="10">
+    <path d="M 452 480 C 420 486 400 512 398 552 C 396 606 428 646 486 650 C 544 646 576 606 574 552 C 572 512 552 486 520 480 C 500 462 472 462 452 480 Z" fill="url(#bag)"/>
+    <path id="bag-mouth" d="M 458 470 C 452 452 462 436 486 432 C 510 436 520 452 514 470 C 500 482 472 482 458 470 Z" fill="#8a6d33"/>
+    <g id="coins" stroke="#8a6d33" stroke-width="6">
+      <circle cx="470" cy="462" r="20" fill="url(#coin)"/>
+      <circle cx="504" cy="466" r="20" fill="url(#coin)"/>
+    </g>
+    <g id="coin-marks" stroke="none" fill="#a8781f">
+      <path d="M 464 456 L 476 462 L 464 468 Z"/>
+      <path d="M 498 460 L 510 466 L 498 472 Z"/>
+    </g>
+  </g>
+  <g id="arm-right" stroke="#1e3a14" stroke-width="10">
+    <path d="M 482 416 C 528 430 556 462 566 502 C 572 528 560 548 536 552 C 506 548 484 520 476 482 C 470 454 470 432 482 416 Z" fill="url(#skin)"/>
+    <circle cx="540" cy="540" r="30" fill="url(#skinDark)"/>
+  </g>
+  <g id="head" stroke="#1e3a14" stroke-width="10">
+    <g id="ears" stroke="#1e3a14" stroke-width="10">
+      <path d="M 288 232 C 240 200 200 176 158 168 C 176 210 204 244 244 268 C 262 262 278 250 288 232 Z" fill="url(#skin)"/>
+      <path d="M 512 232 C 560 200 600 176 642 168 C 624 210 596 244 556 268 C 538 262 522 250 512 232 Z" fill="url(#skin)"/>
+    </g>
+    <path id="skull" d="M 288 240 C 280 172 320 128 400 124 C 480 128 520 172 512 240 C 520 300 488 356 400 364 C 312 356 280 300 288 240 Z" fill="url(#skin)"/>
+    <g id="cap" stroke="#1e3a14" stroke-width="10">
+      <path d="M 300 178 C 322 138 368 118 400 118 C 432 118 478 138 500 178 C 470 158 330 158 300 178 Z" fill="url(#skinDark)"/>
+      <path d="M 396 118 C 390 96 392 80 404 66 C 416 80 418 98 414 120 Z" fill="url(#skinDark)"/>
+    </g>
+    <g id="eyes">
+      <circle cx="352" cy="240" r="42" fill="#f5f2e2" stroke="#1e3a14" stroke-width="8"/>
+      <circle cx="448" cy="240" r="42" fill="#f5f2e2" stroke="#1e3a14" stroke-width="8"/>
+      <circle cx="358" cy="244" r="16" fill="#e8a52f" stroke="none"/>
+      <circle cx="444" cy="244" r="16" fill="#3f8a2e" stroke="none"/>
+      <circle cx="362" cy="240" r="5" fill="#1e3a14" stroke="none"/>
+      <circle cx="448" cy="240" r="5" fill="#1e3a14" stroke="none"/>
+    </g>
+    <g id="snout" stroke="none">
+      <path d="M 372 300 C 380 292 420 292 428 300 C 424 314 376 314 372 300 Z" fill="#2f6e22" opacity="0.5"/>
+    </g>
+    <path id="mouth" d="M 316 316 C 348 352 452 352 484 316 C 476 356 440 380 400 380 C 360 380 324 356 316 316 Z" fill="#26160f" stroke="#1e3a14" stroke-width="8"/>
+    <g id="fangs" stroke="none">
+      <path d="M 336 330 L 344 352 L 356 332 Z" fill="#f5f2e2"/>
+      <path d="M 464 330 L 456 352 L 444 332 Z" fill="#f5f2e2"/>
+      <path d="M 380 344 L 386 360 L 394 344 Z" fill="#f5f2e2"/>
+    </g>
+  </g>
+</svg>

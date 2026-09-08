@@ -24,7 +24,7 @@ export class Progression {
   // Returns: { gold, xp, leveledUp, gain, offer, nextStage, victory }
   // `offer` holds up to 3 distinct skills; the player chooses one on the
   // level-up screen (learn it, or replace a slot / skip).
-  onStageWon(stage, bonus = null) {
+  onStageWon(stage, bonus = null, fled = false) {
     const p = this.player;
     const s = TUNING;
     const boss = this.isBossStage(stage);
@@ -37,7 +37,7 @@ export class Progression {
     if (bonus === 'xp') xp *= 2;
 
     p.gold += Math.round(gold);
-    this.save.stats.kills += 1;
+    if (!fled) this.save.stats.kills += 1;
     this.save.stats.wins += 1;
 
     const leveledUp = p.addXp(xp);

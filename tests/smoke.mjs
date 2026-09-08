@@ -22,6 +22,9 @@ import { pickSkillChoices, poolFor, skillLine, candidatesFor, isPlainDamage, TIE
 import { xpForNext } from '../js/game/upgrades.js';
 import { EQUIPMENT, pieceName, nextTier } from '../js/game/equipment.js';
 
+// Keep the Loot Goblin spawn out of every test except its own.
+TUNING.spawn.lootGoblinChance = 0;
+
 // Deterministic RNG: a 32-bit xorshift seeded by the caller.
 function makeRng(seed) {
   let s = seed >>> 0;
@@ -348,6 +351,70 @@ async function testBossSkills() {
 
   unpinned();
   TUNING.combat.damageVariance = prevVariance;
+}
+
+// --- Loot Goblin: 10% replacement, waits, flees after being attacked ----
+async function testLootGoblin() {
+  TUNING.combat.enemyActionDelayMs = 0;
+  const tick = () => new Promise((r) => setTimeout(r, 20));
+
+  // Spawn: chance 1 always replaces non-boss stages; boss stages are safe.
+  TUNING.spawn.lootGoblinChance = 1;
+  assert.equal(createEnemy(1).id, 'lootgoblin', 'goblin replaces a non-boss stage');
+  assert.equal(createEnemy(11).id, 'lootgoblin', 'goblin can appear in any biome');
+  assert.equal(createEnemy(10).id, 'broodmother', 'boss stages never become goblins');
+  TUNING.spawn.lootGoblinChance = 0;
+
+  // It waits and never attacks; attacking it provokes the flee.
+  const p = newPlayer(7);
+  p.stats0.magic = 100;
+  const g = createEnemy(1);
+  TUNING.spawn.lootGoblinChance = 1;
+  const gb = createEnemy(2);
+  TUNING.spawn.lootGoblinChance = 0;
+  assert.equal(gb.id, 'lootgoblin');
+  const bus = new EventBus();
+  const phases = [];
+  bus.on('phase', (d) => phases.push(d));
+  const c = new Combat(p, gb, bus);
+  c.start();
+  assert.equal(c.e.goblin, true, 'combat flags the goblin');
+
+  c.act('guard');
+  await tick();
+  assert.equal(c.done, false, 'battle continues while the goblin waits');
+  assert.equal(c.e.intent, 'wait', 'goblin intent is wait');
+  assert.equal(c.p.hp, c.p.maxHp, 'the goblin never attacks');
+
+  c.p.guarantee = true;
+  c.act('attack');
+  assert.equal(c.e.provoked, true, 'attacking provokes the goblin');
+  await tick();
+  assert.equal(c.e.intent, 'flee', 'provoked goblin rolls flee');
+  assert.equal(c.done, true, 'goblin flees on the following turn');
+  const win = phases.find((d) => d.value === 'victory');
+  assert.ok(win, 'flee ends the stage as a victory');
+  assert.equal(win.fled, true, 'fled flag is set');
+
+  // Kill it in time: a normal victory (no fled flag).
+  const p2 = newPlayer(7);
+  p2.stats0.magic = 100;
+  TUNING.spawn.lootGoblinChance = 1;
+  const g2 = createEnemy(3);
+  TUNING.spawn.lootGoblinChance = 0;
+  const bus2 = new EventBus();
+  const phases2 = [];
+  bus2.on('phase', (d) => phases2.push(d));
+  const c2 = new Combat(p2, g2, bus2);
+  c2.start();
+  c2.p.guarantee = true;
+  c2.e.hp = 1;
+  c2.act('attack');
+  assert.equal(c2.done, true, 'killed goblin ends the battle');
+  const win2 = phases2.find((d) => d.value === 'victory');
+  assert.ok(win2, 'kill is a victory');
+  assert.equal(win2.fled ?? false, false, 'killed goblin = normal victory (drop applies)');
+  assert.equal(c2.e.provoked, false, 'a fatal strike does not provoke (it is dead)');
 }
 
 // --- Combat: turn order, guard, skill energy/cd, items, victory ------------
@@ -824,6 +891,7 @@ async function main() {
   await testCombatBasics();
   await testCrystalGuardian();
   await testBossSkills();
+  await testLootGoblin();
   await testHpCarryover();
   await testTypeSkills();
   await testElementSkills();

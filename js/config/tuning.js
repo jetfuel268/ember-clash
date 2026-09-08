@@ -35,6 +35,9 @@ export const TUNING = {
     boss: { hpMultiplier: 1.8, atkMultiplier: 1.25 },
   },
   xp: { base: 30, perLevel: 20 }, // xpForNext(level) = base + (level-1)*perLevel
+  spawn: {
+    lootGoblinChance: 0.10, // a Loot Goblin can replace any non-boss stage's enemy
+  },
   rewards: {
     xpBase: 12,
     xpPerStage: 4,
@@ -80,7 +83,7 @@ export const TUNING = {
     bed: { base: 15, perStage: 4 }, // full restore cost = base + perStage * stage
     items: {
       potion: { name: 'Potion', desc: 'Heal 35% of max ❤️', priceBase: 25, perStage: 2 },
-      vial: { name: '⭐ Vial', desc: 'Restore 50 ⭐', priceBase: 35, perStage: 2 },
+      vial: { name: 'Vial', desc: 'Restore 50 ⭐', priceBase: 35, perStage: 2 },
       elixir: { name: 'Elixir', desc: 'Restore 50% of max ❤️ and ⭐', priceBase: 70, perStage: 3 },
     },
   },

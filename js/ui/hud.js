@@ -61,13 +61,13 @@ export class HUD {
     this.applyHeroSkin(p.equipment);
     this.el.enemyName.textContent = `${e.name}${e.boss ? ' (BOSS)' : ''} · ${e.typeLabel}`;
     this.el.playerHp.style.width = `${(p.hp / p.maxHp) * 100}%`;
-    this.el.playerHpText.textContent = `❤️ ${p.hp} / ${p.maxHp}`;
+    this.el.playerHpText.textContent = `${p.hp} / ${p.maxHp}`;
     this.el.playerEnergy.style.width = `${(p.energy / p.maxEnergy) * 100}%`;
-    this.el.playerEnergyText.textContent = `⭐ ${p.energy} / ${p.maxEnergy}`;
+    this.el.playerEnergyText.textContent = `${p.energy} / ${p.maxEnergy}`;
     this.el.actions.attack.textContent = p.swing > 1 ? 'Attack (Charged) ⚔️' : 'Attack 🔨';
     this.renderBuffs(this.el.playerBuffs, p.buffs);
     this.el.enemyHp.style.width = `${(e.hp / e.maxHp) * 100}%`;
-    this.el.enemyHpText.textContent = `❤️ ${e.hp} / ${e.maxHp}`;
+    this.el.enemyHpText.textContent = `${e.hp} / ${e.maxHp}`;
     this.el.enemyIntent.textContent = e.intentLabel || '';
     this.renderBuffs(this.el.enemyBuffs, e.buffs);
     this.lastState = state;

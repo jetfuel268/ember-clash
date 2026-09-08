@@ -57,11 +57,11 @@ bus.on('sfx', (d) => sfx[d.name]?.());
 bus.on('phase', (d) => {
   hud.setPhase(d.value);
   if (d.value === 'victory') {
-    hud.playDeath(); // kill feedback before the screen change
+    if (!d.fled) hud.playDeath(); // kill feedback before the screen change
     setTimeout(() => {
-      hud.stopDeath();
-      onStageWon(d.bonus ?? null);
-    }, 1000);
+      if (!d.fled) hud.stopDeath();
+      onStageWon(d.bonus ?? null, d.fled);
+    }, d.fled ? 400 : 1000);
   }
   if (d.value === 'defeat') {
     hud.playDeath('player'); // fade out before the game-over screen
@@ -85,16 +85,24 @@ function startStage(stage) {
   combat.start();
 }
 
-function onStageWon(bonus) {
+function onStageWon(bonus, fled = false) {
   const stage = save.stage;
   // HP and energy carry over between battles — no win or level-up restoration.
   player.currentHp = combat.p.hp;
   player.currentEnergy = combat.p.energy;
-  const reward = progression.onStageWon(stage, bonus);
-  recordKill(save.bestiary, combat.enemy);
+  const reward = progression.onStageWon(stage, bonus, fled);
+  if (!fled) recordKill(save.bestiary, combat.enemy);
+  // Loot Goblin drop (kill only): 200 gold + a potion or an energy vial.
+  let goblinLoot = '';
+  if (combat.enemy.id === 'lootgoblin' && !fled) {
+    player.gold += 200;
+    const item = Math.random() < 0.5 ? 'potion' : 'vial';
+    player.items[item] += 1;
+    goblinLoot = ` LOOT GOBLIN: +200 gold, +1 ${item === 'potion' ? 'Potion' : 'Vial'}!`;
+  }
   persist();
   log.append({
-    text: `Victory! +${reward.xp} XP, +${reward.gold} gold.${reward.leveledUp ? ` LEVEL UP to ${player.level}!` : ''}`,
+    text: `Victory! +${reward.xp} XP, +${reward.gold} gold.${goblinLoot}${reward.leveledUp ? ` LEVEL UP to ${player.level}!` : ''}`,
     kind: 'system',
   });
   pending = reward;

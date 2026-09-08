@@ -42,6 +42,10 @@ export const ENEMY_DEFS = {
   skeleton: { id: 'skeleton', name: 'Skeleton', sprite: 'skeleton', type: 'undead', hp: 58, atk: 12, skills: ['shell'] },
   wyvern: { id: 'wyvern', name: 'Wyvern', sprite: 'wyvern', type: 'beast', hp: 52, atk: 12, skills: ['enrage'] },
   slime: { id: 'slime', name: 'Slime', sprite: 'slime', type: 'beast', hp: 45, atk: 8, skills: ['shell'] },
+  // The Loot Goblin: appears in place of any non-boss stage enemy (10%).
+  // It never attacks: it waits, and flees the turn after you attack it.
+  // Kill it for a 200-gold + potion/vial drop.
+  lootgoblin: { id: 'lootgoblin', name: 'Loot Goblin', sprite: 'lootgoblin', type: 'beast', hp: 55, atk: 6, skills: ['flee'] },
 };
 
 // Limited per-stage pools: each biome (10 stages) draws only from its pool.
@@ -98,9 +102,14 @@ export function createEnemy(stage, baseIndex) {
     const b = BOSSES[(stage / t.stage.bossEvery - 1) % BOSSES.length];
     base = { hp: 60, atk: 10, id: b.id, name: b.name, sprite: b.sprite, type: b.type, skills: b.skills };
   } else {
-    const pool = poolForStage(stage);
-    const id = baseIndex != null ? pool[baseIndex % pool.length] : pool[Math.floor(Math.random() * pool.length)];
-    base = { ...ENEMY_DEFS[id] };
+    // A Loot Goblin can replace any non-boss stage's enemy.
+    if (Math.random() < t.spawn.lootGoblinChance) {
+      base = { ...ENEMY_DEFS.lootgoblin };
+    } else {
+      const pool = poolForStage(stage);
+      const id = baseIndex != null ? pool[baseIndex % pool.length] : pool[Math.floor(Math.random() * pool.length)];
+      base = { ...ENEMY_DEFS[id] };
+    }
   }
 
   const hpMult = boss ? t.combat.boss.hpMultiplier : 1;
@@ -160,4 +169,6 @@ export const INTENT_LABELS = {
   charge: 'Gathering power',
   defend: 'Raising guard',
   skill: 'Preparing a skill',
+  wait: 'Crouching warily',
+  flee: 'Preparing to flee',
 };
