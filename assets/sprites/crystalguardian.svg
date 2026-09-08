@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+  <defs>
+    <linearGradient id="rock" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7a6a94"/>
+      <stop offset="0.6" stop-color="#54476e"/>
+      <stop offset="1" stop-color="#332a4a"/>
+    </linearGradient>
+    <radialGradient id="rockLight" cx="0.35" cy="0.3" r="1">
+      <stop offset="0" stop-color="#9484b4"/>
+      <stop offset="1" stop-color="#5c4f7c"/>
+    </radialGradient>
+    <linearGradient id="crystal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d9a6ff"/>
+      <stop offset="0.5" stop-color="#9a4de0"/>
+      <stop offset="1" stop-color="#5a1a9e"/>
+    </linearGradient>
+    <linearGradient id="crystalLight" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f0d9ff"/>
+      <stop offset="1" stop-color="#b06ae8"/>
+    </linearGradient>
+    <radialGradient id="eyeGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#d8b4fe" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#a855f7" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="400" cy="750" rx="250" ry="46" fill="#000" opacity="0.35"/>
+  </g>
+  <g id="legs" stroke="#241a3d" stroke-width="10">
+    <rect x="282" y="540" width="108" height="172" rx="38" fill="url(#rock)"/>
+    <rect x="410" y="540" width="108" height="172" rx="38" fill="url(#rock)"/>
+    <g id="knee-crystals" stroke="none">
+      <path d="M 312 592 C 312 566 318 552 326 540 C 334 552 340 566 340 592 C 340 600 312 600 312 592 Z" fill="url(#crystal)"/>
+      <path d="M 460 592 C 460 566 466 552 474 540 C 482 552 488 566 488 592 C 488 600 460 600 460 592 Z" fill="url(#crystal)"/>
+    </g>
+  </g>
+  <g id="body" stroke="#241a3d" stroke-width="10">
+    <rect x="268" y="288" width="264" height="304" rx="72" fill="url(#rockLight)"/>
+    <g id="cracks" fill="none" stroke="#3a2f56" stroke-linecap="round" stroke-width="6" opacity="0.8">
+      <path d="M 300 480 L 318 508 L 306 540"/>
+      <path d="M 488 470 L 474 500"/>
+    </g>
+    <g id="chest-crystals" stroke="none">
+      <circle cx="400" cy="430" r="96" fill="url(#eyeGlow)" opacity="0.5"/>
+      <path d="M 344 470 C 344 420 356 388 372 352 C 388 388 400 420 400 470 C 400 484 344 484 344 470 Z" fill="url(#crystal)"/>
+      <path d="M 400 470 C 400 408 410 372 424 330 C 440 372 452 408 452 470 C 452 486 400 486 400 470 Z" fill="url(#crystal)"/>
+      <path d="M 448 462 C 448 424 458 402 470 378 C 482 402 490 424 490 462 C 490 474 448 474 448 462 Z" fill="url(#crystal)"/>
+      <path d="M 372 462 C 372 428 380 406 390 382 C 400 406 406 428 406 462 C 406 472 372 472 372 462 Z" fill="url(#crystalLight)" opacity="0.9"/>
+      <path d="M 424 462 C 424 420 432 396 442 366 C 452 396 460 420 460 462 C 460 474 424 474 424 462 Z" fill="url(#crystalLight)" opacity="0.9"/>
+    </g>
+  </g>
+  <g id="arms" stroke="#241a3d" stroke-width="10">
+    <rect x="184" y="300" width="92" height="232" rx="42" fill="url(#rock)"/>
+    <rect x="524" y="300" width="92" height="232" rx="42" fill="url(#rock)"/>
+    <circle cx="230" cy="560" r="54" fill="url(#rockLight)"/>
+    <circle cx="570" cy="560" r="54" fill="url(#rockLight)"/>
+    <g id="shoulder-crystals" stroke="none">
+      <path d="M 200 316 C 200 282 208 262 220 236 C 232 262 240 282 240 316 C 240 328 200 328 200 316 Z" fill="url(#crystal)"/>
+      <path d="M 236 310 C 236 286 242 270 250 250 C 258 270 264 286 264 310 C 264 320 236 320 236 310 Z" fill="url(#crystalLight)"/>
+      <path d="M 548 316 C 548 282 556 262 568 236 C 580 262 588 282 588 316 C 588 328 548 328 548 316 Z" fill="url(#crystal)"/>
+      <path d="M 536 310 C 536 286 542 270 550 250 C 558 270 564 286 564 310 C 564 320 536 320 536 310 Z" fill="url(#crystalLight)"/>
+      <path d="M 196 572 C 196 548 202 534 212 516 C 222 534 228 548 228 572 C 228 582 196 582 196 572 Z" fill="url(#crystal)"/>
+      <path d="M 572 572 C 572 548 578 534 588 516 C 598 534 604 548 604 572 C 604 582 572 582 572 572 Z" fill="url(#crystal)"/>
+    </g>
+  </g>
+  <g id="head" stroke="#241a3d" stroke-width="10">
+    <rect x="326" y="148" width="148" height="128" rx="36" fill="url(#rockLight)"/>
+    <g id="crest" stroke="none">
+      <path d="M 352 160 C 352 132 358 116 366 94 C 374 116 380 132 380 160 C 380 170 352 170 352 160 Z" fill="url(#crystal)"/>
+      <path d="M 384 154 C 384 118 392 96 402 68 C 412 96 420 118 420 154 C 420 166 384 166 384 154 Z" fill="url(#crystal)"/>
+      <path d="M 420 160 C 420 132 426 116 434 94 C 442 116 448 132 448 160 C 448 170 420 170 420 160 Z" fill="url(#crystal)"/>
+      <path d="M 392 148 C 392 122 398 106 404 88 C 410 106 414 122 414 148 C 414 156 392 156 392 148 Z" fill="url(#crystalLight)"/>
+    </g>
+    <g id="eyes">
+      <ellipse cx="368" cy="218" rx="18" ry="24" fill="#c77dff" stroke="none"/>
+      <ellipse cx="432" cy="218" rx="18" ry="24" fill="#c77dff" stroke="none"/>
+      <circle cx="368" cy="218" r="34" fill="url(#eyeGlow)" stroke="none"/>
+      <circle cx="432" cy="218" r="34" fill="url(#eyeGlow)" stroke="none"/>
+    </g>
+  </g>
+</svg>

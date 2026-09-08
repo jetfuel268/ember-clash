@@ -311,6 +311,17 @@ export class Combat {
     } else if (id === 'web') {
       this.p.buffs.web = { turns: 3 };
       this.bus.emit('log', { text: `${this.enemy.name} sprays webs — your accuracy drops!`, kind: 'enemy' });
+    } else if (id === 'crystallineshell') {
+      this.e.buffs.defense = { bonus: 0.5, turns: 5 };
+      this.bus.emit('log', { text: `${this.enemy.name} hardens into a crystalline shell (5 turns of defense).`, kind: 'enemy' });
+    } else if (id === 'crystaldrain') {
+      // Drains the player's energy bar for the enemy's stage-scaled attack
+      // value — the same strength as its normal attack (energy only).
+      const drain = Math.max(1, this.enemy.atk);
+      const before = this.p.energy;
+      this.p.energy = Math.max(0, this.p.energy - drain);
+      this.bus.emit('log', { text: `${this.enemy.name} lances your energy — −${before - this.p.energy} ⭐!`, kind: 'enemy' });
+      this.bus.emit('hit', { target: 'player' });
     }
     this.bus.emit('sfx', { name: 'skill' });
   }

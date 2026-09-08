@@ -58,7 +58,7 @@ export const STAGE_POOLS = [
 // The boss of each biome, cycled every 10 stages (10, 20, 30, 40, ...).
 const BOSSES = [
   { id: 'broodmother', name: 'The Broodmother', sprite: 'broodmother', type: 'insect', skills: ['web', 'toxins'] },
-  { id: 'wardenprime', name: 'Warden Prime', sprite: 'warden', type: 'construct', skills: ['shell', 'enrage'] },
+  { id: 'crystalguardian', name: 'Crystal Guardian', sprite: 'crystalguardian', type: 'construct', skills: ['crystallineshell', 'crystaldrain'] },
   { id: 'hollowking', name: 'The Hollow King', sprite: 'skeleton', type: 'undead', skills: ['venom', 'shell'] },
   { id: 'colossus', name: 'Revenant Colossus', sprite: 'wyvern', type: 'beast', skills: ['enrage', 'venom'] },
 ];

@@ -519,6 +519,8 @@ export const ENEMY_SKILLS = {
   venom: { id: 'venom', name: 'Venom', desc: 'Poison the hero (5 damage/turn for 3 turns).' },
   toxins: { id: 'toxins', name: 'Brood Toxin', desc: 'Poison the hero (5 damage/turn for 5 turns).' },
   web: { id: 'web', name: 'Web Spray', desc: 'Reduce the hero’s accuracy for 3 turns.' },
+  crystallineshell: { id: 'crystallineshell', name: 'Crystalline Shell', desc: 'Gain defense for 5 turns.' },
+  crystaldrain: { id: 'crystaldrain', name: 'Crystal Lance', desc: 'Lance the hero’s energy bar (drains ⭐).' },
 };
 
 // Skills learnable at a given player level (randomized pool per level range).

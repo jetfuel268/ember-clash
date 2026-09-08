@@ -231,6 +231,37 @@ function newSave() {
   assert.equal(bm.id, 'broodmother', 'stage 10 boss is the Broodmother');
   assert.deepEqual(bm.skills.sort(), ['toxins', 'web']);
   assert.equal(bm.boss, true);
+  // The stage-20 boss is the Crystal Guardian: shell (5 turns) + energy drain.
+  const cg = createEnemy(20);
+  assert.equal(cg.id, 'crystalguardian', 'stage 20 boss is the Crystal Guardian');
+  assert.deepEqual(cg.skills.sort(), ['crystaldrain', 'crystallineshell']);
+  assert.equal(cg.boss, true);
+}
+
+// --- Crystal Guardian: 5-turn shell + energy-bar lance --------------------
+async function testCrystalGuardian() {
+  TUNING.combat.enemyActionDelayMs = 0;
+  const tick = () => new Promise((r) => setTimeout(r, 20));
+  const p = new Player({ level: 10 });
+  p.stats0.magic = 100;
+  const boss = createEnemy(20);
+  const cb = new Combat(p, boss, new EventBus());
+  cb.start();
+  // Crystal Lance drains the player's energy for the boss's stage-scaled
+  // attack value - the same strength as its normal attack (energy only).
+  const energyBefore = cb.p.energy;
+  const hpBefore = cb.p.hp;
+  cb.enemySkill('crystaldrain');
+  assert.equal(energyBefore - cb.p.energy, boss.atk, 'drain equals the boss atk (stage-scaled)');
+  assert.equal(cb.p.hp, hpBefore, 'drain touches the energy bar only');
+  // Crystalline Shell grants 5 turns of defense (skill cost is paid in
+  // enemyTurn for 'skill' intents; mirror it since we call directly).
+  cb.e.energy -= TUNING.enemyMagic.skillCost;
+  cb.enemySkill('crystallineshell');
+  assert.equal(cb.e.buffs.defense.turns, 5, 'shell lasts 5 turns');
+  assert.equal(cb.e.buffs.defense.bonus, 0.5, 'shell halves damage');
+  cb.e.energy -= TUNING.enemyMagic.skillCost;
+  assert.equal(cb.e.energy, 50 - 2 * TUNING.enemyMagic.skillCost, 'both skills cost enemy energy');
 }
 
 // --- Combat: turn order, guard, skill energy/cd, items, victory ------------
@@ -704,6 +735,7 @@ async function testLateSkills() {
 
 async function main() {
   await testCombatBasics();
+  await testCrystalGuardian();
   await testHpCarryover();
   await testTypeSkills();
   await testElementSkills();
