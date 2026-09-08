@@ -18,7 +18,7 @@ import { Combat } from '../js/game/combat.js';
 import { EventBus } from '../js/core/events.js';
 import { SaveStore, DEFAULT_SAVE } from '../js/core/save.js';
 import { TUNING } from '../js/config/tuning.js';
-import { pickSkillToLearn, poolFor, skillLine, candidatesFor, SKILLS } from '../js/game/skills.js';
+import { pickSkillToLearn, poolFor, skillLine, candidatesFor, isPlainDamage, TIER_BLOCKS, TIER_COSTS, TIER_MULTS, SKILLS } from '../js/game/skills.js';
 import { xpForNext } from '../js/game/upgrades.js';
 import { EQUIPMENT, pieceName, nextTier } from '../js/game/equipment.js';
 
@@ -85,28 +85,24 @@ function newSave() {
   assert.equal(p.replaceSkill('aim', 'mend'), true, 'replace works');
   assert.ok(p.skills.includes('mend') && !p.skills.includes('aim'));
 
-  // Pool randomization by level range.
-  assert.ok(poolFor(3).some((s) => s.pool[0] <= 3 && s.pool[1] >= 3), 'pool 1-9 non-empty at lv3');
-  assert.ok(!poolFor(3).some((s) => s.pool[0] > 3), 'no 10+ skills at lv3');
-  assert.ok(poolFor(15).some((s) => s.pool[0] >= 10), 'pool 10-19 present at lv15');
-  // Cost 50-60 skills are only learnable at levels 11-13.
-  const pricey = (lv) => poolFor(lv).filter((s) => s.cost >= 50 && s.cost <= 60);
-  for (const lv of [1, 5, 9, 10, 14, 19, 25]) {
-    assert.equal(pricey(lv).length, 0, `no 50-60 cost skills at lv${lv}`);
+  // Pool randomization by level range (pools are 10-level blocks).
+  assert.ok(poolFor(3).some((s) => s.pool[0] <= 3 && s.pool[1] >= 3), 'block-1 pool non-empty at lv3');
+  assert.ok(!poolFor(3).some((s) => s.pool[0] > 3), 'no block-2+ skills at lv3');
+  assert.ok(poolFor(15).some((s) => s.pool[0] >= 11), 'block-2 skills present at lv15');
+  // Tier skills are learnable in their own 10-level block and nowhere else.
+  for (const sk of SKILLS.filter((k) => k.pool && k.cost >= 15 && k.cost <= 55 && isPlainDamage(k))) {
+    const block = TIER_BLOCKS[TIER_COSTS.indexOf(sk.cost)];
+    assert.deepEqual(sk.pool, block, `${sk.id} pool matches its tier block ${JSON.stringify(block)}`);
   }
-  assert.ok(pricey(11).length >= 3, '50-60 cost skills present at lv11');
-  assert.ok(pricey(12).length >= 3 && pricey(13).length >= 3, '50-60 cost skills present through lv13');
-  // Early pool carries the cheaper variants of the pricey skills.
+  // Early pool carries the Keen (tier 1) element basics and cheap utility.
   const earlyIds = poolFor(3).map((s) => s.id);
-  assert.ok(earlyIds.includes('minormend'), 'early pool has the cheaper heal (Minor Mend)');
-  assert.ok(earlyIds.includes('swiftedge'), 'early pool has the cheaper on-hit skill (Swift Edge)');
-  assert.ok(earlyIds.includes('emberjab') && earlyIds.includes('frostbrand') && earlyIds.includes('arcbolt'),
-    'early pool has the 150% element variants of the 225% trios');
+  assert.ok(earlyIds.includes('minormend'), 'early pool has the cheap heal (Minor Mend)');
+  assert.ok(earlyIds.includes('swiftedge'), 'early pool has the on-hit skill (Swift Edge)');
   assert.ok(earlyIds.includes('embersnap') && earlyIds.includes('frostenip') && earlyIds.includes('staticzap'),
-    'early pool has the weak 100% element basics');
+    'early pool has the tier-1 element basics');
   // Late pool (20+) is populated.
   const lateIds = poolFor(25).map((s) => s.id);
-  for (const id of ['trueedge', 'volley', 'adrenaline', 'secondwind']) {
+  for (const id of ['trueedge', 'adrenaline', 'secondwind', 'cleave']) {
     assert.ok(lateIds.includes(id), `late pool has ${id} at lv25`);
   }
   for (let i = 0; i < 50; i++) {
@@ -132,7 +128,7 @@ function newSave() {
   const underBlade = candidatesFor(5, ['powerstrike'], Infinity).map((s) => s.id);
   assert.ok(underBlade.includes('doublestrike'), 'Double Strike offered despite higher blade tier owned');
   assert.ok(underBlade.includes('poisonedblade'), 'Poisoned Blade offered despite higher blade tier owned');
-  for (const blocked of ['flickcut', 'fleetcut', 'fairblade'])
+  for (const blocked of ['fairblade'])
     assert.ok(!underBlade.includes(blocked), `${blocked} still suppressed under Power Strike`);
   // A multi-effect owner (Beasthunter, 150% + type bonus) suppresses
   // nothing: line skills stay offered in their own pool windows.
@@ -142,7 +138,7 @@ function newSave() {
   assert.ok(underType15.includes('vampirefang'), 'multi-effect owner does not hide Vampire Fang');
   // A plain Cataclysmic owner suppresses plain lower tiers of its line.
   const underSunder = candidatesFor(5, ['sunderingstroke'], Infinity).map((s) => s.id);
-  for (const blocked of ['flickcut', 'fleetcut', 'fairblade', 'keenedge'])
+  for (const blocked of ['fairblade'])
     assert.ok(!underSunder.includes(blocked), `${blocked} suppressed under Sundering Stroke`);
   for (let i = 0; i < 50; i++) {
     const pick = pickSkillToLearn(3, ['emberjab'], Infinity, makeRng(i));
@@ -180,15 +176,13 @@ function newSave() {
   assert.ok(e50.magic >= e10.magic, 'enemy magic scales with stage');
 }
 
-// --- Full tier ladder: every weapon carries every damage tier ---------
+// --- Full tier ladder: exactly 5 tiers, every weapon carries each ------
 {
   const TIERS = {
-    grazing: 0.25,
-    weak: 0.7,
-    standard: 1,
-    strong: 1.25,
+    keen: 1.25,
     mighty: 1.5,
     brutal: 1.75,
+    crushing: 2.0,
     cataclysmic: 2.25,
   };
   const weapons = ['blade', 'blunt', 'fire', 'ice', 'lightning'];
@@ -205,6 +199,12 @@ function newSave() {
       assert.ok(has, `${w} has a ${tier} (${mult}x) skill`);
     }
   }
+  // No damage skill sits outside the 5-tier ladder (multi-hit skills
+  // reuse tier multipliers per hit).
+  for (const s of SKILLS) {
+    if (s.type !== 'damage') continue;
+    assert.ok(TIER_MULTS.includes(s.mult), `${s.id} sits on the tier ladder (${s.mult})`);
+  }
   // Every learnable skill is payable when it enters the pool: magic
   // grows 2-4 per level from 25, so max magic at pool start >= cost.
   for (const s of SKILLS.filter((k) => k.pool)) {
@@ -213,18 +213,6 @@ function newSave() {
       s.cost === 0 || maxMagicAtStart >= s.cost,
       `${s.id} payable at pool start (cost ${s.cost}, max magic ${maxMagicAtStart})`,
     );
-  }
-  // Weak-tier single-hit skills are retired before level 20 (no weak
-  // spells near the end).
-  for (const s of SKILLS) {
-    if (
-      s.type === 'damage' &&
-      (s.mult === 0.25 || s.mult === 0.7) &&
-      (s.hits ?? 1) === 1 &&
-      s.pool
-    ) {
-      assert.ok(s.pool[1] <= 19, `${s.id} (weak tier) is not learnable late game`);
-    }
   }
 }
 
@@ -376,6 +364,7 @@ async function testElementSkills() {
   const c3 = new Combat(p3, beast3, new EventBus());
   c3.start();
   c3.p.guarantee = true;
+  c3.p.energy = 100; // Pyroclasm costs 55 (above the 50 battle start)
   c3.act('skill', 'pyroclasm');
   const adv = 300 - c3.e.hp;
   assert.ok(adv > vsWeak, `advanced tier (${adv}) > basic tier (${vsWeak})`);
@@ -449,11 +438,11 @@ async function testElementSkills() {
   assert.equal(p2.equipment.sword, 1, 'equipment serialized (sword)');
 }
 
-// --- Save v4: round-trip + migration ---------------------------------------
+// --- Save v5: round-trip + migration ---------------------------------------
 {
   const store = new SaveStore();
   const data = store.load();
-  assert.equal(data.version, 4, 'v4 by default');
+  assert.equal(data.version, 5, 'v5 by default');
   assert.equal(data.player.skills[0], 'powerstrike', 'starter skill');
   assert.equal(data.player.equipment.sword, 0, 'default equipment empty');
 
@@ -462,18 +451,41 @@ async function testElementSkills() {
   p.buyEquipmentTier('legs');
   p.buyEquipmentTier('legs');
   p.gold = 77;
-  localStorage.setItem('combat-game.save.v4', JSON.stringify({
-    version: 4,
+  localStorage.setItem('combat-game.save.v5', JSON.stringify({
+    version: 5,
     player: p.serialize(),
     stage: 9,
     stats: { wins: 3, losses: 1, kills: 4 },
     victorySeen: false,
   }));
   const rt = store.load();
-  assert.equal(rt.version, 4);
+  assert.equal(rt.version, 5);
   assert.equal(rt.player.equipment.legs, 2, 'round-trip keeps equipment');
   assert.equal(rt.player.gold, 77, 'round-trip keeps gold');
   assert.equal(rt.stage, 9, 'round-trip keeps stage');
+
+  // v4 -> v5 migration: removed skill ids are stripped.
+  localStorage.clear();
+  localStorage.setItem('combat-game.save.v4', JSON.stringify({
+    version: 4,
+    player: {
+      level: 5, xp: 0, gold: 50, upgrades: [],
+      stats: { attack: 20, defense: 4, magic: 40, maxHp: 160, critChance: 0.1, critDamage: 2 },
+      skills: ['powerstrike', 'cinderkiss', 'volflick', 'embersnap'],
+      items: { potion: 1, vial: 0, elixir: 0 },
+      equipment: { helmet: 0, chest: 1, legs: 0, sword: 0 },
+      currentHp: null, currentEnergy: null,
+    },
+    stage: 6,
+    stats: { wins: 5, losses: 0, kills: 5 },
+    victorySeen: false,
+  }));
+  const m45 = store.load();
+  assert.equal(m45.version, 5);
+  assert.ok(!m45.player.skills.includes('cinderkiss'), 'removed skill stripped');
+  assert.ok(!m45.player.skills.includes('volflick'), 'removed skill stripped');
+  assert.ok(m45.player.skills.includes('embersnap'), 'kept skill survives migration');
+  assert.equal(m45.player.equipment.chest, 1, 'equipment preserved on v4->v5');
 
   // v3 -> v4 migration: text upgrades become equipment tiers.
   localStorage.clear();
@@ -491,7 +503,7 @@ async function testElementSkills() {
     victorySeen: false,
   }));
   const m34 = store.load();
-  assert.equal(m34.version, 4);
+  assert.equal(m34.version, 5);
   assert.equal(m34.player.equipment.chest, 2, 'iron x2 -> chest tier 2');
   assert.equal(m34.player.equipment.legs, 1, 'mana x1 -> legs tier 1 (lung dropped)');
   assert.equal(m34.player.equipment.sword, 1, 'sharp x1 -> sword tier 1');
@@ -507,7 +519,7 @@ async function testElementSkills() {
     stats: { wins: 5, losses: 1, kills: 6 },
   }));
   const migrated = store.load();
-  assert.equal(migrated.version, 4);
+  assert.equal(migrated.version, 5);
   assert.equal(migrated.player.level, 5);
   assert.equal(migrated.player.stats.attack, 12 + 4 * 2, 'v2 attack recomputed (no upgrade bake-in)');
   assert.equal(migrated.player.stats.magic, 25 + 4 * 3, 'v2 magic re-scaled to max-energy');
@@ -617,6 +629,44 @@ async function testEarlyVariants() {
     `Swift Edge grants +20% dmg buff on hit (got ${JSON.stringify(c.p.buffs.damage)})`);
 }
 
+// --- Balance: each tier kills its own 10-stage block in ~4 turns --------
+// Mid-block player attack approximations include level gains + equipment.
+async function testTierBalance() {
+  TUNING.combat.enemyActionDelayMs = 0;
+  const tick = () => new Promise((r) => setTimeout(r, 20));
+  const cases = [
+    { stage: 5, level: 3, atk: 20, skill: 'steadyslow' }, // T1 vs block 1
+    { stage: 15, level: 7, atk: 24, skill: 'heavyslow' }, // T2 vs block 2
+    { stage: 25, level: 11, atk: 29, skill: 'sageslow' }, // T3 vs block 3
+    { stage: 35, level: 16, atk: 35, skill: 'mountainbreaker' }, // T4 vs block 4
+    { stage: 45, level: 20, atk: 39, skill: 'titancrush' }, // T5 vs block 5
+  ];
+  for (const c of cases) {
+    const p = new Player({ level: c.level });
+    p.stats0.attack = c.atk;
+    p.stats0.magic = 150;
+    p.stats0.critChance = 0;
+    p.skills = [c.skill];
+    const e = createEnemy(c.stage);
+    e.type = 'beast'; // blunt 1.0 - neutral matchup
+    e.hp = e.maxHp;
+    const cb = new Combat(p, e, new EventBus(), null, 150);
+    cb.start();
+    cb.p.guarantee = true;
+    cb.rollEnemyIntent = () => { cb.e.intent = 'attack'; }; // no charge/defend/skill variance
+    let turns = 0;
+    while (!cb.done && turns < 15) {
+      cb.p.energy = 150; // items/regen keep the spell up (damage-math test)
+      cb.act('skill', c.skill);
+      await tick();
+      turns++;
+    }
+    assert.ok(cb.done, `tier skill wins vs stage-${c.stage} enemy`);
+    assert.ok(turns >= 2 && turns <= 8,
+      `tier ${Math.ceil(c.stage / 10)} kills its block in ${turns} turns (stage ${c.stage})`);
+  }
+}
+
 // --- Late-pool skills: Volley (3 hits), Adrenaline (dual buff), Second Wind (heal + cleanse) --
 async function testLateSkills() {
   TUNING.combat.enemyActionDelayMs = 0;
@@ -636,8 +686,8 @@ async function testLateSkills() {
   c.playerStrike = (s, mult, opts) => strike(s, mult, { ...opts, forceHit: true });
   c.act('skill', 'volley');
   const dmg = 300 - c.e.hp;
-  // 3 hits x 70% x 16 atk, +/-15% variance -> 30..39 (no crits)
-  assert.ok(dmg >= 28 && dmg <= 42, `Volley deals 3x70% (got ${dmg})`);
+  // 3 hits x 125% x 16 atk, +/-15% variance -> 51..69 (no crits)
+  assert.ok(dmg >= 50 && dmg <= 70, `Volley deals 3x125% (got ${dmg})`);
   await tick();
   c.act('skill', 'adrenaline');
   assert.ok(c.p.buffs.damage && c.p.buffs.damage.bonus === 0.35 && c.p.buffs.damage.turns === 2,
@@ -659,6 +709,7 @@ async function main() {
   await testElementSkills();
   await testEarlyVariants();
   await testLateSkills();
+  await testTierBalance();
   const win = await playBossFight(23, { helmet: 3, chest: 5, legs: 5, sword: 5 });
   assert.ok(win, 'Lv 23 player (full equipment) defeats the stage-50 final boss (shortened)');
 }

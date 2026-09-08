@@ -1,4 +1,4 @@
-// Versioned localStorage persistence. Save shape (v4):
+// Versioned localStorage persistence. Save shape (v5):
 // {
 //   version: 4,
 //   player: { level, xp, gold, upgrades: [legacy ids],
@@ -11,8 +11,8 @@
 //   stats: { wins, losses, kills },
 //   victorySeen: false,
 // }
-const KEY = 'combat-game.save.v4';
-const VERSION = 4;
+const KEY = 'combat-game.save.v5';
+const VERSION = 5;
 
 export const DEFAULT_SAVE = () => ({
   version: VERSION,
@@ -33,6 +33,12 @@ export const DEFAULT_SAVE = () => ({
   stats: { wins: 0, losses: 0, kills: 0 },
   victorySeen: false,
 });
+
+// Skill ids removed by the 5-tier rework - stripped on migration.
+const REMOVED_SKILL_IDS = [
+  'flickcut', 'fleetcut', 'cinderkiss', 'sparkthrow',
+  'rimetouch', 'sleetshard', 'arcflick', 'volflick',
+];
 
 // v3 upgrades (stackable text boosts) -> equipment tiers.
 // lung (Deep Lungs) is dropped: max energy is the magic stat itself.
@@ -63,11 +69,17 @@ function v3PlayerToV4(p) {
   };
 }
 
+// v4 player -> v5 (drops skill ids that no longer exist).
+function v4PlayerToV5(p) {
+  return { ...p, skills: (p.skills ?? []).filter((id) => !REMOVED_SKILL_IDS.includes(id)) };
+}
+
 export class SaveStore {
   load() {
     try {
       const data =
         this._read(KEY) ??
+        this._read('combat-game.save.v4') ??
         this._read('combat-game.save.v3') ??
         this._read('combat-game.save.v2') ??
         this._read('combat-game.save.v1');
@@ -76,10 +88,13 @@ export class SaveStore {
         // Older saves: rebuild the player the old way, then run it through
         // the v3->v4 upgrade (equipment from legacy upgrades).
         const player = data.version === 1 ? this._upgradePlayer(data) : v2PlayerToV3(data.player);
-        return { ...DEFAULT_SAVE(), player: v3PlayerToV4(player), version: VERSION };
+        return { ...DEFAULT_SAVE(), player: v4PlayerToV5(v3PlayerToV4(player)), version: VERSION };
       }
       if (data.version === 3) {
-        return { ...data, player: v3PlayerToV4(data.player), version: VERSION };
+        return { ...data, player: v4PlayerToV5(v3PlayerToV4(data.player)), version: VERSION };
+      }
+      if (data.version === 4) {
+        return { ...data, player: v4PlayerToV5(data.player), version: VERSION };
       }
       if (data.version !== VERSION) return DEFAULT_SAVE();
       return data;
@@ -105,6 +120,7 @@ export class SaveStore {
   clear() {
     try {
       localStorage.removeItem(KEY);
+      localStorage.removeItem('combat-game.save.v4');
       localStorage.removeItem('combat-game.save.v3');
       localStorage.removeItem('combat-game.save.v2');
       localStorage.removeItem('combat-game.save.v1');
