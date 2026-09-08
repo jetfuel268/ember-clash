@@ -18,7 +18,7 @@ import { Combat } from '../js/game/combat.js';
 import { EventBus } from '../js/core/events.js';
 import { SaveStore, DEFAULT_SAVE } from '../js/core/save.js';
 import { TUNING } from '../js/config/tuning.js';
-import { pickSkillToLearn, poolFor, skillLine, candidatesFor, isPlainDamage, TIER_BLOCKS, TIER_COSTS, TIER_MULTS, SKILLS } from '../js/game/skills.js';
+import { pickSkillChoices, poolFor, skillLine, candidatesFor, isPlainDamage, TIER_BLOCKS, TIER_COSTS, TIER_MULTS, SKILLS } from '../js/game/skills.js';
 import { xpForNext } from '../js/game/upgrades.js';
 import { EQUIPMENT, pieceName, nextTier } from '../js/game/equipment.js';
 
@@ -106,18 +106,17 @@ function newSave() {
     assert.ok(lateIds.includes(id), `late pool has ${id} at lv25`);
   }
   for (let i = 0; i < 50; i++) {
-    const pick = pickSkillToLearn(15, [], Infinity, makeRng(i));
-    if (pick) assert.ok(pick.pool[0] <= 15 && pick.pool[1] >= 15, 'pick matches level range');
+    const pick = pickSkillChoices(15, [], Infinity, 1, makeRng(i))[0];
+    assert.ok(pick.pool[0] <= 15 && pick.pool[1] >= 15, 'pick matches level range');
   }
-  // Level-up offers respect the current energy: nothing you cannot use.
+  // Offers respect the energy pool: nothing unpayable.
   for (let i = 0; i < 50; i++) {
-    const pick = pickSkillToLearn(3, [], 25, makeRng(i));
-    if (pick) assert.ok(pick.cost <= 25, `level-up pick payable at 25 energy (${pick.id} costs ${pick.cost})`);
+    for (const pick of pickSkillChoices(3, [], 25, 3, makeRng(i)))
+      assert.ok(pick.cost <= 25, `level-up pick payable in a 25 pool (${pick.id} costs ${pick.cost})`);
   }
   // Owning a higher-tier skill hides the lower tiers of that line.
   for (let i = 0; i < 50; i++) {
-    const pick = pickSkillToLearn(3, ['powerstrike'], Infinity, makeRng(i));
-    if (pick)
+    for (const pick of pickSkillChoices(3, ['powerstrike'], Infinity, 3, makeRng(i)))
       assert.ok(
         !(skillLine(pick) === 'blade' && pick.mult < 1.5),
         `no lower blade tier under Power Strike (got ${pick.id})`,
@@ -141,13 +140,18 @@ function newSave() {
   for (const blocked of ['fairblade'])
     assert.ok(!underSunder.includes(blocked), `${blocked} suppressed under Sundering Stroke`);
   for (let i = 0; i < 50; i++) {
-    const pick = pickSkillToLearn(3, ['emberjab'], Infinity, makeRng(i));
-    if (pick)
+    for (const pick of pickSkillChoices(3, ['emberjab'], Infinity, 3, makeRng(i)))
       assert.ok(
         !(pick.element === 'fire' && pick.mult < 1.5),
         `no weaker fire under Ember Jab (got ${pick.id})`,
       );
   }
+  // Level-up offers are distinct and always drawn from the candidate pool.
+  const choices = pickSkillChoices(15, ['powerstrike'], 55, 3, makeRng(9));
+  assert.ok(choices.length >= 2 && choices.length <= 3, 'up to 3 distinct choices');
+  assert.equal(new Set(choices.map((s) => s.id)).size, choices.length, 'choices are distinct');
+  const cand = candidatesFor(15, ['powerstrike'], 55).map((s) => s.id);
+  for (const c of choices) assert.ok(cand.includes(c.id), `choice ${c.id} is a valid candidate`);
 }
 
 // --- Items: single-use, shop prices -----------------------------------------
@@ -236,6 +240,16 @@ function newSave() {
   assert.equal(cg.id, 'crystalguardian', 'stage 20 boss is the Crystal Guardian');
   assert.deepEqual(cg.skills.sort(), ['crystaldrain', 'crystallineshell']);
   assert.equal(cg.boss, true);
+  // The stage-30 boss is the Lich: ice + lightning spells + defense debuff.
+  const lich = createEnemy(30);
+  assert.equal(lich.id, 'lich', 'stage 30 boss is the Lich');
+  assert.deepEqual(lich.skills.sort(), ['chainlightning', 'frostbolt', 'wither']);
+  assert.equal(lich.boss, true);
+  // The stage-40 boss is the Ember Wyrm: fire spell + 5-turn attack buff.
+  const wyrm = createEnemy(40);
+  assert.equal(wyrm.id, 'emberwyrm', 'stage 40 boss is the Ember Wyrm');
+  assert.deepEqual(wyrm.skills.sort(), ['fury', 'infernobolt']);
+  assert.equal(wyrm.boss, true);
 }
 
 // --- Crystal Guardian: 5-turn shell + energy-bar lance --------------------
@@ -262,6 +276,78 @@ async function testCrystalGuardian() {
   assert.equal(cb.e.buffs.defense.bonus, 0.5, 'shell halves damage');
   cb.e.energy -= TUNING.enemyMagic.skillCost;
   assert.equal(cb.e.energy, 50 - 2 * TUNING.enemyMagic.skillCost, 'both skills cost enemy energy');
+}
+
+// --- Lich + Ember Wyrm: boss spells, defense debuff, 5-turn fury --------
+async function testBossSkills() {
+  TUNING.combat.enemyActionDelayMs = 0;
+  const prevVariance = TUNING.combat.damageVariance;
+  TUNING.combat.damageVariance = 0; // deterministic spell math
+  // Pin Math.random so enemy skills never roll a miss/crit:
+  // chance(p) = (0.99 < p) is false for every p < 0.99.
+  const realRandom = Math.random;
+  Math.random = () => 0.99;
+  const unpinned = () => {
+    Math.random = realRandom;
+  };
+  const cast = (cb, id) => {
+    Math.random = () => 0.99;
+    cb.enemySkill(id);
+    unpinned();
+  };
+
+  // The Lich (stage 30): ice + lightning spells at 150%, Wither halves
+  // the hero's defense for 5 turns.
+  const p = new Player({ level: 10 });
+  p.stats0.magic = 100;
+  p.stats0.defense = 8;
+  const lich = createEnemy(30);
+  const cb = new Combat(p, lich, new EventBus());
+  cb.start();
+  cb.enemy.critChance = 0;
+  const atk = lich.atk;
+  const hit150 = Math.max(1, Math.round(atk * 1.5));
+
+  const hpBefore = cb.p.hp;
+  cb.p.hp = 1000; // headroom so damage isn't clamped at 0
+  cast(cb, 'frostbolt');
+  const frostDmg = 1000 - cb.p.hp;
+  assert.equal(frostDmg, Math.max(1, hit150 - 8), 'Frost Bolt = 150% atk minus full defense');
+
+  cast(cb, 'wither');
+  assert.equal(cb.p.buffs.defenseDown.turns, 5, 'Wither lasts 5 turns');
+  assert.equal(cb.p.buffs.defenseDown.bonus, 0.5, 'Wither halves defense');
+
+  // With Wither active, Chain Lightning lands against the halved defense.
+  cb.p.hp = 1000;
+  cast(cb, 'chainlightning');
+  assert.equal(1000 - cb.p.hp, Math.max(1, hit150 - 4), 'Chain Lightning respects the halved defense');
+
+  // The Ember Wyrm (stage 40): fire spell + Dragon Fury (+40% atk, 5 turns).
+  const p2 = new Player({ level: 30 });
+  p2.stats0.magic = 100;
+  p2.stats0.defense = 0;
+  const wyrm = createEnemy(40);
+  const c2 = new Combat(p2, wyrm, new EventBus());
+  c2.start();
+  c2.enemy.critChance = 0;
+  const atk2 = wyrm.atk;
+
+  c2.p.hp = 1000;
+  cast(c2, 'infernobolt');
+  assert.equal(1000 - c2.p.hp, Math.max(1, Math.round(atk2 * 1.5)), 'Inferno Bolt = 150% of stage-scaled atk');
+
+  cast(c2, 'fury');
+  assert.equal(c2.e.buffs.damage.turns, 5, 'Dragon Fury lasts 5 turns');
+  assert.equal(c2.e.buffs.damage.bonus, 0.4, 'Dragon Fury grants +40% attack');
+
+  // Fury strengthens the next fire spell.
+  c2.p.hp = 1000;
+  cast(c2, 'infernobolt');
+  assert.equal(1000 - c2.p.hp, Math.max(1, Math.round(atk2 * 1.5 * 1.4)), 'Fury strengthens Inferno Bolt');
+
+  unpinned();
+  TUNING.combat.damageVariance = prevVariance;
 }
 
 // --- Combat: turn order, guard, skill energy/cd, items, victory ------------
@@ -412,17 +498,18 @@ async function testElementSkills() {
   assert.equal(save.stage, 2, 'stage advances');
   assert.equal(save.stats.kills, 1, 'kill recorded');
 
-  // Level-ups learn skills (random per level range).
+  // Level-ups present a choice of up to 3 skills; nothing auto-learns.
   const p2 = newPlayer();
   const save2 = newSave();
   const prog2 = new Progression(p2, save2);
-  let learned = 0;
+  let offers = 0;
   for (let i = 0; i < 20; i++) {
     const r = prog2.onStageWon(i + 1);
-    if (r.learned) learned++;
+    if (r.offer.length) offers++;
+    assert.ok(r.offer.length <= 3, 'at most 3 skill choices per level-up');
   }
-  assert.ok(learned >= 3, `several skills learned across 20 stages (got ${learned})`);
-  assert.ok(p2.skills.length <= 4, 'max 4 skills');
+  assert.ok(offers >= 3, `level-ups present skill choices across 20 stages (got ${offers})`);
+  assert.equal(p2.skills.length, 1, 'no skill auto-learned (the player chooses)');
 }
 
 // --- Equipment: tiers, cumulative stats, purchase cap ---------------------
@@ -736,6 +823,7 @@ async function testLateSkills() {
 async function main() {
   await testCombatBasics();
   await testCrystalGuardian();
+  await testBossSkills();
   await testHpCarryover();
   await testTypeSkills();
   await testElementSkills();

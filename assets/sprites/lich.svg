@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+  <defs>
+    <linearGradient id="robe" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4a6b52"/>
+      <stop offset="0.6" stop-color="#2c4736"/>
+      <stop offset="1" stop-color="#182e22"/>
+    </linearGradient>
+    <linearGradient id="robeLight" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5d8465"/>
+      <stop offset="1" stop-color="#33553f"/>
+    </linearGradient>
+    <linearGradient id="hood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5f8a6e"/>
+      <stop offset="1" stop-color="#274231"/>
+    </linearGradient>
+    <linearGradient id="bone" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f2eedd"/>
+      <stop offset="1" stop-color="#c9c2a6"/>
+    </linearGradient>
+    <linearGradient id="staff" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8a6238"/>
+      <stop offset="1" stop-color="#5c3d20"/>
+    </linearGradient>
+    <radialGradient id="orb" cx="0.35" cy="0.3" r="1">
+      <stop offset="0" stop-color="#eafff5"/>
+      <stop offset="0.5" stop-color="#5eeab0"/>
+      <stop offset="1" stop-color="#1d9e68"/>
+    </radialGradient>
+    <radialGradient id="orbGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#9df5cf" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#3ddc9a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="400" cy="750" rx="250" ry="46" fill="#000" opacity="0.35"/>
+  </g>
+  <g id="staff" stroke="#122018" stroke-width="10">
+    <rect x="630" y="268" width="30" height="330" rx="14" fill="url(#staff)"/>
+    <g id="orb" stroke="none">
+      <circle cx="645" cy="205" r="98" fill="url(#orbGlow)"/>
+      <circle cx="645" cy="205" r="52" fill="url(#orb)"/>
+      <path d="M 622 186 C 630 172 642 164 656 164" fill="none" stroke="#d9fff0" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
+    </g>
+  </g>
+  <g id="arms" stroke="#122018" stroke-width="10">
+    <path id="sleeve-r" d="M 500 322 C 560 330 600 380 616 440 C 624 470 616 492 594 496 C 558 492 520 452 502 408 C 494 380 490 346 500 322 Z" fill="url(#robeLight)"/>
+    <path id="sleeve-l" d="M 300 322 C 240 330 200 380 184 440 C 176 470 184 492 206 496 C 242 492 280 452 298 408 C 306 380 310 346 300 322 Z" fill="url(#robeLight)"/>
+    <g id="hands">
+      <rect x="596" y="458" width="58" height="58" rx="24" fill="url(#bone)"/>
+      <rect x="186" y="458" width="58" height="58" rx="24" fill="url(#bone)"/>
+      <g id="finger-lines" stroke="#8f8a70" stroke-width="5" fill="none" stroke-linecap="round">
+        <path d="M 610 470 L 610 506"/>
+        <path d="M 628 466 L 628 510"/>
+        <path d="M 646 470 L 646 506"/>
+        <path d="M 200 470 L 200 506"/>
+        <path d="M 218 466 L 218 510"/>
+        <path d="M 236 470 L 236 506"/>
+      </g>
+    </g>
+  </g>
+  <g id="robe" stroke="#122018" stroke-width="10">
+    <path d="M 300 272 C 266 302 238 362 226 442 C 214 524 210 606 220 700 C 262 726 538 726 580 700 C 590 606 586 524 574 442 C 562 362 534 302 500 272 C 442 250 358 250 300 272 Z" fill="url(#robe)"/>
+    <g id="hem" stroke="none">
+      <path d="M 232 686 L 252 734 L 282 684 L 306 738 L 336 684 L 362 742 L 396 684 L 424 738 L 452 684 L 478 740 L 506 684 L 530 734 L 552 690 L 570 700 C 566 722 540 730 512 732 L 288 732 C 260 730 236 722 232 700 Z" fill="url(#robeLight)"/>
+    </g>
+    <g id="fold-lines" fill="none" stroke="#1d3327" stroke-width="6" stroke-linecap="round" opacity="0.85">
+      <path d="M 306 340 C 288 440 282 560 286 668"/>
+      <path d="M 494 340 C 512 440 518 560 514 668"/>
+    </g>
+    <g id="runes" stroke="none">
+      <circle cx="400" cy="382" r="34" fill="url(#orbGlow)"/>
+      <path d="M 400 362 L 412 382 L 400 402 L 388 382 Z" fill="#7dffc8"/>
+      <path d="M 340 436 L 350 452 L 340 468 L 330 452 Z" fill="#7dffc8" opacity="0.85"/>
+      <path d="M 460 436 L 470 452 L 460 468 L 450 452 Z" fill="#7dffc8" opacity="0.85"/>
+    </g>
+    <g id="belt">
+      <path d="M 254 478 C 322 504 478 504 546 478 L 546 512 C 478 538 322 538 254 512 Z" fill="#1a241d"/>
+      <rect x="384" y="488" width="32" height="32" rx="8" fill="#3ddc9a"/>
+    </g>
+  </g>
+  <g id="head" stroke="#122018" stroke-width="10">
+    <path id="hood" d="M 318 262 C 306 178 330 124 400 112 C 470 124 494 178 482 262 C 458 292 342 292 318 262 Z" fill="url(#hood)"/>
+    <g id="shoulder-tatters" stroke="none">
+      <path d="M 322 270 C 300 288 288 306 284 330 C 306 322 322 306 332 288 Z" fill="url(#hood)"/>
+      <path d="M 478 270 C 500 288 512 306 516 330 C 494 322 478 306 468 288 Z" fill="url(#hood)"/>
+    </g>
+    <path id="face-cavity" d="M 350 254 C 344 200 358 166 400 160 C 442 166 456 200 450 254 C 432 272 368 272 350 254 Z" fill="#0d1611"/>
+    <g id="skull">
+      <path d="M 366 248 C 360 210 372 184 400 180 C 428 184 440 210 434 248 C 424 262 376 262 366 248 Z" fill="url(#bone)" stroke="#6d6852" stroke-width="6"/>
+      <g id="jag" stroke="#6d6852" stroke-width="5" fill="none" stroke-linecap="round">
+        <path d="M 386 252 L 386 262"/>
+        <path d="M 400 254 L 400 264"/>
+        <path d="M 414 252 L 414 262"/>
+      </g>
+      <path id="nose" d="M 400 220 L 407 234 L 393 234 Z" fill="#8f8a70"/>
+      <g id="eyes">
+        <circle cx="384" cy="204" r="14" fill="url(#orbGlow)" stroke="none"/>
+        <circle cx="416" cy="204" r="14" fill="url(#orbGlow)" stroke="none"/>
+        <circle cx="384" cy="204" r="7" fill="#8affd0" stroke="none"/>
+        <circle cx="416" cy="204" r="7" fill="#8affd0" stroke="none"/>
+      </g>
+    </g>
+  </g>
+</svg>

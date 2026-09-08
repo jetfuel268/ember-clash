@@ -3,7 +3,7 @@
 // `stats` alongside the Player.
 import { TUNING } from '../config/tuning.js';
 import { xpForNext } from './upgrades.js';
-import { pickSkillToLearn } from './skills.js';
+import { pickSkillChoices } from './skills.js';
 import { randInt } from '../core/rng.js';
 
 export class Progression {
@@ -21,8 +21,9 @@ export class Progression {
   }
 
   // Call after a stage win. `bonus` is 'gold'|'xp' (kill-bonus skills).
-  // Returns: { gold, xp, leveledUp, gain, learned, learnedSkill, needsReplace,
-  //           nextStage, victory }
+  // Returns: { gold, xp, leveledUp, gain, offer, nextStage, victory }
+  // `offer` holds up to 3 distinct skills; the player chooses one on the
+  // level-up screen (learn it, or replace a slot / skip).
   onStageWon(stage, bonus = null) {
     const p = this.player;
     const s = TUNING;
@@ -40,17 +41,13 @@ export class Progression {
     this.save.stats.wins += 1;
 
     const leveledUp = p.addXp(xp);
-    let learned = null;
-    let learnedSkill = null;
-    let needsReplace = false;
+    let offer = [];
     if (leveledUp > 0) {
-      const pick = pickSkillToLearn(p.level, p.skills, p.currentEnergy ?? Infinity);
-      if (pick) {
-        const result = p.learnSkill(pick.id);
-        learnedSkill = pick;
-        learned = result.learned;
-        needsReplace = !!result.needsReplace;
-      }
+      // Gate on the energy POOL (max energy), not the current bar: with flat
+      // regen, any cost up to the cap is payable within a few turns, while a
+      // cost above the cap is truly "can't use it". This keeps element skills
+      // offered at level 11+ instead of only the 0-cost ones.
+      offer = pickSkillChoices(p.level, p.skills, p.stats().maxEnergy, 3);
     }
 
     const victory = this.isVictoryStage(stage);
@@ -65,9 +62,7 @@ export class Progression {
       xp,
       leveledUp: leveledUp > 0,
       gain: p._lastLevelUp ?? null,
-      learned,
-      learnedSkill,
-      needsReplace,
+      offer,
       nextStage,
       victory,
     };

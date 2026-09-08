@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+  <defs>
+    <linearGradient id="scale" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff8a3c"/>
+      <stop offset="0.55" stop-color="#e8541e"/>
+      <stop offset="1" stop-color="#b3250f"/>
+    </linearGradient>
+    <linearGradient id="scaleDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c23a12"/>
+      <stop offset="1" stop-color="#7a1a0e"/>
+    </linearGradient>
+    <linearGradient id="belly" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd9a0"/>
+      <stop offset="1" stop-color="#f0a860"/>
+    </linearGradient>
+    <linearGradient id="wing" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a8281a"/>
+      <stop offset="1" stop-color="#5c120c"/>
+    </linearGradient>
+    <radialGradient id="flame" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff3c4"/>
+      <stop offset="0.5" stop-color="#ffb54d"/>
+      <stop offset="1" stop-color="#ff6a1f" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="410" cy="752" rx="272" ry="46" fill="#000" opacity="0.35"/>
+  </g>
+  <g id="wing-back" stroke="#3a1206" stroke-width="10">
+    <path d="M 500 452 C 590 380 660 350 748 372 C 716 410 686 432 692 466 C 656 478 630 508 618 540 C 584 526 532 484 500 452 Z" fill="url(#wing)" opacity="0.92"/>
+  </g>
+  <g id="tail" stroke="#3a1206" stroke-width="10">
+    <path d="M 604 610 C 716 596 760 480 732 372 C 720 328 686 304 654 312 C 672 338 690 366 698 404 C 716 488 694 576 596 588 Z" fill="url(#scale)"/>
+    <g id="tailspike" stroke="none">
+      <path d="M 656 318 C 678 290 700 272 730 262 C 712 288 704 310 708 336 C 686 346 668 338 656 318 Z" fill="url(#scaleDark)"/>
+    </g>
+  </g>
+  <g id="body" stroke="#3a1206" stroke-width="10">
+    <path d="M 218 566 C 224 432 334 358 460 368 C 588 378 658 456 658 568 C 658 672 564 712 434 712 C 300 712 212 672 218 566 Z" fill="url(#scale)"/>
+    <path id="belly" d="M 292 622 C 306 682 560 690 606 620 C 606 668 560 700 448 700 C 340 700 296 668 292 622 Z" fill="url(#belly)" stroke="#b06a28" stroke-width="6"/>
+    <g id="belly-lines" fill="none" stroke="#c9853c" stroke-width="6" stroke-linecap="round" opacity="0.8">
+      <path d="M 330 652 C 400 674 500 674 566 644"/>
+      <path d="M 356 674 C 420 690 480 690 540 668"/>
+    </g>
+    <g id="scale-arcs" fill="none" stroke="#8f2410" stroke-width="6" stroke-linecap="round" opacity="0.7">
+      <path d="M 310 476 C 352 456 402 452 444 462"/>
+      <path d="M 488 468 C 540 464 588 480 620 510"/>
+      <path d="M 268 548 C 288 512 320 490 358 480"/>
+    </g>
+    <g id="backspikes" stroke="none">
+      <path d="M 336 396 C 346 360 362 338 388 320 C 382 352 382 380 390 404 Z" fill="url(#scaleDark)"/>
+      <path d="M 436 372 C 446 336 462 314 490 298 C 484 330 482 358 490 382 Z" fill="url(#scaleDark)"/>
+      <path d="M 548 402 C 562 372 580 356 608 344 C 600 372 598 396 608 418 Z" fill="url(#scaleDark)"/>
+    </g>
+  </g>
+  <g id="neck" stroke="#3a1206" stroke-width="10">
+    <path d="M 268 268 C 330 268 392 300 418 368 C 442 428 452 470 454 508 C 388 496 322 452 286 392 C 268 356 258 308 268 268 Z" fill="url(#scale)"/>
+  </g>
+  <g id="head" stroke="#3a1206" stroke-width="10">
+    <g id="horns" stroke="none">
+      <path d="M 330 148 C 350 100 394 72 444 80 C 420 100 398 130 392 164 C 370 152 350 146 330 148 Z" fill="url(#scaleDark)"/>
+      <path d="M 288 128 C 292 88 316 58 356 50 C 342 78 330 108 334 140 C 316 130 302 126 288 128 Z" fill="url(#scaleDark)"/>
+    </g>
+    <g id="skull">
+      <path d="M 300 322 C 244 312 188 278 158 238 C 140 212 128 186 136 164 C 152 144 186 138 220 146 C 256 122 308 120 348 142 C 396 128 442 152 454 202 C 462 252 428 296 386 314 C 356 326 330 328 300 322 Z" fill="url(#scale)"/>
+      <path id="muzzle" d="M 226 168 C 176 160 130 178 110 210 C 100 228 106 246 124 254 C 156 266 196 258 222 234 C 240 216 242 190 226 168 Z" fill="url(#scale)"/>
+      <path id="jaw" d="M 118 250 C 150 284 208 290 254 272 C 236 312 172 318 130 298 C 108 286 106 266 118 250 Z" fill="url(#scaleDark)"/>
+      <g id="teeth" stroke="none">
+        <path d="M 148 272 L 160 296 L 174 276 Z" fill="#f2eedd"/>
+        <path d="M 184 278 L 196 300 L 210 278 Z" fill="#f2eedd"/>
+        <path d="M 220 272 L 230 294 L 244 268 Z" fill="#f2eedd"/>
+      </g>
+      <path id="nostril" d="M 148 196 C 156 190 168 190 176 196 C 168 204 156 204 148 196 Z" fill="#7a1a0e" stroke="none"/>
+      <g id="eye">
+        <circle cx="304" cy="216" r="34" fill="url(#flame)" stroke="none"/>
+        <ellipse cx="304" cy="216" rx="18" ry="22" fill="#ffd166" stroke="none"/>
+        <path d="M 304 198 C 310 208 310 224 304 234 C 298 224 298 208 304 198 Z" fill="#3a1206" stroke="none"/>
+      </g>
+      <g id="brow" fill="none" stroke="#8f2410" stroke-width="9" stroke-linecap="round">
+        <path d="M 272 184 C 294 170 324 168 350 180"/>
+      </g>
+    </g>
+  </g>
+  <g id="foreleg" stroke="#3a1206" stroke-width="10">
+    <path d="M 312 588 C 296 634 302 682 326 714 C 366 726 402 714 416 682 C 420 644 406 604 382 578 C 358 568 332 574 312 588 Z" fill="url(#scale)"/>
+    <g id="claws" stroke="none">
+      <path d="M 330 704 C 328 728 332 746 346 758 C 350 738 348 720 352 706 Z" fill="url(#scaleDark)"/>
+      <path d="M 366 712 C 366 736 372 752 386 760 C 390 740 386 722 388 708 Z" fill="url(#scaleDark)"/>
+      <path d="M 400 700 C 402 722 412 738 424 744 C 426 726 420 708 420 696 Z" fill="url(#scaleDark)"/>
+    </g>
+  </g>
+  <g id="breath" stroke="none">
+    <circle cx="96" cy="330" r="52" fill="url(#flame)" opacity="0.85"/>
+    <path d="M 108 306 C 92 322 86 344 96 368 C 112 362 122 346 122 330 Z" fill="#ffb54d"/>
+  </g>
+</svg>

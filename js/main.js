@@ -7,7 +7,7 @@ import { Progression } from './game/progression.js';
 import { createEnemy, KNOWN_ENEMY_IDS } from './game/enemies.js';
 import { Combat } from './game/combat.js';
 import { xpForNext } from './game/upgrades.js';
-import { SKILL_MAP } from './game/skills.js';
+import { SKILL_MAP, MAX_SKILLS } from './game/skills.js';
 import { TUNING } from './config/tuning.js';
 import { recordKill } from './game/bestiary.js';
 import { EQUIPMENT, EQUIPMENT_SLOTS, pieceName, nextTier, statLine } from './game/equipment.js';
@@ -250,6 +250,8 @@ function continueAfterChoice() {
 }
 
 // --- Level-up screen: stat gains + a new skill (learn or replace) ---
+// Level-up screen: stat gains + choose ONE of up to 3 offered skills
+// (learn it, replace a full slot with it, or skip).
 function showLevelUp(reward) {
   screens.show('levelup');
   const $ = (id) => document.getElementById(id);
@@ -258,25 +260,30 @@ function showLevelUp(reward) {
   $('levelup-sub').textContent = 'Your stats increased:';
   $('levelup-gain').textContent = `+${g.attack} Attack  ·  +${g.defense} Defense  ·  +${g.magic} Magic  ·  +${g.maxHp} Max ❤️`;
 
-  const sk = reward.learnedSkill;
-  $('levelup-skill').innerHTML = sk
-    ? `<div class="name">Learned: ${sk.name}</div>
-    <div class="desc">${sk.desc} — ${sk.cost} ⭐</div>`
-    : `<div class="name">No new skill available</div>
-    <div class="desc">Nothing you can currently afford, or you already have the top tier of every line.</div>`;
-
+  const offer = reward.offer ?? [];
+  const wrap = $('levelup-skill');
   const replaceWrap = $('levelup-replace');
   const skipBtn = $('btn-levelup-skip');
-  if (reward.needsReplace) {
+  wrap.textContent = '';
+  replaceWrap.classList.add('hidden');
+  $('levelup-replace-cards').textContent = '';
+
+  const finishLearn = (id) => {
+    player.learnSkill(id);
+    persist();
+    continueAfterChoice();
+  };
+
+  const showReplaceFor = (sk) => {
     replaceWrap.classList.remove('hidden');
     skipBtn.classList.remove('hidden');
     const cards = $('levelup-replace-cards');
-    cards.textContent = '';
     for (const oldId of player.skills) {
       const old = SKILL_MAP[oldId];
       const card = document.createElement('button');
       card.className = 'card';
-      card.innerHTML = `<div class="name">Replace ${old.name}</div><div class="desc">${old.desc}</div>`;
+      card.innerHTML = `<div class="name">Replace ${old.name} with ${sk.name}</div>
+        <div class="desc">${old.desc}</div>`;
       card.addEventListener('click', () => {
         player.replaceSkill(oldId, sk.id);
         persist();
@@ -284,9 +291,30 @@ function showLevelUp(reward) {
       });
       cards.appendChild(card);
     }
+  };
+
+  if (offer.length === 0) {
+    wrap.innerHTML = `<div class="name">No new skill available</div>
+      <div class="desc">Nothing you can afford, or you already have the top tier of every line.</div>`;
   } else {
-    replaceWrap.classList.add('hidden');
-    skipBtn.classList.add('hidden');
+    const head = document.createElement('p');
+    head.className = 'subtitle';
+    head.textContent = player.skills.length >= MAX_SKILLS
+      ? 'Your 4 skill slots are full — pick a skill, then replace one (or skip):'
+      : 'Choose one skill to learn:';
+    wrap.appendChild(head);
+    for (const sk of offer) {
+      const card = document.createElement('button');
+      card.className = 'card';
+      card.innerHTML = `<div class="name">${sk.name}</div>
+        <div class="desc">${sk.desc} — ${sk.cost} ⭐</div>`;
+      card.addEventListener('click', () => {
+        if (player.skills.length < MAX_SKILLS) finishLearn(sk.id);
+        else showReplaceFor(sk);
+      });
+      wrap.appendChild(card);
+    }
+    skipBtn.classList.remove('hidden');
   }
 }
 

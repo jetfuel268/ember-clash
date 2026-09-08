@@ -521,6 +521,13 @@ export const ENEMY_SKILLS = {
   web: { id: 'web', name: 'Web Spray', desc: 'Reduce the hero’s accuracy for 3 turns.' },
   crystallineshell: { id: 'crystallineshell', name: 'Crystalline Shell', desc: 'Gain defense for 5 turns.' },
   crystaldrain: { id: 'crystaldrain', name: 'Crystal Lance', desc: 'Lance the hero’s energy bar (drains ⭐).' },
+  // Boss: The Lich (stage 30).
+  frostbolt: { id: 'frostbolt', name: 'Frost Bolt', desc: 'A spell dealing 150% damage.' },
+  chainlightning: { id: 'chainlightning', name: 'Chain Lightning', desc: 'A spell dealing 150% damage.' },
+  wither: { id: 'wither', name: "Lich's Wither", desc: "Lowers the hero's defense for 5 turns." },
+  // Boss: The Ember Wyrm (stage 40).
+  infernobolt: { id: 'infernobolt', name: 'Inferno Bolt', desc: 'A spell dealing 150% damage.' },
+  fury: { id: 'fury', name: 'Dragon Fury', desc: 'Gain 40% more attack for 5 turns.' },
 };
 
 // Skills learnable at a given player level (randomized pool per level range).
@@ -571,9 +578,16 @@ export function candidatesFor(level, ownedIds, energy = Infinity) {
 // of that line (e.g. a Cataclysmic fire spell hides weaker fire spells).
 // Multi-effect skills (Double Strike, Vampire Fang, Beasthunter, ...)
 // never block and are never blocked.
-export function pickSkillToLearn(level, ownedIds, energy = Infinity, rng) {
-  const candidates = candidatesFor(level, ownedIds, energy);
-  if (candidates.length === 0) return null;
-  const roll = rng ? rng() : Math.random();
-  return candidates[Math.min(candidates.length - 1, Math.floor(roll * candidates.length))];
+// Pick up to `count` DISTINCT learnable skills for a level-up, so the
+// player chooses one. Candidates are within the level block, payable from
+// the energy pool, not owned, and not a plain single-hit skill of a tier
+// the player already has in any form.
+export function pickSkillChoices(level, ownedIds, energy = Infinity, count = 3, rng = Math.random) {
+  const bag = [...candidatesFor(level, ownedIds, energy)];
+  const choices = [];
+  while (choices.length < count && bag.length) {
+    const i = Math.min(bag.length - 1, Math.floor(rng() * bag.length));
+    choices.push(bag.splice(i, 1)[0]);
+  }
+  return choices;
 }

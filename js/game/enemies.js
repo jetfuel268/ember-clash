@@ -59,8 +59,8 @@ export const STAGE_POOLS = [
 const BOSSES = [
   { id: 'broodmother', name: 'The Broodmother', sprite: 'broodmother', type: 'insect', skills: ['web', 'toxins'] },
   { id: 'crystalguardian', name: 'Crystal Guardian', sprite: 'crystalguardian', type: 'construct', skills: ['crystallineshell', 'crystaldrain'] },
-  { id: 'hollowking', name: 'The Hollow King', sprite: 'skeleton', type: 'undead', skills: ['venom', 'shell'] },
-  { id: 'colossus', name: 'Revenant Colossus', sprite: 'wyvern', type: 'beast', skills: ['enrage', 'venom'] },
+  { id: 'lich', name: 'The Lich', sprite: 'lich', type: 'undead', skills: ['frostbolt', 'chainlightning', 'wither'] },
+  { id: 'emberwyrm', name: 'The Ember Wyrm', sprite: 'dragon', type: 'demon', skills: ['infernobolt', 'fury'] },
 ];
 
 // The stage-50 final boss: a dark mirror of the hero.

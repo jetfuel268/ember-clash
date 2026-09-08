@@ -9,13 +9,13 @@
 //   enemy.magic, enemy.energy, enemy.buffs
 import { TUNING } from '../config/tuning.js';
 import { rollIntent, INTENT_LABELS, TYPES } from './enemies.js';
-import { SKILL_MAP } from './skills.js';
+import { SKILL_MAP, ENEMY_SKILLS } from './skills.js';
 import { chance } from '../core/rng.js';
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
 function freshBuffs() {
-  return { damage: null, defense: null, hit: null, dot: null, web: null };
+  return { damage: null, defense: null, hit: null, dot: null, web: null, defenseDown: null };
 }
 
 export class Combat {
@@ -322,8 +322,61 @@ export class Combat {
       this.p.energy = Math.max(0, this.p.energy - drain);
       this.bus.emit('log', { text: `${this.enemy.name} lances your energy — −${before - this.p.energy} ⭐!`, kind: 'enemy' });
       this.bus.emit('hit', { target: 'player' });
+    } else if (id === 'frostbolt' || id === 'chainlightning' || id === 'infernobolt') {
+      // Damaging spell: 150% of the enemy's stage-scaled attack.
+      const sk = ENEMY_SKILLS[id];
+      this.bus.emit('log', { text: `${this.enemy.name} casts ${sk.name}!`, kind: 'enemy' });
+      this.enemyDamage(1.5, sk.name);
+    } else if (id === 'wither') {
+      this.p.buffs.defenseDown = { bonus: 0.5, turns: 5 };
+      this.bus.emit('log', { text: `${this.enemy.name} casts Lich's Wither — your defense crumbles (5 turns)!`, kind: 'enemy' });
+    } else if (id === 'fury') {
+      this.e.buffs.damage = { bonus: 0.4, turns: 5 };
+      this.bus.emit('log', { text: `${this.enemy.name} rages — +40% attack for 5 turns!`, kind: 'enemy' });
     }
     this.bus.emit('sfx', { name: 'skill' });
+  }
+
+  // Apply a stage-scaled enemy attack (× mult) to the player: variance,
+  // hit chance, crit, defense (reduced by the Lich's Wither debuff),
+  // parry/riposte counters. Shared by normal/charged attacks and spells.
+  enemyDamage(mult = 1, label = null) {
+    const ps = this.player.stats();
+    const variance = 1 + (Math.random() * 2 - 1) * TUNING.combat.damageVariance;
+    let dmg = Math.max(1, Math.round(this.enemy.atk * mult * variance * (1 + (this.e.buffs.damage?.bonus ?? 0))));
+    const hitChance = clamp(this.eHit + (this.e.buffs.hit?.bonus ?? 0) - ps.evasion, 0.05, 0.95);
+    if (chance(1 - hitChance)) {
+      this.bus.emit('log', { text: `${this.enemy.name} misses ${label ?? 'its attack'}!`, kind: 'enemy' });
+      this.bus.emit('sfx', { name: 'miss' });
+      return;
+    }
+    const crit = chance(this.enemy.critChance);
+    const defending = this.p.defending;
+    const defendMult = 1 - Math.max(
+      defending ? TUNING.combat.defendReduction : 0,
+      this.p.buffs.defense?.bonus ?? 0
+    );
+    if (defending) this.p.defending = false;
+    const defDown = this.p.buffs.defenseDown?.bonus ?? 0;
+    const defense = defDown > 0 ? Math.max(0, Math.round(ps.defense * (1 - defDown))) : ps.defense;
+    dmg = Math.max(1, Math.round(dmg * defendMult) - defense);
+    if (crit) dmg = Math.max(dmg, Math.round(dmg * this.enemy.critDamage));
+    if (this.p.meditating) dmg *= 2;
+    this.p.hp = Math.max(0, this.p.hp - dmg);
+    this.bus.emit('log', { text: `${crit ? 'CRITICAL! ' : ''}${this.enemy.name} ${label ? `hits you with ${label} for` : 'hits you for'} ${dmg}.`, kind: 'enemy' });
+    this.bus.emit('hit', { target: 'player', crit });
+    this.bus.emit('sfx', { name: 'hurt' });
+    if (this.p.parry) {
+      const ref = Math.max(1, Math.round(dmg * 0.25));
+      this.e.hp = Math.max(0, this.e.hp - ref);
+      this.bus.emit('log', { text: `You parry and counter for ${ref}!`, kind: 'player' });
+      this.bus.emit('hit', { target: 'enemy', crit: false });
+    }
+    if (this.p.riposte) {
+      this.e.hp = Math.max(0, this.e.hp - dmg);
+      this.bus.emit('log', { text: `Riposte! You counter for ${dmg}!`, kind: 'player' });
+      this.bus.emit('hit', { target: 'enemy', crit: false });
+    }
   }
 
   enemyTurn() {
@@ -346,40 +399,7 @@ export class Combat {
       const mult =
         (intent === 'charge' ? TUNING.combat.enemyChargeMultiplier : 1) *
         (charged ? TUNING.combat.enemyChargeMultiplier : 1);
-      const ps = this.player.stats();
-      const variance = 1 + (Math.random() * 2 - 1) * TUNING.combat.damageVariance;
-      let dmg = Math.max(1, Math.round(this.enemy.atk * mult * variance * (1 + (this.e.buffs.damage?.bonus ?? 0))));
-      const hitChance = clamp(this.eHit + (this.e.buffs.hit?.bonus ?? 0) - ps.evasion, 0.05, 0.95);
-      if (chance(1 - hitChance)) {
-        this.bus.emit('log', { text: `${this.enemy.name} misses!`, kind: 'enemy' });
-        this.bus.emit('sfx', { name: 'miss' });
-      } else {
-        const crit = chance(this.enemy.critChance);
-        const defending = this.p.defending;
-        const defendMult = 1 - Math.max(
-          defending ? TUNING.combat.defendReduction : 0,
-          this.p.buffs.defense?.bonus ?? 0
-        );
-        if (defending) this.p.defending = false;
-        dmg = Math.max(1, Math.round(dmg * defendMult) - ps.defense);
-        if (crit) dmg = Math.max(dmg, Math.round(dmg * this.enemy.critDamage));
-        if (this.p.meditating) dmg *= 2;
-        this.p.hp = Math.max(0, this.p.hp - dmg);
-        this.bus.emit('log', { text: `${crit ? 'CRITICAL! ' : ''}${this.enemy.name} hits you for ${dmg}.`, kind: 'enemy' });
-        this.bus.emit('hit', { target: 'player', crit });
-        this.bus.emit('sfx', { name: 'hurt' });
-        if (this.p.parry) {
-          const ref = Math.max(1, Math.round(dmg * 0.25));
-          this.e.hp = Math.max(0, this.e.hp - ref);
-          this.bus.emit('log', { text: `You parry and counter for ${ref}!`, kind: 'player' });
-          this.bus.emit('hit', { target: 'enemy', crit: false });
-        }
-        if (this.p.riposte) {
-          this.e.hp = Math.max(0, this.e.hp - dmg);
-          this.bus.emit('log', { text: `Riposte! You counter for ${dmg}!`, kind: 'player' });
-          this.bus.emit('hit', { target: 'enemy', crit: false });
-        }
-      }
+      this.enemyDamage(mult);
     }
 
     // Enemy poison tick (Poisoned Blade).
@@ -414,7 +434,7 @@ export class Combat {
   }
 
   tickBuffs(side) {
-    for (const key of ['damage', 'defense', 'hit', 'dot', 'web']) {
+    for (const key of ['damage', 'defense', 'hit', 'dot', 'web', 'defenseDown']) {
       const b = side.buffs[key];
       if (b) {
         b.turns -= 1;
@@ -486,7 +506,7 @@ export class Combat {
 
   describeBuffs(side) {
     const out = [];
-    const names = { damage: '+DMG', defense: '+DEF', hit: '+ACC', dot: 'POISON', web: 'WEB' };
+    const names = { damage: '+DMG', defense: '+DEF', hit: '+ACC', dot: 'POISON', web: 'WEB', defenseDown: 'DEF DOWN' };
     for (const [key, b] of Object.entries(side.buffs)) {
       if (b) out.push(`${names[key]} ${b.turns}t`);
     }
