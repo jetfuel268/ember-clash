@@ -559,9 +559,31 @@ export function poolFor(level) {
   return SKILLS.filter((s) => s.pool && level >= s.pool[0] && level <= s.pool[1]);
 }
 
+// The damage line a skill belongs to: its element, or blade/blunt for
+// weapon skills. Utility (buff/heal) skills have no line and never
+// block or get blocked.
+export function skillLine(s) {
+  if (s.element) return s.element;
+  if (s.weapon === 'blade') return 'blade';
+  if (s.type === 'damage') return 'blunt';
+  return null;
+}
+
 // A random learnable skill the player does not already own, or null.
-export function pickSkillToLearn(level, ownedIds, rng) {
-  const candidates = poolFor(level).filter((s) => !ownedIds.includes(s.id));
+// `energy` excludes skills you cannot currently use (cost > energy);
+// owning a higher-tier skill of a line hides the lower tiers of that
+// line (e.g. a Cataclysmic fire spell hides all weaker fire spells).
+export function pickSkillToLearn(level, ownedIds, energy = Infinity, rng) {
+  const ownedSkills = ownedIds.map((id) => SKILL_MAP[id]).filter(Boolean);
+  const candidates = poolFor(level).filter((s) => {
+    if (ownedIds.includes(s.id)) return false;
+    if (s.cost > energy) return false;
+    const line = skillLine(s);
+    if (!line) return true;
+    return !ownedSkills.some(
+      (o) => o.type === 'damage' && skillLine(o) === line && o.mult > s.mult,
+    );
+  });
   if (candidates.length === 0) return null;
   const roll = rng ? rng() : Math.random();
   return candidates[Math.min(candidates.length - 1, Math.floor(roll * candidates.length))];

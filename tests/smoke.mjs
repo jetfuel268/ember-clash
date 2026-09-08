@@ -18,7 +18,7 @@ import { Combat } from '../js/game/combat.js';
 import { EventBus } from '../js/core/events.js';
 import { SaveStore, DEFAULT_SAVE } from '../js/core/save.js';
 import { TUNING } from '../js/config/tuning.js';
-import { pickSkillToLearn, poolFor, SKILLS } from '../js/game/skills.js';
+import { pickSkillToLearn, poolFor, skillLine, SKILLS } from '../js/game/skills.js';
 import { xpForNext } from '../js/game/upgrades.js';
 import { EQUIPMENT, pieceName, nextTier } from '../js/game/equipment.js';
 
@@ -110,8 +110,30 @@ function newSave() {
     assert.ok(lateIds.includes(id), `late pool has ${id} at lv25`);
   }
   for (let i = 0; i < 50; i++) {
-    const pick = pickSkillToLearn(15, [], makeRng(i));
+    const pick = pickSkillToLearn(15, [], Infinity, makeRng(i));
     if (pick) assert.ok(pick.pool[0] <= 15 && pick.pool[1] >= 15, 'pick matches level range');
+  }
+  // Level-up offers respect the current energy: nothing you cannot use.
+  for (let i = 0; i < 50; i++) {
+    const pick = pickSkillToLearn(3, [], 25, makeRng(i));
+    if (pick) assert.ok(pick.cost <= 25, `level-up pick payable at 25 energy (${pick.id} costs ${pick.cost})`);
+  }
+  // Owning a higher-tier skill hides the lower tiers of that line.
+  for (let i = 0; i < 50; i++) {
+    const pick = pickSkillToLearn(3, ['powerstrike'], Infinity, makeRng(i));
+    if (pick)
+      assert.ok(
+        !(skillLine(pick) === 'blade' && pick.mult < 1.5),
+        `no lower blade tier under Power Strike (got ${pick.id})`,
+      );
+  }
+  for (let i = 0; i < 50; i++) {
+    const pick = pickSkillToLearn(3, ['emberjab'], Infinity, makeRng(i));
+    if (pick)
+      assert.ok(
+        !(pick.element === 'fire' && pick.mult < 1.5),
+        `no weaker fire under Ember Jab (got ${pick.id})`,
+      );
   }
 }
 

@@ -98,7 +98,7 @@ function onStageWon(bonus) {
     kind: 'system',
   });
   pending = reward;
-  if (reward.leveledUp && reward.learnedSkill) {
+  if (reward.leveledUp) {
     sfx.levelup();
     showLevelUp(reward);
   } else {
@@ -259,9 +259,11 @@ function showLevelUp(reward) {
   $('levelup-gain').textContent = `+${g.attack} Attack  ·  +${g.defense} Defense  ·  +${g.magic} Magic  ·  +${g.maxHp} Max ❤️`;
 
   const sk = reward.learnedSkill;
-  $('levelup-skill').innerHTML = `
-    <div class="name">Learned: ${sk.name}</div>
-    <div class="desc">${sk.desc} — ${sk.cost} ⭐</div>`;
+  $('levelup-skill').innerHTML = sk
+    ? `<div class="name">Learned: ${sk.name}</div>
+    <div class="desc">${sk.desc} — ${sk.cost} ⭐</div>`
+    : `<div class="name">No new skill available</div>
+    <div class="desc">Nothing you can currently afford, or you already have the top tier of every line.</div>`;
 
   const replaceWrap = $('levelup-replace');
   const skipBtn = $('btn-levelup-skip');
@@ -297,9 +299,9 @@ function toggleSkillsMenu() {
     for (const id of player.skills) {
       const sk = SKILL_MAP[id];
       const afford = (state?.player?.energy ?? 0) >= sk.cost;
-      if (!afford) continue; // never show a skill you cannot currently pay
       const item = document.createElement('button');
       item.className = 'skill-item';
+      item.disabled = !afford;
       item.innerHTML = `<strong>${sk.name}</strong> (${sk.cost} ⭐)<span class="s-desc">${sk.desc}</span>`;
       item.addEventListener('click', () => {
         menu.classList.add('hidden');

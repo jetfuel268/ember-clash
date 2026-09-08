@@ -44,7 +44,7 @@ export class Progression {
     let learnedSkill = null;
     let needsReplace = false;
     if (leveledUp > 0) {
-      const pick = pickSkillToLearn(p.level, p.skills);
+      const pick = pickSkillToLearn(p.level, p.skills, p.currentEnergy ?? Infinity);
       if (pick) {
         const result = p.learnSkill(pick.id);
         learnedSkill = pick;
