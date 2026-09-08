@@ -70,6 +70,14 @@ body {
 }
 .actor-player { left: 6%; }
 .actor-enemy { right: 6%; bottom: 6%; }
+.fx-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+}
 .hud-corner {
   position: absolute;
   top: 10px;

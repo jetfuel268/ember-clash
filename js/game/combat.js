@@ -9,7 +9,7 @@
 //   enemy.magic, enemy.energy, enemy.buffs
 import { TUNING } from '../config/tuning.js';
 import { rollIntent, INTENT_LABELS, TYPES, elementMultFor } from './enemies.js';
-import { SKILL_MAP, ENEMY_SKILLS } from './skills.js';
+import { SKILL_MAP, ENEMY_SKILLS, TIER_COSTS, TIER_MULTS } from './skills.js';
 import { chance } from '../core/rng.js';
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -111,6 +111,8 @@ export class Combat {
       const typeKey = mult > 1 ? 'slash' : 'blunt';
       const r = this.playerStrike(s, mult, { typeKey, forceHit: force });
       this.afterPlayerHit(r, mult > 1 ? ' (charged)' : '');
+      // FX: a basic attack is a blunt swing; a charged one is a slash.
+      this.emitFx('player', mult > 1 ? 'slash' : 'blunt');
     } else if (action === 'guard') {
       this.p.defending = true;
       this.bus.emit('log', { text: 'You brace for the next attack.', kind: 'player' });
@@ -229,6 +231,30 @@ export class Combat {
     if (b.hit) this.p.buffs.hit = { bonus: b.hit.bonus, turns: b.hit.turns };
   }
 
+  // FX events: the game describes the attack (kind + tier); the UI
+  // renders it. Tier 0-4 for the five skill tiers, 0 for basics.
+  emitFx(side, kind, tier = 0) {
+    this.bus.emit('fx', { side, kind, tier });
+  }
+
+  tierOf(sk) {
+    const i = TIER_COSTS.indexOf(sk.cost);
+    if (i >= 0) return i;
+    const j = TIER_MULTS.indexOf(sk.mult);
+    return j >= 0 ? j : 0;
+  }
+
+  // What an effect looks like for a skill (null = nothing to show).
+  skillFx(sk) {
+    if (sk.element === 'fire') return { kind: 'fire', tier: this.tierOf(sk) };
+    if (sk.element === 'ice') return { kind: 'ice', tier: this.tierOf(sk) };
+    if (sk.element === 'lightning') return { kind: 'lightning', tier: this.tierOf(sk) };
+    if (sk.weapon === 'blade') return { kind: 'slash', tier: 0 };
+    if (sk.type === 'damage') return { kind: 'blunt', tier: 0 };
+    if (sk.healFrac) return { kind: 'heal', tier: 0 };
+    return null;
+  }
+
   // Unified skill activation shared by the hero and the enemy: purely
   // declarative effect fields (buff/dot/web/defenseDown/drainEnergy/damage
   // + element) — no per-skill code paths. `side`: 'p' = hero casts,
@@ -333,6 +359,8 @@ export class Combat {
         this.enemyDamage(sk.mult, sk.name, sk.element);
       }
     }
+    const fx = this.skillFx(sk);
+    if (fx) this.emitFx(side, fx.kind, fx.tier);
 
     // Fire attacks ignite the target (both sides, 15% chance).
     if (sk.element === 'fire' && foe.hp > 0 && Math.random() < TUNING.status.burn.chance) {
@@ -484,6 +512,13 @@ export class Combat {
         (intent === 'charge' ? TUNING.combat.enemyChargeMultiplier : 1) *
         (charged ? TUNING.combat.enemyChargeMultiplier : 1);
       this.enemyDamage(mult);
+      // FX: a Warden's swing is its tier's lightning; everything else is blunt.
+      if (this.e.lightningMult > 1) {
+        const t = TIER_MULTS.indexOf(this.e.lightningMult);
+        this.emitFx('enemy', 'lightning', t >= 0 ? t : 1);
+      } else {
+        this.emitFx('enemy', 'blunt', 0);
+      }
     }
 
     // Enemy poison tick (Poisoned Blade).

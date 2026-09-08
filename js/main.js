@@ -15,6 +15,7 @@ import { equipIconSvg } from './ui/equipIcons.js';
 import { Screens } from './ui/screens.js';
 import { HUD } from './ui/hud.js';
 import { Log } from './ui/log.js';
+import { AttackFx } from './ui/attackFx.js';
 import { sfx, setMuted, isMuted } from './core/audio.js';
 
 const store = new SaveStore();
@@ -22,6 +23,12 @@ const bus = new EventBus();
 const screens = new Screens(document.getElementById('app'));
 const hud = new HUD();
 const log = new Log(document.getElementById('log'));
+const fx = new AttackFx(
+  document.getElementById('fx-canvas'),
+  document.getElementById('battlefield')
+);
+fx.resize();
+window.addEventListener('resize', () => fx.resize());
 
 // --- Mutable app state (module-local; no globals) ---
 let save = store.load();
@@ -53,6 +60,7 @@ bus.on('hit', (d) => {
   if (d.target === 'enemy') sfx[d.crit ? 'crit' : 'hit']();
   hud.flash(d.target, d.crit);
 });
+bus.on('fx', (d) => fx.play(d));
 bus.on('sfx', (d) => sfx[d.name]?.());
 bus.on('phase', (d) => {
   hud.setPhase(d.value);
@@ -77,6 +85,7 @@ function startStage(stage) {
   const enemy = createEnemy(stage);
   combat = new Combat(player, enemy, bus, player.currentHp, player.currentEnergy);
   screens.show('combat');
+  fx.resize(); // the battlefield has a real size now
   document.getElementById('skills-menu').classList.add('hidden');
   document.getElementById('items-menu').classList.add('hidden');
   log.clear();
