@@ -18,7 +18,7 @@ import { Combat } from '../js/game/combat.js';
 import { EventBus } from '../js/core/events.js';
 import { SaveStore, DEFAULT_SAVE } from '../js/core/save.js';
 import { TUNING } from '../js/config/tuning.js';
-import { pickSkillToLearn, poolFor } from '../js/game/skills.js';
+import { pickSkillToLearn, poolFor, SKILLS } from '../js/game/skills.js';
 import { xpForNext } from '../js/game/upgrades.js';
 import { EQUIPMENT, pieceName, nextTier } from '../js/game/equipment.js';
 
@@ -141,7 +141,55 @@ function newSave() {
   assert.ok(e50.magic >= e10.magic, 'enemy magic scales with stage');
 }
 
-// --- Stage pools: limited per-stage pools + biome bosses ------------------
+// --- Full tier ladder: every weapon carries every damage tier ---------
+{
+  const TIERS = {
+    grazing: 0.25,
+    weak: 0.7,
+    standard: 1,
+    strong: 1.25,
+    mighty: 1.5,
+    brutal: 1.75,
+    cataclysmic: 2.25,
+  };
+  const weapons = ['blade', 'blunt', 'fire', 'ice', 'lightning'];
+  for (const w of weapons) {
+    for (const [tier, mult] of Object.entries(TIERS)) {
+      const has = SKILLS.some((s) =>
+        s.type === 'damage' &&
+        s.mult === mult &&
+        (w === 'blade'
+          ? s.weapon === 'blade'
+          : w === 'blunt'
+            ? !s.element && s.weapon !== 'blade'
+            : s.element === w));
+      assert.ok(has, `${w} has a ${tier} (${mult}x) skill`);
+    }
+  }
+  // Every learnable skill is payable when it enters the pool: magic
+  // grows 2-4 per level from 25, so max magic at pool start >= cost.
+  for (const s of SKILLS.filter((k) => k.pool)) {
+    const maxMagicAtStart = 25 + 4 * (s.pool[0] - 1);
+    assert.ok(
+      s.cost === 0 || maxMagicAtStart >= s.cost,
+      `${s.id} payable at pool start (cost ${s.cost}, max magic ${maxMagicAtStart})`,
+    );
+  }
+  // Weak-tier single-hit skills are retired before level 20 (no weak
+  // spells near the end).
+  for (const s of SKILLS) {
+    if (
+      s.type === 'damage' &&
+      (s.mult === 0.25 || s.mult === 0.7) &&
+      (s.hits ?? 1) === 1 &&
+      s.pool
+    ) {
+      assert.ok(s.pool[1] <= 19, `${s.id} (weak tier) is not learnable late game`);
+    }
+  }
+}
+
+// --- Stage pools: limited per-stage pools + biome bosses -------------------
 {
   const pool1 = poolForStage(1);
   assert.deepEqual(pool1, ['stinger', 'skeleton', 'slime'], 'stage-1 pool is spider/skeleton/slime');

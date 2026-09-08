@@ -297,9 +297,9 @@ function toggleSkillsMenu() {
     for (const id of player.skills) {
       const sk = SKILL_MAP[id];
       const afford = (state?.player?.energy ?? 0) >= sk.cost;
+      if (!afford) continue; // never show a skill you cannot currently pay
       const item = document.createElement('button');
       item.className = 'skill-item';
-      item.disabled = !afford;
       item.innerHTML = `<strong>${sk.name}</strong> (${sk.cost} ⭐)<span class="s-desc">${sk.desc}</span>`;
       item.addEventListener('click', () => {
         menu.classList.add('hidden');
