@@ -392,6 +392,8 @@ export class Combat {
     this.bus.emit('log', { text: `${crit ? 'CRITICAL! ' : ''}${this.enemy.name} ${label ? `hits you with ${label} for` : light ? 'hurls a lightning bolt for' : 'hits you for'} ${dmg}.`, kind: 'enemy' });
     this.bus.emit('hit', { target: 'player', crit });
     this.bus.emit('sfx', { name: 'hurt' });
+    // Enemy attacks can set the player burning (15% chance).
+    if (this.p.hp > 0 && Math.random() < TUNING.status.burn.chance) this.applyPlayerBurn();
     if (this.p.parry) {
       const ref = Math.max(1, Math.round(dmg * 0.25));
       this.e.hp = Math.max(0, this.e.hp - ref);
@@ -414,6 +416,17 @@ export class Combat {
       turns: Math.max(prev?.turns ?? 0, TUNING.status.burn.turns),
     };
     this.bus.emit('log', { text: prev ? `The flames around ${this.enemy.name} intensify!` : `${this.enemy.name} catches fire!`, kind: 'system' });
+  }
+
+  // Apply/refresh the burning status on the player: 5% of max HP per
+  // turn for 3 turns (enemy attacks, 15% chance).
+  applyPlayerBurn() {
+    const prev = this.p.buffs.burn;
+    this.p.buffs.burn = {
+      amount: Math.max(1, Math.round(this.p.maxHp * TUNING.status.burn.fracOfMaxHp)),
+      turns: Math.max(prev?.turns ?? 0, TUNING.status.burn.turns),
+    };
+    this.bus.emit('log', { text: prev ? 'The flames around you intensify!' : 'You catch fire!', kind: 'system' });
   }
 
   enemyTurn() {
@@ -474,6 +487,13 @@ export class Combat {
     this.pushState();
 
     if (this.p.hp <= 0) return this.finish(false);
+    // Player burning tick (enemy attacks, 15% chance).
+    if (this.p.buffs.burn) {
+      this.p.hp = Math.max(0, this.p.hp - this.p.buffs.burn.amount);
+      this.bus.emit('log', { text: `Burn sears you for ${this.p.buffs.burn.amount}.`, kind: 'system' });
+      this.pushState();
+      if (this.p.hp <= 0) return this.finish(false);
+    }
     // Player poison tick (venom).
     if (this.p.buffs.dot) {
       this.p.hp = Math.max(0, this.p.hp - this.p.buffs.dot.amount);
