@@ -344,25 +344,34 @@ export class Combat {
     this.castSkill('e', ENEMY_SKILLS[id]);
   }
 
+  // Consumable use: effects come from TUNING.shop.items[id].effect — no
+  // per-item code paths. Supported fields: heal:'potion' (potionHeal of
+  // max HP), energy:N (flat), restoreFrac:f (f of max HP and energy).
   useItem(id) {
     const def = TUNING.shop.items[id];
     const s = this.player.stats();
-    if (id === 'potion') {
-      const heal = Math.round(this.p.maxHp * s.potionHeal);
-      const before = this.p.hp;
-      this.p.hp = Math.min(this.p.maxHp, this.p.hp + heal);
-      this.bus.emit('log', { text: `You drink a ${def.name} and recover ${this.p.hp - before} ❤️.`, kind: 'player' });
-    } else if (id === 'vial') {
-      const before = this.p.energy;
-      this.p.energy = Math.min(this.p.maxEnergy, this.p.energy + 50);
-      this.bus.emit('log', { text: `You drink a ${def.name} and recover ${this.p.energy - before} ⭐.`, kind: 'player' });
-    } else if (id === 'elixir') {
-      const hpBefore = this.p.hp;
-      const enBefore = this.p.energy;
-      this.p.hp = Math.min(this.p.maxHp, this.p.hp + Math.round(this.p.maxHp * TUNING.player.elixirRestore));
-      this.p.energy = Math.min(this.p.maxEnergy, this.p.energy + Math.round(this.p.maxEnergy * TUNING.player.elixirRestore));
-      this.bus.emit('log', { text: `You drink a ${def.name} and recover ${this.p.hp - hpBefore} ❤️ and ${this.p.energy - enBefore} ⭐.`, kind: 'player' });
+    const fx = def.effect ?? {};
+    const hpBefore = this.p.hp;
+    const enBefore = this.p.energy;
+    if (fx.heal === 'potion') {
+      this.p.hp = Math.min(this.p.maxHp, this.p.hp + Math.round(this.p.maxHp * s.potionHeal));
     }
+    if (fx.restoreFrac) {
+      this.p.hp = Math.min(this.p.maxHp, this.p.hp + Math.round(this.p.maxHp * fx.restoreFrac));
+      this.p.energy = Math.min(this.p.maxEnergy, this.p.energy + Math.round(this.p.maxEnergy * fx.restoreFrac));
+    }
+    if (fx.energy) {
+      this.p.energy = Math.min(this.p.maxEnergy, this.p.energy + fx.energy);
+    }
+    const parts = [];
+    if (this.p.hp > hpBefore) parts.push(`recover ${this.p.hp - hpBefore} ❤️`);
+    if (this.p.energy > enBefore) parts.push(`recover ${this.p.energy - enBefore} ⭐`);
+    this.bus.emit('log', {
+      text: parts.length
+        ? `You drink a ${def.name} and ${parts.join(' and ')}.`
+        : `You drink a ${def.name} (nothing to restore).`,
+      kind: 'player',
+    });
     this.player.removeItem(id);
     this.p.items[id] -= 1;
     this.bus.emit('sfx', { name: 'potion' });

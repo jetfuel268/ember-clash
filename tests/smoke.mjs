@@ -670,6 +670,12 @@ async function testCombatBasics() {
   const c3 = new Combat(p, e, bus, null, 500);
   assert.equal(c3.p.energy, 100, 'carried energy clamped to max');
   // Items.
+  // Consumables are data-driven: every shop item must carry an effect
+  // (useItem has no per-item code paths).
+  for (const def of Object.values(TUNING.shop.items)) {
+    assert.ok(def.effect && Object.keys(def.effect).length > 0,
+      `shop item ${def.name} has a declarative effect`);
+  }
   c.p.hp = 10;
   c.act('item', 'potion');
   assert.ok(c.p.hp > 10, 'potion heals');

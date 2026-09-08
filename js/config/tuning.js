@@ -10,7 +10,6 @@ export const TUNING = {
     baseCritChance: 0.1,
     baseCritDamage: 2.0,
     potionHeal: 0.35, // fraction of maxHp
-    elixirRestore: 0.75, // fraction of maxHp and maxEnergy
     // Per level-up: attack/defense gain a random amount in [statMin, statMax],
     // magic (max energy) in [magicMin, magicMax], maxHp in [hpMin, hpMax].
     levelUp: {
@@ -87,9 +86,14 @@ export const TUNING = {
   shop: {
     bed: { base: 15, perStage: 4 }, // full restore cost = base + perStage * stage
     items: {
-      potion: { name: 'Potion', desc: 'Heal 35% of max ❤️', priceBase: 25, perStage: 2 },
-      vial: { name: 'Vial', desc: 'Restore 50 ⭐', priceBase: 35, perStage: 2 },
-      elixir: { name: 'Elixir', desc: 'Restore 75% of max ❤️ and ⭐', priceBase: 70, perStage: 3 },
+      // `effect` is applied by the shared Combat.useItem — a new consumable
+      // is a catalog entry only. Supported fields:
+      //   heal: 'potion'  — restore stats().potionHeal of max HP (equipment-boosted)
+      //   energy: N       — restore a flat N energy
+      //   restoreFrac: f  — restore f of max HP and max energy
+      potion: { name: 'Potion', desc: 'Heal 35% of max ❤️', priceBase: 25, perStage: 2, effect: { heal: 'potion' } },
+      vial: { name: 'Vial', desc: 'Restore 50 ⭐', priceBase: 35, perStage: 2, effect: { energy: 50 } },
+      elixir: { name: 'Elixir', desc: 'Restore 75% of max ❤️ and ⭐', priceBase: 70, perStage: 3, effect: { restoreFrac: 0.75 } },
     },
   },
 };
