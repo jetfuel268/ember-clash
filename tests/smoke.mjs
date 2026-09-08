@@ -88,11 +88,12 @@ function newSave() {
   assert.equal(p.replaceSkill('aim', 'mend'), true, 'replace works');
   assert.ok(p.skills.includes('mend') && !p.skills.includes('aim'));
 
-  // Pool randomization by level range (pools are 10-level blocks).
+  // Pool randomization by level range (pools are 5-level blocks; the
+  // campaign tops out at ~level 25, so all five tiers fit in 1-25).
   assert.ok(poolFor(3).some((s) => s.pool[0] <= 3 && s.pool[1] >= 3), 'block-1 pool non-empty at lv3');
   assert.ok(!poolFor(3).some((s) => s.pool[0] > 3), 'no block-2+ skills at lv3');
-  assert.ok(poolFor(15).some((s) => s.pool[0] >= 11), 'block-2 skills present at lv15');
-  // Tier skills are learnable in their own 10-level block and nowhere else.
+  assert.ok(poolFor(15).some((s) => s.pool[0] >= 11), 'block-3 skills present at lv15');
+  // Tier skills are learnable in their own 5-level block and nowhere else.
   for (const sk of SKILLS.filter((k) => k.pool && k.cost >= 15 && k.cost <= 55 && isPlainDamage(k))) {
     const block = TIER_BLOCKS[TIER_COSTS.indexOf(sk.cost)];
     assert.deepEqual(sk.pool, block, `${sk.id} pool matches its tier block ${JSON.stringify(block)}`);
@@ -103,9 +104,10 @@ function newSave() {
   assert.ok(earlyIds.includes('swiftedge'), 'early pool has the on-hit skill (Swift Edge)');
   assert.ok(earlyIds.includes('embersnap') && earlyIds.includes('frostenip') && earlyIds.includes('staticzap'),
     'early pool has the tier-1 element basics');
-  // Late pool (20+) is populated.
+  // Late pool (20+) is populated: late utilities + the Cataclysmic tier
+  // (which must be reachable by ~level 25, the campaign's end).
   const lateIds = poolFor(25).map((s) => s.id);
-  for (const id of ['trueedge', 'adrenaline', 'secondwind', 'cleave']) {
+  for (const id of ['trueedge', 'adrenaline', 'secondwind', 'pyroclasm']) {
     assert.ok(lateIds.includes(id), `late pool has ${id} at lv25`);
   }
   for (let i = 0; i < 50; i++) {
@@ -137,7 +139,7 @@ function newSave() {
   const underType5 = candidatesFor(5, ['beasthunter'], Infinity).map((s) => s.id);
   assert.ok(underType5.includes('doublestrike'), 'multi-effect owner does not hide Double Strike');
   const underType15 = candidatesFor(15, ['beasthunter'], Infinity).map((s) => s.id);
-  assert.ok(underType15.includes('vampirefang'), 'multi-effect owner does not hide Vampire Fang');
+  assert.ok(underType15.includes('cleave'), 'multi-effect owner does not hide Cleave');
   // A plain Cataclysmic owner suppresses plain lower tiers of its line.
   const underSunder = candidatesFor(5, ['sunderingstroke'], Infinity).map((s) => s.id);
   for (const blocked of ['fairblade'])
@@ -428,16 +430,16 @@ async function testLootGoblin() {
 // --- Healing line: one per 10-level block, 10% -> 50% of max HP --------
 async function testHealLine() {
   const expected = [
-    ['minormend', [1, 10], 15, 0.1],
-    ['mend', [11, 20], 25, 0.2],
-    ['majormend', [21, 30], 35, 0.3],
-    ['fleshmend', [31, 40], 45, 0.4],
-    ['fullmend', [41, 50], 55, 0.5],
+    ['minormend', [1, 5], 15, 0.1],
+    ['mend', [6, 10], 25, 0.2],
+    ['majormend', [11, 15], 35, 0.3],
+    ['fleshmend', [16, 20], 45, 0.4],
+    ['fullmend', [21, 25], 55, 0.5],
   ];
   for (const [id, pool, cost, frac] of expected) {
     const sk = SKILLS.find((s) => s.id === id);
     assert.ok(sk, `heal line has ${id}`);
-    assert.deepEqual(sk.pool, pool, `${id} lives in its 10-level block`);
+    assert.deepEqual(sk.pool, pool, `${id} lives in its 5-level block`);
     assert.equal(sk.cost, cost, `${id} cost follows the tier ladder`);
     assert.equal(sk.healFrac, frac, `${id} heals ${frac * 100}% of max HP`);
   }
