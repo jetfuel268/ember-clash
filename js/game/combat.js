@@ -118,9 +118,7 @@ export class Combat {
     } else if (action === 'skill') {
       const sk = SKILL_MAP[arg];
       this.p.energy -= sk.cost;
-      this.usePlayerSkill(s, sk);
-      // Fire-type skills can set the enemy burning (15% chance).
-      if (this.e.hp > 0 && sk.element === 'fire' && Math.random() < TUNING.status.burn.chance) this.applyBurn();
+      this.castSkill('p', sk, s);
     } else if (action === 'item') {
       this.useItem(arg);
     }
@@ -229,70 +227,121 @@ export class Combat {
     if (b.hit) this.p.buffs.hit = { bonus: b.hit.bonus, turns: b.hit.turns };
   }
 
-  usePlayerSkill(s, sk) {
-    if (sk.hpCostFrac) {
-      this.p.hp = Math.max(1, this.p.hp - Math.round(this.p.maxHp * sk.hpCostFrac));
-    }
-    this.bus.emit('log', { text: `You use ${sk.name}!`, kind: 'player' });
+  // Unified skill activation shared by the hero and the enemy: purely
+  // declarative effect fields (buff/dot/web/defenseDown/drainEnergy/damage
+  // + element) — no per-skill code paths. `side`: 'p' = hero casts,
+  // 'e' = enemy casts. `stats` is the caster's stats() snapshot
+  // (player strike math only).
+  castSkill(side, sk, stats = null) {
+    const me = side === 'p' ? this.p : this.e;
+    const foe = side === 'p' ? this.e : this.p;
+    const kind = side === 'p' ? 'player' : 'enemy';
+    const name = side === 'p' ? 'You' : this.enemy.name;
+
+    if (sk.hpCostFrac) me.hp = Math.max(1, me.hp - Math.round(me.maxHp * sk.hpCostFrac));
+    this.bus.emit('log', {
+      text: side === 'p'
+        ? `You use ${sk.name}!`
+        : sk.log
+          ? `${this.enemy.name} ${sk.log}`
+          : `${this.enemy.name} casts ${sk.name}!`,
+      kind,
+    });
     this.bus.emit('sfx', { name: 'skill' });
 
-    if (sk.buff) this.givePlayerBuff(sk.buff);
+    if (sk.buff) {
+      if (sk.buff.damage) me.buffs.damage = { ...sk.buff.damage };
+      if (sk.buff.defense) me.buffs.defense = { ...sk.buff.defense };
+      if (sk.buff.hit) me.buffs.hit = { ...sk.buff.hit };
+    }
     if (sk.healFrac) {
-      const heal = Math.round(this.p.maxHp * sk.healFrac);
-      this.p.hp = Math.min(this.p.maxHp, this.p.hp + heal);
+      const heal = Math.round(me.maxHp * sk.healFrac);
+      me.hp = Math.min(me.maxHp, me.hp + heal);
       this.bus.emit('log', { text: `You recover ${heal} ❤️.`, kind: 'player' });
     }
     if (sk.meditate) {
-      this.p.meditating = true;
-      this.p.energy = Math.min(this.p.energy + Math.round(this.p.maxEnergy * 0.25), this.p.maxEnergy);
+      me.meditating = true;
+      me.energy = Math.min(me.energy + Math.round(me.maxEnergy * 0.25), me.maxEnergy);
     }
-    if (sk.chargeMult) this.p.swing = sk.chargeMult;
-    if (sk.guaranteeNext) this.p.guarantee = true;
+    if (sk.chargeMult) me.swing = sk.chargeMult;
+    if (sk.guaranteeNext) me.guarantee = true;
     if (sk.parry) {
-      this.p.parry = true;
-      this.p.defending = true;
+      me.parry = true;
+      me.defending = true;
     }
-    if (sk.riposte) this.p.riposte = true;
+    if (sk.riposte) me.riposte = true;
     if (sk.cleanse) {
-      this.p.buffs.dot = null;
-      this.p.meditating = false;
+      me.buffs.dot = null;
+      me.meditating = false;
+    }
+    if (sk.dot) {
+      foe.buffs.dot = { ...sk.dot };
+      if (side === 'e') this.bus.emit('log', { text: `${this.enemy.name} poisons you!`, kind: 'enemy' });
+    }
+    if (sk.web) {
+      foe.buffs.web = { turns: sk.web.turns };
+      if (side === 'e') this.bus.emit('log', { text: `${this.enemy.name} sprays webs — your accuracy drops!`, kind: 'enemy' });
+    }
+    if (sk.defenseDown) foe.buffs.defenseDown = { ...sk.defenseDown };
+    if (sk.drainEnergy) {
+      // Drains the target's energy bar for the caster's stage-scaled
+      // attack value — the same strength as its normal attack (energy only).
+      const drain = Math.max(1, this.enemy.atk);
+      const before = foe.energy;
+      foe.energy = Math.max(0, foe.energy - drain);
+      this.bus.emit('log', { text: `${this.enemy.name} lances your energy — −${before - foe.energy} ⭐!`, kind: 'enemy' });
+      this.bus.emit('hit', { target: 'player' });
     }
 
     if (sk.type === 'damage') {
-      const hits = sk.hits ?? 1;
-      let total = 0;
-      let anyCrit = false;
-      let landed = false;
-      for (let i = 0; i < hits; i++) {
-        const r = this.playerStrike(s, sk.mult, {
-          forceHit: this.p.guarantee,
-          ignoreArmor: sk.ignoreArmor,
-          vsType: sk.vsType,
-          vsMult: sk.vsMult,
-          element: sk.element,
-        });
-        if (i === 0 && this.p.guarantee) this.p.guarantee = false;
-        total += r.dmg;
-        if (r.crit) anyCrit = true;
-        landed = landed || r.hit;
-      }
-      if (landed) {
-        this.bus.emit('log', {
-          text: `${anyCrit ? 'CRITICAL! ' : ''}${sk.name} hits for ${total}${this.matchupLabel(sk)}.`,
-          kind: 'player',
-        });
-        this.bus.emit('hit', { target: 'enemy', crit: anyCrit });
-        if (sk.poison) this.e.buffs.dot = { ...sk.poison };
-        if (sk.leech) {
-          const heal = Math.round(total * sk.leech);
-          this.p.hp = Math.min(this.p.maxHp, this.p.hp + heal);
-          this.bus.emit('log', { text: `You drain ${heal} ❤️.`, kind: 'player' });
+      if (side === 'p') {
+        const hits = sk.hits ?? 1;
+        let total = 0;
+        let anyCrit = false;
+        let landed = false;
+        for (let i = 0; i < hits; i++) {
+          const r = this.playerStrike(stats, sk.mult, {
+            forceHit: this.p.guarantee,
+            ignoreArmor: sk.ignoreArmor,
+            vsType: sk.vsType,
+            vsMult: sk.vsMult,
+            element: sk.element,
+          });
+          if (i === 0 && this.p.guarantee) this.p.guarantee = false;
+          total += r.dmg;
+          if (r.crit) anyCrit = true;
+          landed = landed || r.hit;
         }
-        if (sk.extraActionOnHit) this.p.extraAction = true;
-        if (sk.buffOnHit) this.givePlayerBuff(sk.buffOnHit);
+        if (landed) {
+          this.bus.emit('log', {
+            text: `${anyCrit ? 'CRITICAL! ' : ''}${sk.name} hits for ${total}${this.matchupLabel(sk)}.`,
+            kind: 'player',
+          });
+          this.bus.emit('hit', { target: 'enemy', crit: anyCrit });
+          if (sk.leech) {
+            const heal = Math.round(total * sk.leech);
+            this.p.hp = Math.min(this.p.maxHp, this.p.hp + heal);
+            this.bus.emit('log', { text: `You drain ${heal} ❤️.`, kind: 'player' });
+          }
+          if (sk.extraActionOnHit) this.p.extraAction = true;
+          if (sk.buffOnHit) this.givePlayerBuff(sk.buffOnHit);
+        }
+        this.lastKillBonus = sk.killBonus ?? null;
+      } else {
+        this.enemyDamage(sk.mult, sk.name, sk.element);
       }
-      this.lastKillBonus = sk.killBonus ?? null;
     }
+
+    // Fire attacks ignite the target (both sides, 15% chance).
+    if (sk.element === 'fire' && foe.hp > 0 && Math.random() < TUNING.status.burn.chance) {
+      if (side === 'p') this.applyBurn();
+      else this.applyPlayerBurn();
+    }
+  }
+
+  // Test/legacy entry point: route a named enemy skill through the shared caster.
+  enemySkill(id) {
+    this.castSkill('e', ENEMY_SKILLS[id]);
   }
 
   useItem(id) {
@@ -319,53 +368,12 @@ export class Combat {
     this.bus.emit('sfx', { name: 'potion' });
   }
 
-  // Enemy skill effects (energy-gated; data lives in skills.js names only).
-  enemySkill(id) {
-    if (id === 'enrage') {
-      this.e.buffs.damage = { bonus: 0.4, turns: 3 };
-      this.bus.emit('log', { text: `${this.enemy.name} enrages (+40% damage)!`, kind: 'enemy' });
-    } else if (id === 'shell') {
-      this.e.buffs.defense = { bonus: 0.5, turns: 3 };
-      this.bus.emit('log', { text: `${this.enemy.name} hardens its shell.`, kind: 'enemy' });
-    } else if (id === 'venom') {
-      this.p.buffs.dot = { amount: 5, turns: 3 };
-      this.bus.emit('log', { text: `${this.enemy.name} poisons you!`, kind: 'enemy' });
-    } else if (id === 'toxins') {
-      this.p.buffs.dot = { amount: 5, turns: 5 };
-      this.bus.emit('log', { text: `${this.enemy.name} drenches you in toxic venom!`, kind: 'enemy' });
-    } else if (id === 'web') {
-      this.p.buffs.web = { turns: 3 };
-      this.bus.emit('log', { text: `${this.enemy.name} sprays webs — your accuracy drops!`, kind: 'enemy' });
-    } else if (id === 'crystallineshell') {
-      this.e.buffs.defense = { bonus: 0.5, turns: 5 };
-      this.bus.emit('log', { text: `${this.enemy.name} hardens into a crystalline shell (5 turns of defense).`, kind: 'enemy' });
-    } else if (id === 'crystaldrain') {
-      // Drains the player's energy bar for the enemy's stage-scaled attack
-      // value — the same strength as its normal attack (energy only).
-      const drain = Math.max(1, this.enemy.atk);
-      const before = this.p.energy;
-      this.p.energy = Math.max(0, this.p.energy - drain);
-      this.bus.emit('log', { text: `${this.enemy.name} lances your energy — −${before - this.p.energy} ⭐!`, kind: 'enemy' });
-      this.bus.emit('hit', { target: 'player' });
-    } else if (id === 'frostbolt' || id === 'chainlightning' || id === 'infernobolt') {
-      // Damaging spell: 150% of the enemy's stage-scaled attack.
-      const sk = ENEMY_SKILLS[id];
-      this.bus.emit('log', { text: `${this.enemy.name} casts ${sk.name}!`, kind: 'enemy' });
-      this.enemyDamage(1.5, sk.name);
-    } else if (id === 'wither') {
-      this.p.buffs.defenseDown = { bonus: 0.5, turns: 5 };
-      this.bus.emit('log', { text: `${this.enemy.name} casts Lich's Wither — your defense crumbles (5 turns)!`, kind: 'enemy' });
-    } else if (id === 'fury') {
-      this.e.buffs.damage = { bonus: 0.4, turns: 5 };
-      this.bus.emit('log', { text: `${this.enemy.name} rages — +40% attack for 5 turns!`, kind: 'enemy' });
-    }
-    this.bus.emit('sfx', { name: 'skill' });
-  }
-
   // Apply a stage-scaled enemy attack (× mult) to the player: variance,
   // hit chance, crit, defense (reduced by the Lich's Wither debuff),
   // parry/riposte counters. Shared by normal/charged attacks and spells.
-  enemyDamage(mult = 1, label = null) {
+  // `element` marks fire/ice/lightning spells (fire can burn the hero —
+  // handled by the shared caster).
+  enemyDamage(mult = 1, label = null, element = null) {
     const ps = this.player.stats();
     const variance = 1 + (Math.random() * 2 - 1) * TUNING.combat.damageVariance;
     let dmg = Math.max(1, Math.round(this.enemy.atk * mult * variance * (1 + (this.e.buffs.damage?.bonus ?? 0)) * this.e.lightningMult));
@@ -392,8 +400,6 @@ export class Combat {
     this.bus.emit('log', { text: `${crit ? 'CRITICAL! ' : ''}${this.enemy.name} ${label ? `hits you with ${label} for` : light ? 'hurls a lightning bolt for' : 'hits you for'} ${dmg}.`, kind: 'enemy' });
     this.bus.emit('hit', { target: 'player', crit });
     this.bus.emit('sfx', { name: 'hurt' });
-    // Enemy attacks can set the player burning (15% chance).
-    if (this.p.hp > 0 && Math.random() < TUNING.status.burn.chance) this.applyPlayerBurn();
     if (this.p.parry) {
       const ref = Math.max(1, Math.round(dmg * 0.25));
       this.e.hp = Math.max(0, this.e.hp - ref);

@@ -382,7 +382,7 @@ export const SKILLS = [
     pool: [1, 10],
     type: 'damage',
     mult: 1.25,
-    poison: { amount: 6, turns: 3 },
+    dot: { amount: 6, turns: 3 },
   },
   {
     id: 'swiftedge',
@@ -537,23 +537,27 @@ export const SKILL_MAP = Object.fromEntries(SKILLS.map((s) => [s.id, s]));
 
 // Enemy skills (names/desc only — effects live in combat.js; costs come from
 // TUNING.enemyMagic.skillCost). Used by the bestiary and intent labels.
+// Enemy skills: the same declarative effect fields as player skills
+// (buff/dot/web/defenseDown/damage + element), applied by the shared
+// Combat.castSkill path — no per-skill code branches.
+// `log` is optional enemy-flavor text for the cast line.
 export const ENEMY_SKILLS = {
-  enrage: { id: 'enrage', name: 'Enrage', desc: 'Gain +40% damage for 3 turns.' },
-  shell: { id: 'shell', name: 'Shell', desc: 'Halve incoming damage for 3 turns.' },
-  venom: { id: 'venom', name: 'Venom', desc: 'Poison the hero (5 damage/turn for 3 turns).' },
-  toxins: { id: 'toxins', name: 'Brood Toxin', desc: 'Poison the hero (5 damage/turn for 5 turns).' },
-  web: { id: 'web', name: 'Web Spray', desc: 'Reduce the hero’s accuracy for 3 turns.' },
+  enrage: { id: 'enrage', name: 'Enrage', desc: 'Gain +40% damage for 3 turns.', buff: { damage: { bonus: 0.4, turns: 3 } }, log: 'enrages (+40% damage)!' },
+  shell: { id: 'shell', name: 'Shell', desc: 'Halve incoming damage for 3 turns.', buff: { defense: { bonus: 0.5, turns: 3 } }, log: 'hardens its shell' },
+  venom: { id: 'venom', name: 'Venom', desc: 'Poison the hero (5 damage/turn for 3 turns).', dot: { amount: 5, turns: 3 } },
+  toxins: { id: 'toxins', name: 'Brood Toxin', desc: 'Poison the hero (5 damage/turn for 5 turns).', dot: { amount: 5, turns: 5 }, log: 'drenches you in toxic venom!' },
+  web: { id: 'web', name: 'Web Spray', desc: 'Reduce the hero’s accuracy for 3 turns.', web: { turns: 3 } },
   // Loot Goblin.
-  flee: { id: 'flee', name: 'Flee', desc: 'Runs off two turns after being attacked.' },
-  crystallineshell: { id: 'crystallineshell', name: 'Crystalline Shell', desc: 'Gain defense for 5 turns.' },
-  crystaldrain: { id: 'crystaldrain', name: 'Crystal Lance', desc: 'Lance the hero’s energy bar (drains ⭐).' },
+  flee: { id: 'flee', name: 'Flee', desc: 'Runs off the turn after the hero strikes twice.' },
+  crystallineshell: { id: 'crystallineshell', name: 'Crystalline Shell', desc: 'Gain defense for 5 turns.', buff: { defense: { bonus: 0.5, turns: 5 } }, log: 'hardens into a crystalline shell (5 turns of defense)' },
+  crystaldrain: { id: 'crystaldrain', name: 'Crystal Lance', desc: 'Lance the hero’s energy bar (drains ⭐).', drainEnergy: true },
   // Boss: The Lich (stage 30).
-  frostbolt: { id: 'frostbolt', name: 'Frost Bolt', desc: 'A spell dealing 150% damage.' },
-  chainlightning: { id: 'chainlightning', name: 'Chain Lightning', desc: 'A spell dealing 150% damage.' },
-  wither: { id: 'wither', name: "Lich's Wither", desc: "Lowers the hero's defense for 5 turns." },
+  frostbolt: { id: 'frostbolt', name: 'Frost Bolt', desc: 'A ❄️ spell dealing 150% damage.', type: 'damage', mult: 1.5, element: 'ice' },
+  chainlightning: { id: 'chainlightning', name: 'Chain Lightning', desc: 'A ⚡ spell dealing 150% damage.', type: 'damage', mult: 1.5, element: 'lightning' },
+  wither: { id: 'wither', name: "Lich's Wither", desc: "Lowers the hero's defense for 5 turns.", defenseDown: { bonus: 0.5, turns: 5 }, log: `casts Lich's Wither — your defense crumbles (5 turns)!` },
   // Boss: The Ember Wyrm (stage 40).
-  infernobolt: { id: 'infernobolt', name: 'Inferno Bolt', desc: 'A spell dealing 150% damage.' },
-  fury: { id: 'fury', name: 'Dragon Fury', desc: 'Gain 40% more attack for 5 turns.' },
+  infernobolt: { id: 'infernobolt', name: 'Inferno Bolt', desc: 'A 🔥 spell dealing 150% damage (15% chance to set Burning).', type: 'damage', mult: 1.5, element: 'fire' },
+  fury: { id: 'fury', name: 'Dragon Fury', desc: 'Gain 40% more attack for 5 turns.', buff: { damage: { bonus: 0.4, turns: 5 } }, log: 'rages — +40% attack for 5 turns!' },
 };
 
 // Skills learnable at a given player level (randomized pool per level range).

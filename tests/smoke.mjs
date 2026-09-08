@@ -514,7 +514,7 @@ async function testBurning() {
   c.enemyTurn();
   assert.ok(c.e.hp <= hpBefore - c.e.buffs.burn.amount + 1, 'burn ticks damage on the enemy turn');
 
-  // Enemy attacks can set the PLAYER burning (15% chance).
+  // Only enemy FIRE attacks can set the player burning (15% chance).
   const p4 = newPlayer(7);
   p4.stats0.critChance = 0;
   const e4 = createEnemy(1);
@@ -522,16 +522,30 @@ async function testBurning() {
   c4.start();
   c4.p.maxHp = 200;
   c4.p.hp = 500; // headroom so the hit can't kill
-  // Calls: variance, miss check (0.5 >= 1-hitChance -> hits), crit (0.5 no crit), burn (0.05 < 0.15 -> burn).
+  // Inferno Bolt (fire): cast log/sfx, then enemyDamage — variance, miss
+  // check (0.5 >= 1-hitChance -> hits), crit (no), then the burn roll
+  // (0.05 < 0.15 -> burn).
   const seq = [0.5, 0.5, 0.5, 0.05];
   let ri = 0;
   Math.random = () => seq[Math.min(ri++, seq.length - 1)];
-  c4.enemyDamage(1);
+  c4.enemySkill('infernobolt');
   Math.random = realRandom;
-  assert.ok(c4.p.buffs.burn, 'an enemy hit can set the player burning (15% chance)');
+  assert.ok(c4.p.buffs.burn, 'an enemy fire spell can set the player burning (15% chance)');
   assert.equal(c4.p.buffs.burn.amount, Math.max(1, Math.round(200 * 0.05)), 'player burn is 5% of the player max HP per turn');
 
+  // A non-fire enemy attack never burns, even inside the 15% window
+  // (same hit sequence, no burn roll exists for it).
+  const c4b = new Combat(newPlayer(7), createEnemy(1), new EventBus());
+  c4b.start();
+  c4b.p.hp = 500;
+  ri = 0;
+  Math.random = () => seq[Math.min(ri++, seq.length - 1)];
+  c4b.enemyDamage(1);
+  Math.random = realRandom;
+  assert.equal(c4b.p.buffs.burn, null, 'non-fire enemy attacks cannot set burning');
+
   // The player burn ticks on the enemy turn (force the enemy to miss).
+  c4.p.buffs.burn = { amount: 10, turns: 3 }; // re-establish the status
   c4.p.hp = 300;
   const phBefore = c4.p.hp;
   Math.random = () => 0.01; // 0.01 < (1 - hitChance): the enemy misses
