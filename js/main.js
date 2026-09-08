@@ -286,8 +286,10 @@ function showLevelUp(reward) {
     replaceWrap.classList.remove('hidden');
     skipBtn.classList.remove('hidden');
     const cards = $('levelup-replace-cards');
+    cards.textContent = ''; // reset so re-picking an offer doesn't stack cards
     for (const oldId of player.skills) {
       const old = SKILL_MAP[oldId];
+      if (!old) continue; // tolerate stale/unknown ids from old saves
       const card = document.createElement('button');
       card.className = 'card';
       card.innerHTML = `<div class="name">Replace ${old.name} with ${sk.name}</div>

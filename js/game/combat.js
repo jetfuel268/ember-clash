@@ -166,17 +166,19 @@ export class Combat {
     } else {
       totalMult = mult * t[typeKey];
     }
-    const hitChance = forceHit
+    const webbed = this.p.buffs.web;
+    // The hero never misses — unless webbed, which is a flat accuracy
+    // penalty (no enemy-evasion subtraction anymore).
+    const hitChance = forceHit || !webbed
       ? 1
       : clamp(
-          s.hit +
+          1 +
             (this.p.buffs.hit?.bonus ?? 0) -
-            (this.p.buffs.web ? TUNING.enemyMagic.webPenalty : 0) -
-            this.enemy.evasion,
+            TUNING.enemyMagic.webPenalty,
           0.05,
           0.98
         );
-    if (!forceHit && chance(1 - hitChance)) {
+    if (hitChance < 1 && chance(1 - hitChance)) {
       this.bus.emit('log', { text: 'You miss!', kind: 'player' });
       this.bus.emit('sfx', { name: 'miss' });
       return { dmg: 0, crit: false, hit: false };

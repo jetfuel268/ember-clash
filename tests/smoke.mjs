@@ -554,6 +554,44 @@ async function testBurning() {
   assert.equal(c4.p.hp, phBefore - c4.p.buffs.burn.amount, 'player burn ticks damage on the enemy turn');
 }
 
+// --- Hero hit rules: never misses unless webbed; flat evasion ---------
+async function testHeroHitRules() {
+  TUNING.combat.enemyActionDelayMs = 0;
+  const prevVariance = TUNING.combat.damageVariance;
+  TUNING.combat.damageVariance = 0;
+  const realRandom = Math.random;
+
+  // Unwebbed hero never misses, even on a terrible roll.
+  const p = newPlayer(1);
+  const c = new Combat(p, createEnemy(1), new EventBus());
+  c.start();
+  c.p.energy = 200;
+  Math.random = () => 0.001; // would have been a miss under the old formula
+  const hpBefore = c.e.hp;
+  c.act('skill', 'cleave');
+  Math.random = realRandom;
+  assert.ok(hpBefore - c.e.hp > 0, 'unwebbed hero cannot miss');
+
+  // Webbed hero CAN miss (flat 25% accuracy penalty).
+  const p2 = newPlayer(1);
+  const c2 = new Combat(p2, createEnemy(1), new EventBus());
+  c2.start();
+  c2.p.energy = 200;
+  c2.p.buffs.web = { turns: 1 };
+  Math.random = () => 0.05; // 0.05 < (1 - 0.75): webbed hero misses
+  const hpBefore2 = c2.e.hp;
+  c2.act('skill', 'cleave');
+  Math.random = realRandom;
+  assert.equal(hpBefore2 - c2.e.hp, 0, 'webbed hero can miss');
+
+  // Evasion is flat: same at level 1 and level 50.
+  const low = newPlayer(1);
+  const high = new Player({ level: 50 });
+  assert.equal(low.stats().evasion, TUNING.player.evasionBase, 'evasion is flat (level 1)');
+  assert.equal(high.stats().evasion, TUNING.player.evasionBase, 'evasion does not scale with level');
+  TUNING.combat.damageVariance = prevVariance;
+}
+
 // --- Element weaknesses: slimes weak to everything, insects to fire -------
 async function testElementWeaknesses() {
   TUNING.combat.enemyActionDelayMs = 0;
@@ -1114,6 +1152,7 @@ async function main() {
   await testLootGoblin();
   await testHealLine();
   await testBurning();
+  await testHeroHitRules();
   await testElementWeaknesses();
   await testWardenLightning();
   await testHpCarryover();

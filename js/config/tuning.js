@@ -20,9 +20,7 @@ export const TUNING = {
       hpMin: 12,
       hpMax: 28,
     },
-    evasionBase: 0.03,
-    evasionPerLevel: 0.004,
-    evasionCap: 0.15,
+    evasionBase: 0.03, // flat player evasion (no per-level scaling)
   },
   combat: {
     damageVariance: 0.15, // +/- fraction

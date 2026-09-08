@@ -106,11 +106,9 @@ export class Player {
       }
     }
 
-    s.hit = Math.min(0.8 + (this.level - 1) * 0.01, 0.9);
-    s.evasion = Math.min(
-      TUNING.player.evasionBase + (this.level - 1) * TUNING.player.evasionPerLevel,
-      TUNING.player.evasionCap
-    );
+    s.hit = Math.min(0.8 + (this.level - 1) * 0.01, 0.9); // informational only
+    // Evasion is a flat stat (no longer scales per level).
+    s.evasion = TUNING.player.evasionBase;
     s.maxEnergy = Math.min(
       s.magic,
       TUNING.player.energyCap
