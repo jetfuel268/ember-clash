@@ -2,6 +2,7 @@
 // and per-stage limited enemy pools.
 import { TUNING } from '../config/tuning.js';
 import { weightedPick } from '../core/rng.js';
+import { TIER_MULTS } from './skills.js';
 
 // Creature-based types. `slash` = Power Strike multiplier, `blunt` = Attack.
 // `element` = strengths (1.5x) and weaknesses (0.5x) of the creature against
@@ -37,7 +38,7 @@ export function weaknessOf(type) {
 export const ENEMY_DEFS = {
   grunt: { id: 'grunt', name: 'Grunt', sprite: 'grunt', type: 'beast', hp: 60, atk: 9, skills: [] },
   brute: { id: 'brute', name: 'Brute', sprite: 'brute', type: 'demon', hp: 48, atk: 13, skills: ['enrage'] },
-  warden: { id: 'warden', name: 'Warden', sprite: 'warden', type: 'construct', hp: 85, atk: 7, skills: ['shell'] },
+  warden: { id: 'warden', name: 'Warden', sprite: 'warden', type: 'construct', hp: 85, atk: 7, skills: ['shell'], lightning: true },
   stinger: { id: 'stinger', name: 'Stinger', sprite: 'stinger', type: 'insect', hp: 55, atk: 11, skills: ['venom'] },
   skeleton: { id: 'skeleton', name: 'Skeleton', sprite: 'skeleton', type: 'undead', hp: 58, atk: 12, skills: ['shell'] },
   wyvern: { id: 'wyvern', name: 'Wyvern', sprite: 'wyvern', type: 'beast', hp: 52, atk: 12, skills: ['enrage'] },
@@ -149,6 +150,9 @@ export function createEnemy(stage, baseIndex) {
     energy: em.startEnergy,
     boss,
     stage,
+    // Wardens attack with lightning at the tier of their current 10-stage
+    // area (T1 1.25x ... T5 2.25x).
+    lightningMult: base.lightning ? TIER_MULTS[Math.min(4, Math.floor((stage - 1) / 10))] : 1,
   };
 }
 

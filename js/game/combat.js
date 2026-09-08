@@ -15,7 +15,7 @@ import { chance } from '../core/rng.js';
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
 function freshBuffs() {
-  return { damage: null, defense: null, hit: null, dot: null, web: null, defenseDown: null };
+  return { damage: null, defense: null, hit: null, dot: null, web: null, defenseDown: null, burn: null };
 }
 
 export class Combat {
@@ -53,6 +53,8 @@ export class Combat {
       energy: Math.min(TUNING.enemyMagic.startEnergy, enemy.magic),
       goblin: enemy.id === 'lootgoblin',
       provoked: false, // Loot Goblin: did the hero strike it?
+      fleeCountdown: 0, // Loot Goblin: enemy turns until it runs off
+      lightningMult: enemy.lightningMult ?? 1, // Wardens: stage-area tier
     };
     this.eHit = Math.min(
       TUNING.enemyAi.enemyHitBase + TUNING.enemyAi.enemyHitPerStage * (enemy.stage - 1),
@@ -117,10 +119,14 @@ export class Combat {
       const sk = SKILL_MAP[arg];
       this.p.energy -= sk.cost;
       this.usePlayerSkill(s, sk);
+      // Any skill can set the enemy burning (15% chance).
+      if (this.e.hp > 0 && Math.random() < 0.15) this.applyBurn();
     } else if (action === 'item') {
       this.useItem(arg);
     }
-    // Attacking (basic or skill) provokes the Loot Goblin: it flees next turn.
+    // Attacking (basic or skill) provokes the Loot Goblin: it survives one
+    // more hero turn (a second hit chance), then runs off on the enemy
+    // turn after that.
     if (
       (action === 'attack' || action === 'skill') &&
       this.e.goblin &&
@@ -128,6 +134,7 @@ export class Combat {
       this.e.hp > 0
     ) {
       this.e.provoked = true;
+      this.e.fleeCountdown = 1;
       this.bus.emit('log', { text: `${this.enemy.name} prepares to flee!`, kind: 'enemy' });
     }
     this.pushState();
@@ -361,10 +368,11 @@ export class Combat {
   enemyDamage(mult = 1, label = null) {
     const ps = this.player.stats();
     const variance = 1 + (Math.random() * 2 - 1) * TUNING.combat.damageVariance;
-    let dmg = Math.max(1, Math.round(this.enemy.atk * mult * variance * (1 + (this.e.buffs.damage?.bonus ?? 0))));
+    let dmg = Math.max(1, Math.round(this.enemy.atk * mult * variance * (1 + (this.e.buffs.damage?.bonus ?? 0)) * this.e.lightningMult));
+    const light = this.e.lightningMult > 1;
     const hitChance = clamp(this.eHit + (this.e.buffs.hit?.bonus ?? 0) - ps.evasion, 0.05, 0.95);
     if (chance(1 - hitChance)) {
-      this.bus.emit('log', { text: `${this.enemy.name} misses ${label ?? 'its attack'}!`, kind: 'enemy' });
+      this.bus.emit('log', { text: `${this.enemy.name} misses ${label ?? (light ? 'its lightning bolt' : 'its attack')}!`, kind: 'enemy' });
       this.bus.emit('sfx', { name: 'miss' });
       return;
     }
@@ -381,7 +389,7 @@ export class Combat {
     if (crit) dmg = Math.max(dmg, Math.round(dmg * this.enemy.critDamage));
     if (this.p.meditating) dmg *= 2;
     this.p.hp = Math.max(0, this.p.hp - dmg);
-    this.bus.emit('log', { text: `${crit ? 'CRITICAL! ' : ''}${this.enemy.name} ${label ? `hits you with ${label} for` : 'hits you for'} ${dmg}.`, kind: 'enemy' });
+    this.bus.emit('log', { text: `${crit ? 'CRITICAL! ' : ''}${this.enemy.name} ${label ? `hits you with ${label} for` : light ? 'hurls a lightning bolt for' : 'hits you for'} ${dmg}.`, kind: 'enemy' });
     this.bus.emit('hit', { target: 'player', crit });
     this.bus.emit('sfx', { name: 'hurt' });
     if (this.p.parry) {
@@ -397,6 +405,17 @@ export class Combat {
     }
   }
 
+  // Apply/refresh the burning status on the enemy: 5% of its max HP per
+  // turn for 3 turns (any skill can trigger it, 15% chance).
+  applyBurn() {
+    const prev = this.e.buffs.burn;
+    this.e.buffs.burn = {
+      amount: Math.max(1, Math.round(this.e.maxHp * 0.05)),
+      turns: Math.max(prev?.turns ?? 0, 3),
+    };
+    this.bus.emit('log', { text: prev ? `The flames around ${this.enemy.name} intensify!` : `${this.enemy.name} catches fire!`, kind: 'system' });
+  }
+
   enemyTurn() {
     if (this.done) return;
     // Energy regens a flat amount per turn; magic is the pool's cap.
@@ -406,14 +425,22 @@ export class Combat {
     this.e.charging = false;
     this.rollEnemyIntent();
 
-    if (this.e.goblin && this.e.provoked) {
-      // It was attacked last turn and runs off now: the stage is cleared,
-      // but its loot is lost.
-      this.bus.emit('log', { text: `${this.enemy.name} flees! (its loot is lost)`, kind: 'system' });
-      return this.finish(true, true);
-    }
-
-    if (intent === 'defend') {
+    if (this.e.goblin) {
+      // The Loot Goblin never attacks. Unprovoked it crouches and waits;
+      // provoked it survives one more hero turn (fleeCountdown), then runs.
+      if (this.e.provoked) {
+        if (this.e.fleeCountdown <= 0) {
+          // It was hit last turn and runs off now: the stage is cleared,
+          // but its loot is lost.
+          this.bus.emit('log', { text: `${this.enemy.name} flees! (its loot is lost)`, kind: 'system' });
+          return this.finish(true, true);
+        }
+        this.e.fleeCountdown -= 1;
+        this.bus.emit('log', { text: `${this.enemy.name} trembles, ready to run!`, kind: 'enemy' });
+      } else {
+        this.bus.emit('log', { text: `${this.enemy.name} crouches, waiting for you to attack.`, kind: 'enemy' });
+      }
+    } else if (intent === 'defend') {
       this.e.defending = true;
       this.bus.emit('log', { text: `${this.enemy.name} raises its guard.`, kind: 'enemy' });
     } else if (intent === 'skill') {
@@ -433,6 +460,13 @@ export class Combat {
     if (this.e.buffs.dot) {
       this.e.hp = Math.max(0, this.e.hp - this.e.buffs.dot.amount);
       this.bus.emit('log', { text: `Poison burns ${this.enemy.name} for ${this.e.buffs.dot.amount}.`, kind: 'system' });
+      this.pushState();
+      if (this.e.hp <= 0) return this.finish(true);
+    }
+    // Enemy burning tick (any skill, 15% chance).
+    if (this.e.buffs.burn) {
+      this.e.hp = Math.max(0, this.e.hp - this.e.buffs.burn.amount);
+      this.bus.emit('log', { text: `Burn sears ${this.enemy.name} for ${this.e.buffs.burn.amount}.`, kind: 'system' });
       this.pushState();
       if (this.e.hp <= 0) return this.finish(true);
     }
@@ -461,7 +495,7 @@ export class Combat {
   }
 
   tickBuffs(side) {
-    for (const key of ['damage', 'defense', 'hit', 'dot', 'web', 'defenseDown']) {
+    for (const key of ['damage', 'defense', 'hit', 'dot', 'web', 'defenseDown', 'burn']) {
       const b = side.buffs[key];
       if (b) {
         b.turns -= 1;
@@ -534,7 +568,7 @@ export class Combat {
 
   describeBuffs(side) {
     const out = [];
-    const names = { damage: '+DMG', defense: '+DEF', hit: '+ACC', dot: 'POISON', web: 'WEB', defenseDown: 'DEF DOWN' };
+    const names = { damage: '+DMG', defense: '+DEF', hit: '+ACC', dot: 'POISON', web: 'WEB', defenseDown: 'DEF DOWN', burn: 'BURN' };
     for (const [key, b] of Object.entries(side.buffs)) {
       if (b) out.push(`${names[key]} ${b.turns}t`);
     }

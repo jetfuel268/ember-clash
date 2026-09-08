@@ -389,9 +389,17 @@ async function testLootGoblin() {
   c.p.guarantee = true;
   c.act('attack');
   assert.equal(c.e.provoked, true, 'attacking provokes the goblin');
-  await tick();
+  assert.equal(c.e.fleeCountdown, 1, 'provoked goblin counts one enemy turn');
+  await tick(); // enemy turn 1: it holds, giving the hero a second hit chance
+  assert.equal(c.done, false, 'goblin still there after the first enemy turn');
+  assert.equal(c.e.fleeCountdown, 0, 'flee countdown reached zero');
+  assert.equal(c.p.hp, c.p.maxHp, 'goblin never attacks, even while provoked');
+  // Second player turn: the hero can strike again.
+  c.act('attack');
+  assert.equal(c.done, false, 'second hit does not instantly end the fight');
+  await tick(); // enemy turn 2: now it runs off
   assert.equal(c.e.intent, 'flee', 'provoked goblin rolls flee');
-  assert.equal(c.done, true, 'goblin flees on the following turn');
+  assert.equal(c.done, true, 'goblin flees on the second enemy turn');
   const win = phases.find((d) => d.value === 'victory');
   assert.ok(win, 'flee ends the stage as a victory');
   assert.equal(win.fled, true, 'fled flag is set');
@@ -415,6 +423,118 @@ async function testLootGoblin() {
   assert.ok(win2, 'kill is a victory');
   assert.equal(win2.fled ?? false, false, 'killed goblin = normal victory (drop applies)');
   assert.equal(c2.e.provoked, false, 'a fatal strike does not provoke (it is dead)');
+}
+
+// --- Healing line: one per 10-level block, 10% -> 50% of max HP --------
+async function testHealLine() {
+  const expected = [
+    ['minormend', [1, 10], 15, 0.1],
+    ['mend', [11, 20], 25, 0.2],
+    ['majormend', [21, 30], 35, 0.3],
+    ['fleshmend', [31, 40], 45, 0.4],
+    ['fullmend', [41, 50], 55, 0.5],
+  ];
+  for (const [id, pool, cost, frac] of expected) {
+    const sk = SKILLS.find((s) => s.id === id);
+    assert.ok(sk, `heal line has ${id}`);
+    assert.deepEqual(sk.pool, pool, `${id} lives in its 10-level block`);
+    assert.equal(sk.cost, cost, `${id} cost follows the tier ladder`);
+    assert.equal(sk.healFrac, frac, `${id} heals ${frac * 100}% of max HP`);
+  }
+
+  // Heal actually restores: bottom tier 10%, top tier 50%.
+  for (const [id, frac] of [['minormend', 0.1], ['fullmend', 0.5]]) {
+    const p = newPlayer(3);
+    p.stats0.magic = 200;
+    const e = createEnemy(1);
+    e.maxHp = 1000; e.hp = 1000;
+    const bus = new EventBus();
+    const c = new Combat(p, e, bus);
+    c.start();
+    const maxHp = c.p.maxHp;
+    c.p.energy = 200;
+    c.p.hp = Math.round(maxHp * 0.25);
+    c.act('skill', id);
+    assert.equal(c.p.hp, Math.min(maxHp, Math.round(maxHp * 0.25) + Math.round(maxHp * frac)),
+      `${id} heals ${frac * 100}% of max HP`);
+  }
+}
+
+// --- Burning status: 15% chance on any skill, 5% max HP/turn x 3 -------
+async function testBurning() {
+  TUNING.combat.enemyActionDelayMs = 0;
+  const tick = () => new Promise((r) => setTimeout(r, 20));
+  const realRandom = Math.random;
+
+  // Forced burn: Math.random() = 0.05 < 0.15 (and hits/crits stay sane).
+  const p = newPlayer(7);
+  p.stats0.magic = 200;
+  p.stats0.critChance = 0;
+  const e = createEnemy(1);
+  const bus = new EventBus();
+  const c = new Combat(p, e, bus);
+  c.start();
+  Math.random = () => 0.05;
+  c.p.energy = 200;
+  c.act('skill', 'powerstrike');
+  Math.random = realRandom;
+  assert.ok(c.e.buffs.burn, 'skill can set the enemy burning (15% chance)');
+  assert.equal(c.e.buffs.burn.turns, 3, 'burn lasts 3 turns');
+  assert.equal(c.e.buffs.burn.amount, Math.max(1, Math.round(c.e.maxHp * 0.05)), 'burn is 5% of the enemy max HP per turn');
+
+  // No burn when the roll misses the window.
+  const p2 = newPlayer(7);
+  p2.stats0.magic = 200;
+  p2.stats0.critChance = 0;
+  const e2 = createEnemy(1);
+  const c2 = new Combat(p2, e2, new EventBus());
+  c2.start();
+  Math.random = () => 0.99;
+  c2.p.energy = 200;
+  c2.act('skill', 'powerstrike');
+  Math.random = realRandom;
+  assert.equal(c2.e.buffs.burn, null, 'no burn outside the 15% window');
+
+  // The burn ticks on the enemy turn.
+  c.e.hp = c.e.maxHp;
+  const hpBefore = c.e.hp;
+  c.enemyTurn();
+  assert.ok(c.e.hp <= hpBefore - c.e.buffs.burn.amount + 1, 'burn ticks damage on the enemy turn');
+}
+
+// --- Wardens: lightning attacks at the tier of their 10-stage area -----
+async function testWardenLightning() {
+  TUNING.combat.enemyActionDelayMs = 0;
+  const prevVariance = TUNING.combat.damageVariance;
+  TUNING.combat.damageVariance = 0;
+  const realRandom = Math.random;
+
+  // Stage 15 warden (cavern, tier 2 = 1.5x) and stage 25 (dungeon, 1.75x).
+  const w15 = createEnemy(15, 0);
+  assert.equal(w15.id, 'warden', 'cavern pool has the Warden');
+  assert.equal(w15.lightningMult, 1.5, 'stage-15 Warden strikes at tier 2 (1.5x)');
+  const w25 = createEnemy(25, 2);
+  assert.equal(w25.id, 'warden', 'dungeon pool has the Warden');
+  assert.equal(w25.lightningMult, 1.75, 'stage-25 Warden strikes at tier 3 (1.75x)');
+  const grunt = createEnemy(1, 0);
+  assert.equal(grunt.lightningMult, 1, 'non-Warden enemies have no lightning multiplier');
+
+  // Damage math: 1.5x the stage-scaled atk (variance off, no defense).
+  const p = new Player({ level: 10 });
+  p.stats0.magic = 100;
+  p.stats0.defense = 0;
+  const w = createEnemy(15, 0);
+  const c = new Combat(p, w, new EventBus());
+  c.start();
+  c.enemy.critChance = 0;
+  Math.random = () => 0.99; // never miss, never crit
+  c.p.hp = 1000;
+  c.enemyDamage(1);
+  const dealt = 1000 - c.p.hp;
+  Math.random = realRandom;
+  assert.equal(dealt, Math.max(1, Math.round(w.atk * 1.5)), 'warden lightning = 1.5x stage-scaled atk at stage 15');
+
+  TUNING.combat.damageVariance = prevVariance;
 }
 
 // --- Combat: turn order, guard, skill energy/cd, items, victory ------------
@@ -462,7 +582,7 @@ async function testCombatBasics() {
   assert.ok(c.p.hp > 10, 'potion heals');
   assert.equal(p.items.potion, 1, 'item consumed from player inventory');
   await tick(); // resolve the potion's enemy turn
-  // Elixir restores 50% of max HP and max energy.
+  // Elixir restores 75% of max HP and max energy.
   p.items.elixir = 1;
   c.p.items.elixir = 1;
   c.p.maxHp = 100;
@@ -470,8 +590,8 @@ async function testCombatBasics() {
   c.p.hp = 10;
   c.p.energy = 5;
   c.act('item', 'elixir');
-  assert.equal(c.p.hp, 60, 'elixir restores 50% max HP');
-  assert.equal(c.p.energy, 55, 'elixir restores 50% max energy');
+  assert.equal(c.p.hp, 85, 'elixir restores 75% max HP');
+  assert.equal(c.p.energy, 80, 'elixir restores 75% max energy');
   await tick(); // resolve the elixir's enemy turn
   // Victory path.
   c.e.hp = 1;
@@ -798,15 +918,13 @@ async function testEarlyVariants() {
   const c = new Combat(p, e, new EventBus());
   c.start();
   c.p.guarantee = true; // hits land
-  // Minor Mend: heals 15% of max HP.
+  // Minor Mend: heals 10% of max HP.
   c.p.hp = Math.max(1, Math.round(c.p.maxHp * 0.5));
   const before = c.p.hp;
   c.act('skill', 'minormend');
+  assert.equal(c.p.hp - before, Math.min(c.p.maxHp - before, Math.round(c.p.maxHp * 0.1)),
+    'Minor Mend heals exactly 10% of max HP');
   await tick(); // let the enemy turn resolve so busy clears
-  assert.ok(c.p.hp > Math.round(c.p.maxHp * 0.5),
-    `Minor Mend raised HP above the 50% floor (hp ${c.p.hp})`);
-  assert.ok(c.p.hp <= Math.round(c.p.maxHp * 0.65) + 20,
-    `Minor Mend heals ~15% (not more), even after an enemy hit (hp ${c.p.hp})`);
   // Swift Edge: on a hit, grants +20% damage for 2 turns.
   assert.ok(!c.p.buffs.damage, 'no damage buff before Swift Edge');
   c.act('skill', 'swiftedge');
@@ -892,6 +1010,9 @@ async function main() {
   await testCrystalGuardian();
   await testBossSkills();
   await testLootGoblin();
+  await testHealLine();
+  await testBurning();
+  await testWardenLightning();
   await testHpCarryover();
   await testTypeSkills();
   await testElementSkills();
